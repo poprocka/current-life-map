@@ -1,0 +1,115 @@
+"use client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { AnswerValue } from "@/content/types";
+import { CONTENT_VERSION } from "@/content/v10/question-bank";
+import { resumeStep, TOTAL_STEPS } from "@/engine/navigation";
+
+const KEY = `clm:${CONTENT_VERSION}:session`;
+
+export type SyncState = "idle" | "saving" | "saved" | "device" | "error";
+
+interface Stored {
+  version: string;
+  answers: Record<string, AnswerValue>;
+  step: number;
+  token?: string;
+  updatedAt: string;
+}
+
+export function readStored(): Stored | null {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw) as Stored;
+    return s.version === CONTENT_VERSION ? s : null;
+  } catch {
+    return null;
+  }
+}
+
+function write(s: Stored) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(s));
+  } catch {
+    /* storage unavailable (private mode): in-memory only */
+  }
+}
+
+export function clearStored() {
+  try { localStorage.removeItem(KEY); } catch { /* noop */ }
+}
+
+/**
+ * Interview state with autosave.
+ * Every change is written to the device immediately, then synced to the server (debounced).
+ * If server storage isn't configured, sync reports "device" honestly instead of "saved".
+ */
+export function useInterview() {
+  const [ready, setReady] = useState(false);
+  const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
+  const [step, setStep] = useState(0);
+  const [sync, setSync] = useState<SyncState>("idle");
+  const token = useRef<string | undefined>(undefined);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const serverAvailable = useRef(true);
+
+  useEffect(() => {
+    const s = readStored();
+    if (s) {
+      setAnswers(s.answers);
+      token.current = s.token;
+      setStep(Math.min(s.step ?? resumeStep(s.answers), TOTAL_STEPS - 1));
+    }
+    setReady(true);
+  }, []);
+
+  const pushToServer = useCallback(async (a: Record<string, AnswerValue>) => {
+    if (!serverAvailable.current) return setSync("device");
+    setSync("saving");
+    try {
+      if (!token.current) {
+        const r = await fetch("/api/maps", { method: "POST" });
+        if (r.status === 503) { serverAvailable.current = false; return setSync("device"); }
+        if (!r.ok) throw new Error();
+        token.current = (await r.json()).token;
+      }
+      const r = await fetch(`/api/maps/${token.current}/responses`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answers: a }),
+      });
+      if (r.status === 503) { serverAvailable.current = false; return setSync("device"); }
+      if (!r.ok) throw new Error();
+      setSync("saved");
+    } catch {
+      setSync("error");
+    }
+  }, []);
+
+  const persist = useCallback((a: Record<string, AnswerValue>, st: number) => {
+    write({ version: CONTENT_VERSION, answers: a, step: st, token: token.current, updatedAt: new Date().toISOString() });
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      void pushToServer(a).then(() =>
+        write({ version: CONTENT_VERSION, answers: a, step: st, token: token.current, updatedAt: new Date().toISOString() }));
+    }, 600);
+  }, [pushToServer]);
+
+  const answer = useCallback((id: string, value: AnswerValue | undefined) => {
+    setAnswers((prev) => {
+      const next = { ...prev };
+      if (value === undefined) delete next[id];
+      else next[id] = value;
+      persist(next, step);
+      return next;
+    });
+  }, [persist, step]);
+
+  const goTo = useCallback((st: number) => {
+    const clamped = Math.max(0, Math.min(st, TOTAL_STEPS - 1));
+    setStep(clamped);
+    setAnswers((a) => { persist(a, clamped); return a; });
+  }, [persist]);
+
+  return { ready, answers, step, sync, answer, goTo, token: token.current };
+}

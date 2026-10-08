@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+html, body { background: #F5EDE2; color: #1F1411; }
+body { font-family: theme(fontFamily.sans); font-weight: 300; -webkit-font-smoothing: antialiased; }
+
+.eyebrow { @apply text-[10.5px] uppercase tracking-eyebrow text-taupe font-normal; }
+.hairline { border-color: theme(colors.linen.line); }
+
+/* Accessible visually-hidden radio inputs behind pill labels */
+.pill-input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pill { @apply relative cursor-pointer select-none rounded-full border border-linen-line bg-transparent px-5 py-3 text-[14px] leading-snug text-mahogany transition-all duration-200; }
+.pill:hover { @apply border-taupe; }
+.pill-input:focus-visible + .pill { @apply outline outline-1 outline-offset-2 outline-burgundy; }
+.pill-input:checked + .pill { @apply border-burgundy bg-burgundy text-linen; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
