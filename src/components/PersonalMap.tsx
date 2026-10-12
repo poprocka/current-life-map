@@ -25,8 +25,8 @@ export function orbitGeometry(o: OrbitResult) {
   return { a, dist, size, bright, x: C + dist * Math.cos(a), y: C + dist * Math.sin(a) };
 }
 
-const IN = "#D9A23A"; // inflow: warm gold — energy coming in to you
-const OUT = "#B04A63"; // outflow: deep rose — energy going out of you
+const IN = "#E0C26A"; // inflow: muted yellow — energy coming in to you
+const OUT = "#A39D97"; // outflow: soft grey — energy going out of you
 
 /**
  * Personalised Current Life Map.
@@ -58,7 +58,7 @@ export function PersonalMap({ result }: { result: LifeMapResult }) {
       <SystemDefs />
       <defs>
         <filter id="flowSoft" filterUnits="userSpaceOnUse" x="-100" y="-100" width="800" height="800">
-          <feGaussianBlur stdDeviation="1.1" />
+          <feGaussianBlur stdDeviation="2.2" />
         </filter>
       </defs>
 
@@ -73,44 +73,52 @@ export function PersonalMap({ result }: { result: LifeMapResult }) {
       )}
 
       {/* Trade-off path removed from the Map (Jana, 2026-10-12); still described in Energy Architecture */}
-      {/* Energy as a solid, tapered shape filled with a soft gradient of light that streams smoothly
-          (Jana, 2026-10-12): no dots, dashes or blobs. Gold streams in toward the Sun (energy in);
-          rose streams out toward the planet (energy out). Width and brightness follow how much energy
-          was reported; every flow moves at the same pace. Motion is off under reduced-motion settings. */}
+      {/* Energy as a soft bridge of light between the Sun and each planet (Jana, 2026-10-12):
+          meditative, like a breathing exercise. Muted yellow flows in toward the Sun (energy in);
+          soft grey flows out toward the planet (energy out). The shape tucks under both bodies so it is
+          fully connected, a gradient glides slowly along it and the whole bridge gently "breathes".
+          Width and brightness follow how much energy was reported. Motion is off under reduced motion. */}
       {ORBIT_IDS.map((id) => {
         const o = by[id];
         if (o.energySigned === null || o.energySigned === 0) return null;
         const g = orbitGeometry(o);
         const ux = Math.cos(g.a), uy = Math.sin(g.a);
         const px = -uy, py = ux;
-        const nearR = SUN_R + 4, farR = g.dist - g.size - 4;
         const inward = o.energySigned > 0;
         const mag = Math.abs(o.energySigned); // 0.5 or 1
         const color = inward ? IN : OUT;
-        // tapered: wider where the light arrives
-        const wNear = inward ? 3 + mag * 3 : 1.2 + mag;
-        const wFar = inward ? 1.2 + mag : 3 + mag * 3;
-        const pt = (r: number, w: number, side: 1 | -1) => `${C + ux * r + px * w * side},${C + uy * r + py * w * side}`;
-        const shape = [pt(nearR, wNear, 1), pt(farR, wFar, 1), pt(farR, wFar, -1), pt(nearR, wNear, -1)].join(" ");
-        const from = inward ? farR : nearR;
-        const dir = inward ? -1 : 1; // travel direction along the radius
-        const period = Math.max(60, (farR - nearR) * 0.7);
+        // starts inside the Sun's rim and ends inside the planet, so both bodies cover the joins
+        const r0 = SUN_R - 8, r1 = g.dist - g.size * 0.4, rm = (r0 + r1) / 2;
+        const w0 = 9 + mag * 5;               // wide where it meets the Sun
+        const w1 = Math.max(5, g.size * 0.62); // as wide as most of the planet
+        const wm = 2.4 + mag * 2.2;            // soft waist
+        const P = (r: number, w: number) => `${C + ux * r + px * w},${C + uy * r + py * w}`;
+        const d = `M${P(r0, w0)} Q${P(rm, wm)} ${P(r1, w1)} L${P(r1, -w1)} Q${P(rm, -wm)} ${P(r0, -w0)} Z`;
+        const from = inward ? r1 : r0;
+        const dir = inward ? -1 : 1;
+        const period = Math.max(70, (r1 - r0) * 0.8);
         const gx = C + ux * from, gy = C + uy * from;
+        const lo = 0.22 + mag * 0.08, hi = 0.55 + mag * 0.2;
         return (
           <g key={`e-${id}`}>
             <defs>
               <linearGradient id={`flow-${id}`} gradientUnits="userSpaceOnUse" spreadMethod="repeat"
                 x1={gx} y1={gy} x2={gx + ux * dir * period} y2={gy + uy * dir * period}>
-                <stop offset="0%" stopColor={color} stopOpacity={0.3 + mag * 0.1} />
-                <stop offset="50%" stopColor={color} stopOpacity={0.75 + mag * 0.2} />
-                <stop offset="100%" stopColor={color} stopOpacity={0.3 + mag * 0.1} />
+                <stop offset="0%" stopColor={color} stopOpacity={lo} />
+                <stop offset="50%" stopColor={color} stopOpacity={hi} />
+                <stop offset="100%" stopColor={color} stopOpacity={lo} />
                 {!reduceMotion && (
                   <animateTransform attributeName="gradientTransform" type="translate"
-                    from="0 0" to={`${ux * dir * period} ${uy * dir * period}`} dur="3.6s" repeatCount="indefinite" />
+                    from="0 0" to={`${ux * dir * period} ${uy * dir * period}`} dur="6s" repeatCount="indefinite" />
                 )}
               </linearGradient>
             </defs>
-            <polygon points={shape} fill={`url(#flow-${id})`} filter="url(#flowSoft)" />
+            <path d={d} fill={`url(#flow-${id})`} filter="url(#flowSoft)">
+              {!reduceMotion && (
+                <animate attributeName="opacity" values="0.7;1;0.7" keyTimes="0;0.5;1" dur="5.5s"
+                  calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" repeatCount="indefinite" />
+              )}
+            </path>
           </g>
         );
       })}
@@ -143,21 +151,24 @@ export function PersonalMap({ result }: { result: LifeMapResult }) {
  */
 export function MapLegend({ distancePending = true }: { distancePending?: boolean }) {
   const item = "flex items-start gap-3";
+  // Two-column grid (Jana, 2026-10-12): energy in | energy out, then distance + size | brightness.
   return (
-    <ul className="grid gap-x-8 gap-y-3 text-[12.5px] leading-snug text-mahogany/80 sm:grid-cols-2">
-      <li className={`${item} sm:col-span-2`}><Swatch><circle cx="4" cy="9" r="3" fill="#D9B26A" /><circle cx="26" cy="9" r="4" fill="#B7AC9B" /><line x1="8" y1="9" x2="21" y2="9" stroke="#C2B3A3" strokeDasharray="2 2" /></Swatch>
-        <span><b className="font-normal text-mahogany">Distance from the Sun</b> — {distancePending
-          ? <>will show how connected each area is to your authentic self. <span className="text-taupe">Not shown yet: every Orbit sits at the same distance while this measure is being finalised.</span></>
-          : "the closer an area is, the more connected it is to your authentic self"}</span></li>
-      <li className={item}><Swatch><circle cx="9" cy="9" r="4" fill="#B7AC9B" /><circle cx="22" cy="9" r="8" fill="#B7AC9B" /></Swatch>
-        <span><b className="font-normal text-mahogany">Size</b> — how important the area is to you right now</span></li>
-      <li className={item}><Swatch><circle cx="9" cy="9" r="6" fill="#B7AC9B" opacity=".3" /><circle cx="22" cy="9" r="6" fill="#B7AC9B" /></Swatch>
-        <span><b className="font-normal text-mahogany">Brightness</b> — how alive and supported this area feels, based on your answers to its statements</span></li>
-      <li className={item}><Swatch><FlowSwatch color={IN} inward /></Swatch>
-        <span><b className="font-normal text-mahogany">Energy in</b> — <span style={{ color: IN }}>gold</span> light streaming toward the Sun: this area gives you energy</span></li>
-      <li className={item}><Swatch><FlowSwatch color={OUT} /></Swatch>
-        <span><b className="font-normal text-mahogany">Energy out</b> — <span style={{ color: OUT }}>rose</span> light streaming away from the Sun: this area takes energy. Wider, brighter light means more energy</span></li>
-    </ul>
+    <div className="grid gap-x-8 gap-y-3 text-[12.5px] leading-snug text-mahogany/80 sm:grid-cols-2">
+      <div className={item}><Swatch><FlowSwatch color={IN} inward /></Swatch>
+        <span><b className="font-normal text-mahogany">Energy in</b> — <span style={{ color: "#B8963A" }}>yellow</span> light flowing toward the Sun: this area gives you energy</span></div>
+      <div className={item}><Swatch><FlowSwatch color={OUT} /></Swatch>
+        <span><b className="font-normal text-mahogany">Energy out</b> — <span style={{ color: "#857F79" }}>grey</span> light flowing away from the Sun: this area takes energy. Wider, brighter light means more energy</span></div>
+      <div className="flex flex-col gap-3">
+        <div className={item}><Swatch><circle cx="4" cy="9" r="3" fill="#D9B26A" /><circle cx="26" cy="9" r="4" fill="#B7AC9B" /><line x1="8" y1="9" x2="21" y2="9" stroke="#C2B3A3" strokeDasharray="2 2" /></Swatch>
+          <span><b className="font-normal text-mahogany">Distance from the Sun</b> — {distancePending
+            ? <>will show how connected each area is to your authentic self. <span className="text-taupe">Not shown yet: every Orbit sits at the same distance while this measure is being finalised.</span></>
+            : "the closer an area is, the more connected it is to your authentic self"}</span></div>
+        <div className={item}><Swatch><circle cx="9" cy="9" r="4" fill="#B7AC9B" /><circle cx="22" cy="9" r="8" fill="#B7AC9B" /></Swatch>
+          <span><b className="font-normal text-mahogany">Size</b> — how important the area is to you right now</span></div>
+      </div>
+      <div className={item}><Swatch><circle cx="9" cy="9" r="6" fill="#B7AC9B" opacity=".3" /><circle cx="22" cy="9" r="6" fill="#B7AC9B" /></Swatch>
+        <span><b className="font-normal text-mahogany">Brightness</b> — how alive and supported this area feels, based on your answers to its statements</span></div>
+    </div>
   );
 }
 

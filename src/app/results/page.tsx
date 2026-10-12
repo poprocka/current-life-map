@@ -68,7 +68,7 @@ export default function Results() {
             influence one another.
           </p>
         </header>
-        <div className="mt-4 grid gap-12 lg:mt-2 lg:grid-cols-[1.7fr_1fr] lg:items-start lg:gap-14">
+        <div className="mt-4 grid gap-12 lg:mt-2 lg:grid-cols-[1.7fr_1fr] lg:items-start lg:gap-24">
           <div className="min-w-0">
             <PersonalMap result={result} />
             <div className="mt-8 border-t hairline pt-6"><MapLegend distancePending={distancePending} /></div>
