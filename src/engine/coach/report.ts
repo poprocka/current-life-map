@@ -9,6 +9,7 @@ import { QUESTION_BANK } from "@/content/v10/question-bank";
 import { NOT_APPLICABLE } from "@/content/types";
 import { type Answers, type CoachItem, answerLabel, direct, pct, quote } from "./shared";
 import { f4, f5 } from "@/engine/congruence";
+import { generateCoachIntelligence, type CoachIntelligence } from "./intelligence";
 
 export const COACH_REPORT_TEMPLATE_VERSION = "coach-report-1";
 
@@ -24,6 +25,8 @@ export interface CoachReport {
   }[];
   formulas: string[];
   openFlags: { id: string; item: string }[];
+  /** Human-first Coach Intelligence Report (sections A–H, readiness, opportunity). */
+  intelligence?: CoachIntelligence;
   /** F4/F5 per the Design Pack — coach-only, awaiting sign-off, never shown to the client while FEATURES are off. */
   provisional?: {
     congruence: { orbit: string; name: string; value: number | null; band: string | null; items: string[]; evidenceUnits: number }[];
@@ -159,6 +162,7 @@ export function generateCoachReport(result: LifeMapResult, answers: Answers): Co
       "N/A and missing answers are excluded; denominators adjust; never imputed.",
     ],
     openFlags: result.openFlags.map((f) => ({ id: f.id, item: f.item })),
+    intelligence: generateCoachIntelligence(result, answers),
     provisional: (() => {
       const name = (id: string) => result.orbits.find((o) => o.orbit === id)?.name ?? id;
       const c = f4(answers), p = f5(answers);

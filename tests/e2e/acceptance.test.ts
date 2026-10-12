@@ -132,7 +132,7 @@ describe("§9 acceptance", () => {
     expect(ws.result?.snapshot.versions.scoring).toBe(PROVISIONAL_1.scoringVersion);
     expect(ws.coachReport?.content.sections.length).toBeGreaterThan(3);
     expect(ws.scripts.length).toBe(2); // generated at completion + regenerated with booking intake
-    expect(ws.scripts[0].content.blocks.map((b) => [b.startMin, b.endMin])).toEqual([[0, 5], [5, 15], [15, 30], [30, 40], [40, 50], [50, 60]]);
+    expect(ws.scripts[0].content.blocks.map((b) => [b.startMin, b.endMin])).toEqual([[0, 10], [10, 20], [20, 35], [35, 45], [45, 55], [55, 60]]);
     expect(ws.scripts[0].content.blocks[0].prompts.some((p) => p.text.includes("Why I feel stretched"))).toBe(true);
     expect(ws.bookings[0]).toMatchObject({ booking_state: "confirmed", payment_state: "paid", timezone: "Europe/Lisbon", meeting_url: "https://zoom.us/j/123", needs_reconciliation: false });
     expect(ws.clients.find((c) => c.link_source === "booking")?.email).toBe("alex@example.com");

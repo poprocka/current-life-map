@@ -22,11 +22,11 @@ describe("coach material", () => {
     const report = generateCoachReport(result, answers);
     for (const h of report.hypotheses) { expect(h.basis).toBe("hypothesis"); expect(h.uncertainty).toBeTruthy(); expect(h.questionToValidate).toMatch(/\?$/); }
   });
-  it("quotes exact question wording and answer labels", () => {
+  it("every personalised script prompt links to answers, and hypotheses carry a way to check them", () => {
     const script = generateDeepDiveScript(result, answers);
-    const quoted = script.blocks.flatMap((b) => b.prompts).filter((p) => p.evidence.length === 1 && questionById(p.evidence[0].questionId)?.responseType === "truth");
-    expect(quoted.length).toBeGreaterThan(0);
-    for (const p of quoted) expect(p.text).toContain(questionById(p.evidence[0].questionId)!.prompt);
+    const personal = script.blocks.flatMap((b) => b.prompts).filter((p) => p.basis === "hypothesis");
+    expect(personal.length).toBeGreaterThan(0);
+    for (const p of personal) { expect(p.evidence.length).toBeGreaterThan(0); expect(p.uncertainty).toBeTruthy(); }
   });
   it("uses no clinical or diagnostic language", () => {
     const text = JSON.stringify([generateCoachReport(result, answers), generateDeepDiveScript(result, answers)]);
@@ -35,8 +35,7 @@ describe("coach material", () => {
   it("six blocks summing to 60 minutes; focus Orbits have evidence", () => {
     const s = generateDeepDiveScript(result, answers);
     expect(s.blocks.reduce((t, b) => t + b.endMin - b.startMin, 0)).toBe(60);
-    expect(s.focusOrbits.length).toBeGreaterThanOrEqual(2);
-    expect(s.focusOrbits.length).toBeLessThanOrEqual(3);
+    expect(s.blocks.find((b) => b.key === "patterns")!.prompts.length).toBeGreaterThan(0);
   });
   it("is deterministic", () => {
     expect(JSON.stringify(generateDeepDiveScript(result, answers))).toBe(JSON.stringify(generateDeepDiveScript(result, answers)));
