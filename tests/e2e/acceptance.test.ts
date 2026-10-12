@@ -344,3 +344,42 @@ describe("client profile: 1:1 coaching", () => {
     expect((await pg.query(`select 1 from assessment_client_links where assessment_id = $1`, [id])).rows).toHaveLength(1);
   });
 });
+
+import { saveValidation, generateUnderstanding, saveUnderstandingEdit, saveReportVersion } from "@/server/admin/mutations";
+describe("after the session: validations → Client Understanding & Coaching Direction", () => {
+  it("marks interpretations, keeps notes encrypted, and builds direction only from what the person confirmed or clarified", async () => {
+    const { id } = await completedAssessment();
+    let ws = (await asJana((sql) => loadWorkspace(sql, { userId: JANA, role: "admin" }, id)))!;
+    const intel = ws.coachReport!.content.intelligence!;
+    const pats = intel.patterns;
+    expect(pats.length).toBeGreaterThanOrEqual(2);
+    await asJana(async (sql) => {
+      await saveValidation(sql, JANA, id, { insightId: pats[0].id, title: pats[0].title, status: "confirmed", note: "Yes — exactly how evenings go." });
+      await saveValidation(sql, JANA, id, { insightId: pats[1].id, title: pats[1].title, status: "challenged", note: "Says it's a temporary push until March." });
+      await saveNote(sql, JANA, id, { bookingId: null, notes: "n", validatedFindings: {}, agreedNextSteps: { steps: ["Protect two evenings a week"], coachingInquiry: true }, followUpStatus: "planned" });
+    });
+    const raw = await pg.query<{ note_ciphertext: string }>(`select note_ciphertext from interpretation_validations where assessment_id = $1`, [id]);
+    expect(raw.rows.every((r) => !r.note_ciphertext.includes("evenings"))).toBe(true);
+
+    const g = await asJana((sql) => generateUnderstanding(sql, JANA, id));
+    expect(g.ok).toBe(true);
+    if (!g.ok) return;
+    const sec = (k: string) => g.doc.sections.find((s) => s.key === k)!;
+    expect(sec("confirmed").items[0].text).toContain("exactly how evenings go");
+    expect(sec("challenged").items[0].text).toContain("temporary push");
+    expect(JSON.stringify(sec("direction"))).toContain(pats[0].title);
+    expect(JSON.stringify(sec("direction"))).not.toContain(pats[1].title); // challenged never drives direction
+    expect(sec("goals").items.map((i) => i.text)).toContain("Protect two evenings a week");
+    expect(g.doc.principle).toMatch(/conversation revealed the person/);
+    const enc = await pg.query<{ content_ciphertext: string }>(`select content_ciphertext from understanding_documents where assessment_id = $1`, [id]);
+    expect(enc.rows[0].content_ciphertext).not.toContain("evenings");
+
+    // edited versions preserve the generated original; report edits also versioned
+    await asJana((sql) => saveUnderstandingEdit(sql, JANA, id, { ...g.doc, sections: g.doc.sections.slice(0, 2) }));
+    await asJana((sql) => saveReportVersion(sql, JANA, id, ws.coachReport!.content));
+    ws = (await asJana((sql) => loadWorkspace(sql, { userId: JANA, role: "admin" }, id)))!;
+    expect(ws.understandingDocs!.map((d) => [d.version, d.kind])).toEqual([[2, "coach_edited"], [1, "generated"]]);
+    expect(ws.coachReports!.map((r) => r.kind)).toEqual(["coach_edited", "generated"]);
+    expect(ws.validations!.find((v) => v.status === "confirmed")!.note).toContain("evenings");
+  });
+});

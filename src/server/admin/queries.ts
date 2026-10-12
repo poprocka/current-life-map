@@ -66,6 +66,14 @@ export async function loadWorkspace(sql: Sql, viewer: WorkspaceData["viewer"], i
     .map((r) => ({ snapshot: r.snapshot, sha256: r.snapshot_sha256, generated_at: r.generated_at, scoring_version: r.scoring_version }))[0] ?? null;
   const coachReport = (await q<WorkspaceData["coachReport"] & Record<string, unknown>>(
     `select id, content, review_state, template_version, created_at from coach_reports where assessment_id = $1 order by created_at desc limit 1`))[0] ?? null;
+  const coachReports = await q<never>(`select id, content, kind, created_at from coach_reports where assessment_id = $1 order by created_at desc`);
+  const validations = (await q<{ insight_id: string; insight_title: string; status: string; note_ciphertext: string | null; updated_at: string }>(
+    `select insight_id, insight_title, status, note_ciphertext, updated_at from interpretation_validations where assessment_id = $1`))
+    .map(({ note_ciphertext, ...v }) => ({ ...v, note: decryptOr(note_ciphertext) }));
+  const understandingDocs = (await q<{ version: number; kind: string; content_ciphertext: string; created_at: string }>(
+    `select version, kind, content_ciphertext, created_at from understanding_documents where assessment_id = $1 order by version desc`))
+    .map(({ content_ciphertext, ...d }) => { let content = null; try { content = JSON.parse(decrypt(content_ciphertext)); } catch { /* key unavailable */ } return { ...d, content }; })
+    .filter((d) => d.content);
   const scripts = await q<never>(`select id, version, kind, booking_id, content, created_at from session_scripts where assessment_id = $1 order by version desc`);
   const clients = await q<never>(
     `select c.id, c.name, c.email, c.phone, l.link_source, l.linked_at, l.verified_at, c.coaching_enrolled, c.coaching_enrolled_at::text as coaching_enrolled_at from assessment_client_links l join clients c on c.id = l.client_id
@@ -96,7 +104,7 @@ export async function loadWorkspace(sql: Sql, viewer: WorkspaceData["viewer"], i
 
   await audit(sql, viewer.userId, "assessment.viewed", "assessment", id);
   return {
-    assessment: isoRow(a as never), answers: answers as never, result, coachReport: coachReport as never, scripts, clients, bookings: bookings as never,
+    assessment: isoRow(a as never), answers: answers as never, result, coachReport: coachReport as never, coachReports, validations: validations as never, understandingDocs: understandingDocs as never, scripts, clients, bookings: bookings as never,
     pdfRequests, consents, notes: notes as never, artifacts, audit: auditRows, relatedAssessments, viewer,
   };
 }

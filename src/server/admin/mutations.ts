@@ -73,3 +73,61 @@ export async function setDisplayName(sql: Sql, coachId: string, assessmentId: st
   }
   await audit(sql, coachId, "client.name_set", "assessment", assessmentId);
 }
+
+// ── Post-session: validations, report versions, Client Understanding ────────
+import type { CoachReport } from "@/engine/coach/report";
+import { generateUnderstandingDocument, type UnderstandingDocument, type ValidationStatus } from "@/engine/coach/understanding";
+import { decrypt } from "../crypto";
+
+/** Mark one interpretation as confirmed / clarified / challenged / not discussed, with an optional encrypted note. */
+export async function saveValidation(sql: Sql, coachId: string, assessmentId: string, v: { insightId: string; title: string; status: ValidationStatus; note: string | null }) {
+  await sql.query(
+    `insert into interpretation_validations (assessment_id, insight_id, insight_title, status, note_ciphertext, coach_id, updated_at) values ($1,$2,$3,$4,$5,$6, now())
+     on conflict (assessment_id, insight_id) do update set status = excluded.status, insight_title = excluded.insight_title, note_ciphertext = excluded.note_ciphertext, coach_id = excluded.coach_id, updated_at = now()`,
+    [assessmentId, v.insightId, v.title.slice(0, 200), v.status, v.note?.trim() ? encrypt(v.note.trim()) : null, coachId]);
+  await audit(sql, coachId, "interpretation.marked", "assessment", assessmentId, { status: v.status });
+}
+
+/** Jana's edited Coach Report saved as a new version; the generated original stays. */
+export async function saveReportVersion(sql: Sql, coachId: string, assessmentId: string, content: CoachReport) {
+  const r = await sql.query<{ id: string }>(
+    `insert into coach_reports (assessment_id, content, evidence_refs, template_version, kind, created_by) values ($1,$2,'[]',$3,'coach_edited',$4) returning id`,
+    [assessmentId, JSON.stringify(content), content.templateVersion, coachId]);
+  await audit(sql, coachId, "coach_report.edited", "assessment", assessmentId);
+  return r.rows[0].id;
+}
+
+/** Build the Client Understanding & Coaching Direction from the latest report, validations and session notes. */
+export async function generateUnderstanding(sql: Sql, coachId: string, assessmentId: string) {
+  const rep = (await sql.query<{ content: CoachReport }>(`select content from coach_reports where assessment_id = $1 order by created_at desc limit 1`, [assessmentId])).rows[0];
+  if (!rep?.content.intelligence) return { ok: false as const, error: "no_report" as const };
+  const vals = (await sql.query<{ insight_id: string; insight_title: string; status: ValidationStatus; note_ciphertext: string | null }>(
+    `select insight_id, insight_title, status, note_ciphertext from interpretation_validations where assessment_id = $1`, [assessmentId])).rows
+    .map((r) => ({ insightId: r.insight_id, title: r.insight_title, status: r.status, note: r.note_ciphertext ? safeDecrypt(r.note_ciphertext) : null }));
+  const note = (await sql.query<{ agreed_next_steps: { steps: string[]; coachingInquiry: boolean } | null }>(
+    `select agreed_next_steps from session_notes where assessment_id = $1 order by updated_at desc limit 1`, [assessmentId])).rows[0];
+  const enr = (await sql.query<{ coaching_enrolled: boolean; coaching_enrolled_at: string | null }>(
+    `select c.coaching_enrolled, c.coaching_enrolled_at::text as coaching_enrolled_at from assessment_client_links l join clients c on c.id = l.client_id where l.assessment_id = $1 and c.coaching_enrolled limit 1`, [assessmentId])).rows[0];
+  const doc = generateUnderstandingDocument({
+    intelligence: rep.content.intelligence, validations: vals,
+    agreedNextSteps: note?.agreed_next_steps?.steps ?? [], coachingInquiry: note?.agreed_next_steps?.coachingInquiry ?? false,
+    enrolled: enr ? { since: enr.coaching_enrolled_at } : null,
+  });
+  const version = await insertUnderstanding(sql, coachId, assessmentId, doc, "generated");
+  return { ok: true as const, version, doc };
+}
+
+export async function saveUnderstandingEdit(sql: Sql, coachId: string, assessmentId: string, doc: UnderstandingDocument) {
+  return insertUnderstanding(sql, coachId, assessmentId, doc, "coach_edited");
+}
+
+async function insertUnderstanding(sql: Sql, coachId: string, assessmentId: string, doc: UnderstandingDocument, kind: "generated" | "coach_edited") {
+  const v = (await sql.query<{ v: number }>(`select coalesce(max(version), 0) + 1 as v from understanding_documents where assessment_id = $1`, [assessmentId])).rows[0].v;
+  await sql.query(`insert into understanding_documents (assessment_id, version, kind, content_ciphertext, created_by) values ($1,$2,$3,$4,$5)`,
+    [assessmentId, v, kind, encrypt(JSON.stringify(doc)), coachId]);
+  await sql.query(`insert into report_artifacts (assessment_id, artifact_type, version, generation_status) values ($1,'client_understanding',$2,'ready')`, [assessmentId, v]);
+  await audit(sql, coachId, `understanding.${kind}`, "assessment", assessmentId, { version: v });
+  return v;
+}
+
+function safeDecrypt(s: string) { try { return decrypt(s); } catch { return null; } }

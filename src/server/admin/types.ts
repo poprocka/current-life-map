@@ -2,6 +2,7 @@
 import type { LifeMapResult } from "@/engine/compute";
 import type { CoachReport } from "@/engine/coach/report";
 import type { DeepDiveScript } from "@/engine/coach/script";
+import type { UnderstandingDocument, ValidationStatus } from "@/engine/coach/understanding";
 
 export interface ListRow {
   assessment_id: string; created_at: string; completed_at: string | null; status: string; sections_completed: number; assessment_version: string;
@@ -32,7 +33,11 @@ export interface WorkspaceData {
   assessment: { id: string; status: string; created_at: string; completed_at: string | null; sections_completed: number; assessment_version: string; question_bank_version: string; last_activity_at: string };
   answers: AnswerRow[];
   result: { snapshot: LifeMapResult; sha256: string; generated_at: string; scoring_version: string } | null;
-  coachReport: { id: string; content: CoachReport; review_state: string; template_version: string; created_at: string } | null;
+  coachReport: { id: string; content: CoachReport; review_state: string; template_version: string; created_at: string; kind?: string } | null;
+  /** All versions, newest first: the generated original and every coach edit. */
+  coachReports?: { id: string; content: CoachReport; kind: string; created_at: string }[];
+  validations?: { insight_id: string; insight_title: string; status: ValidationStatus; note: string | null; updated_at: string }[];
+  understandingDocs?: { version: number; kind: string; content: UnderstandingDocument; created_at: string }[];
   scripts: ScriptVersion[];
   clients: { id: string; name: string | null; email: string | null; phone: string | null; link_source: string; linked_at: string; verified_at: string | null; coaching_enrolled: boolean; coaching_enrolled_at: string | null }[];
   bookings: BookingView[];

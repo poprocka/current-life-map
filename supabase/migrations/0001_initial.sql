@@ -63,7 +63,7 @@ create table assessment_results (
 create table report_artifacts (
   id uuid primary key default gen_random_uuid(),
   assessment_id uuid not null references assessments(id) on delete cascade,
-  artifact_type text not null check (artifact_type in ('client_pdf', 'coach_report', 'deep_dive_script')),
+  artifact_type text not null check (artifact_type in ('client_pdf', 'coach_report', 'deep_dive_script', 'client_understanding')),
   version int not null,
   storage_key text,                                     -- private bucket key, never a public URL
   checksum text,
@@ -170,7 +170,34 @@ create table coach_reports (
   evidence_refs jsonb not null,
   template_version text not null,
   review_state text not null default 'unreviewed' check (review_state in ('unreviewed', 'in_review', 'reviewed')),
+  kind text not null default 'generated' check (kind in ('generated', 'coach_edited')),   -- the generated original is never overwritten
+  created_by uuid references auth.users(id),
   created_at timestamptz not null default now()
+);
+
+-- After the Deep Dive: which interpretations the person confirmed, clarified or challenged ("the conversation reveals the person")
+create table interpretation_validations (
+  id uuid primary key default gen_random_uuid(),
+  assessment_id uuid not null references assessments(id) on delete cascade,
+  insight_id text not null,
+  insight_title text not null,
+  status text not null check (status in ('confirmed', 'clarified', 'challenged', 'not_discussed')),
+  note_ciphertext text,                                 -- coach's note of what the person said, encrypted
+  coach_id uuid not null references auth.users(id),
+  updated_at timestamptz not null default now(),
+  unique (assessment_id, insight_id)
+);
+
+-- Client Understanding & Coaching Direction: built from validated findings; foundation of a potential 1:1 program
+create table understanding_documents (
+  id uuid primary key default gen_random_uuid(),
+  assessment_id uuid not null references assessments(id) on delete cascade,
+  version int not null,
+  kind text not null check (kind in ('generated', 'coach_edited')),
+  content_ciphertext text not null,                     -- includes the person's own words from the session, encrypted
+  created_by uuid references auth.users(id),
+  created_at timestamptz not null default now(),
+  unique (assessment_id, version)
 );
 
 create table session_scripts (
@@ -259,7 +286,7 @@ declare t text;
 begin
   foreach t in array array['coach_users','assessments','assessment_answers','assessment_results','report_artifacts','clients',
     'assessment_client_links','pdf_requests','booking_link_tokens','bookings','booking_events','coach_reports','session_scripts',
-    'session_notes','consents','audit_events']
+    'session_notes','consents','audit_events','interpretation_validations','understanding_documents']
   loop
     execute format('alter table %I enable row level security', t);
     execute format('alter table %I force row level security', t);
@@ -271,7 +298,8 @@ do $$
 declare t text;
 begin
   foreach t in array array['assessments','assessment_answers','assessment_results','report_artifacts','clients',
-    'assessment_client_links','pdf_requests','bookings','booking_events','coach_reports','session_scripts','session_notes','consents','audit_events']
+    'assessment_client_links','pdf_requests','bookings','booking_events','coach_reports','session_scripts','session_notes','consents','audit_events',
+    'interpretation_validations','understanding_documents']
   loop
     execute format('create policy coach_read on %I for select to authenticated using (is_coach_mfa())', t);
   end loop;
@@ -287,6 +315,10 @@ create policy coach_insert_clients on clients for insert to authenticated with c
 create policy coach_update_clients on clients for update to authenticated using (is_coach_mfa()) with check (is_coach_mfa());
 create policy coach_insert_links on assessment_client_links for insert to authenticated with check (is_coach_mfa() and link_source = 'coach_manual');
 create policy coach_update_reviews on coach_reports for update to authenticated using (is_coach_mfa()) with check (is_coach_mfa());
+create policy coach_write_report_versions on coach_reports for insert to authenticated with check (is_coach_mfa() and kind = 'coach_edited' and created_by = auth.uid());
+create policy coach_write_validations on interpretation_validations for all to authenticated using (is_coach_mfa()) with check (is_coach_mfa() and coach_id = auth.uid());
+create policy coach_write_understanding on understanding_documents for insert to authenticated with check (is_coach_mfa() and created_by = auth.uid());
+create policy coach_write_artifacts on report_artifacts for insert to authenticated with check (is_coach_mfa() and artifact_type = 'client_understanding');
 create policy coach_audit_insert on audit_events for insert to authenticated with check (is_coach_mfa() and actor_id = auth.uid());
 create policy coach_self on coach_users for select to authenticated using (user_id = auth.uid());
 -- No policies for anon: the public role can neither read nor write any table.
