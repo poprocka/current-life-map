@@ -56,6 +56,8 @@ export interface CoachIntelligence {
   direction: { summary: string; nextChapter: string; evidence: Ev[] };
   readiness: { dimensions: { key: string; label: string; level: ReadinessLevel; note: string; evidence: Ev[] }[]; conclusion: ReadinessConclusion; conclusionReason: string };
   opportunity: { goals: string[]; themes: string[]; methodology: string[]; outcomes: string[]; clarify: string[]; cautions: string[]; invitation: string };
+  /** Jana's own observations added while editing. */
+  coachObservations?: string[];
   /** Flat list of every validatable insight, in reading order (used for post-session marking). */
   validatable: { id: string; section: SectionKey; title: string }[];
 }

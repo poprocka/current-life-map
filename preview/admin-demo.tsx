@@ -7,6 +7,7 @@ import type { ListFilters, ListRow, ReconRow, WorkspaceData } from "@/server/adm
 import { computeLifeMap } from "@/engine/compute";
 import { generateCoachReport, COACH_REPORT_TEMPLATE_VERSION } from "@/engine/coach/report";
 import { generateDeepDiveScript } from "@/engine/coach/script";
+import { generateUnderstandingDocument } from "@/engine/coach/understanding";
 import { ACTIVE_QUESTIONS, ASSESSMENT_VERSION, QUESTION_BANK_VERSION, questionById } from "@/content/v10/question-bank";
 import { NOT_APPLICABLE } from "@/content/types";
 import { navigate } from "./shims/router";
@@ -139,6 +140,7 @@ function DemoHeader() {
   );
 }
 
+let demoVersion = 0;
 export function AdminDemo({ path }: { path: string }) {
   const [filters, setFilters] = useState<ListFilters>({});
   const [recon, setRecon] = useState(RECON);
@@ -162,7 +164,15 @@ export function AdminDemo({ path }: { path: string }) {
       {person ? (
         <Workspace key={person.id} data={workspace(person)} actions={{
           saveScript: async () => { await later(); return 3; }, saveNote: async () => { await later(); return "n1"; },
-          setReview: later, setBookingOutcome: later, setName: later, setCoaching: later, deleteAssessment: async () => { await later(); navigate("/admin"); },
+          setReview: later, setBookingOutcome: later, setName: later, setCoaching: later,
+          saveReportVersion: later, saveValidation: later,
+          generateUnderstanding: async (validations) => {
+            await later();
+            const w = workspace(person);
+            return { version: (demoVersion += 1), content: generateUnderstandingDocument({ intelligence: w.coachReport!.content.intelligence!, validations,
+              agreedNextSteps: ["Protect two evenings a week for rest"], coachingInquiry: true, enrolled: person.coaching ? { since: person.coaching } : null }) };
+          },
+          saveUnderstanding: async () => { await later(); return (demoVersion += 1); }, deleteAssessment: async () => { await later(); navigate("/admin"); },
           pdfHref: null, exportHref: null, listHref: "/admin",
         }} />
       ) : (

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { WorkspaceData, NoteView, ScriptVersion } from "@/server/admin/types";
 import type { NoteInput } from "@/server/admin/mutations";
 import type { DeepDiveScript, ScriptBlock } from "@/engine/coach/script";
@@ -13,6 +13,10 @@ import { ResultsView } from "@/components/ResultsView";
 import { generateResultInsights } from "@/engine/insights";
 import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
 import { Badge, Card, btn, btnPrimary, fmtDate, input, shortId } from "./ui";
+import { CoachReportView } from "./CoachReportView";
+import { UnderstandingTab } from "./UnderstandingTab";
+import type { CoachReport } from "@/engine/coach/report";
+import type { UnderstandingDocument, Validation, ValidationStatus } from "@/engine/coach/understanding";
 
 export interface WorkspaceActions {
   saveScript(content: DeepDiveScript, bookingId: string | null): Promise<number>;
@@ -22,6 +26,10 @@ export interface WorkspaceActions {
   deleteAssessment(): Promise<void>;
   setName(name: string | null): Promise<void>;
   setCoaching(enrolled: boolean, since: string | null): Promise<void>;
+  saveReportVersion(content: CoachReport): Promise<void>;
+  saveValidation(v: { insightId: string; title: string; status: ValidationStatus; note: string | null }): Promise<void>;
+  generateUnderstanding(validations: Validation[]): Promise<{ version: number; content: UnderstandingDocument }>;
+  saveUnderstanding(content: UnderstandingDocument): Promise<number>;
   pdfHref: string | null;
   exportHref: string | null;
   listHref: string;
@@ -29,13 +37,15 @@ export interface WorkspaceActions {
 
 const TABS = [
   ["answers", "A · Answers"], ["map", "B · Client’s Map"], ["report", "C · Coach Report"], ["script", "D · Deep Dive Script"],
-  ["contact", "E · Contact & Booking"], ["notes", "F · Session Notes"], ["activity", "G · Activity & Audit"],
+  ["contact", "E · Contact & Booking"], ["notes", "F · Session Notes"], ["activity", "G · Activity & Audit"], ["understanding", "H · Client Understanding"],
 ] as const;
 type Tab = (typeof TABS)[number][0];
 
 /** Assessment detail / client workspace (addendum §3). */
 export function Workspace({ data, actions }: { data: WorkspaceData; actions: WorkspaceActions }) {
   const [tab, setTab] = useState<Tab>("answers");
+  const validationsRef = useRef<Record<string, { insightId: string; title: string; status: ValidationStatus; note: string | null }>>(
+    Object.fromEntries((data.validations ?? []).map((v) => [v.insight_id, { insightId: v.insight_id, title: v.insight_title, status: v.status, note: v.note }])));
   const answers = useMemo(() => Object.fromEntries(data.answers.map((a) => [a.question_id, a.value ?? undefined])) as Record<string, string | string[] | undefined>, [data.answers]);
   const booking = data.bookings.filter((b) => b.booking_state !== "rescheduled").at(-1);
 
@@ -70,7 +80,13 @@ export function Workspace({ data, actions }: { data: WorkspaceData; actions: Wor
       <div className="mt-6" role="tabpanel">
         {tab === "answers" && <AnswersTab data={data} answers={answers} />}
         {tab === "map" && <MapTab data={data} pdfHref={actions.pdfHref} />}
-        {tab === "report" && <ReportTab data={data} answers={answers} actions={actions} />}
+        {tab === "report" && <CoachReportView data={data} answers={answers} actions={{
+          setReview: actions.setReview, saveReportVersion: actions.saveReportVersion,
+          saveValidation: async (v) => { validationsRef.current = { ...validationsRef.current, [v.insightId]: v }; await actions.saveValidation(v); },
+          goToUnderstanding: () => setTab("understanding"),
+        }} />}
+        {tab === "understanding" && <UnderstandingTab data={data} title={data.clients.map((c) => c.name).filter(Boolean).at(-1) ?? `Assessment ${shortId(data.assessment.id)}`}
+          actions={{ generateUnderstanding: () => actions.generateUnderstanding(Object.values(validationsRef.current).map((v) => ({ insightId: v.insightId, title: v.title, status: v.status, note: v.note }))), saveUnderstanding: actions.saveUnderstanding }} />}
         {tab === "script" && <ScriptTab data={data} answers={answers} actions={actions} />}
         {tab === "contact" && <ContactTab data={data} actions={actions} />}
         {tab === "notes" && <NotesTab data={data} actions={actions} />}
@@ -236,79 +252,6 @@ function MapTab({ data, pdfHref }: { data: WorkspaceData; pdfHref: string | null
       <div className="mt-2 rounded-[24px] border hairline bg-linen">
         <ResultsView result={data.result.snapshot} insights={generateResultInsights(data.result.snapshot, Object.fromEntries(data.answers.map((a) => [a.question_id, a.value ?? undefined])))} embedded />
       </div>
-    </div>
-  );
-}
-
-// ── C. Coach Report ──────────────────────────────────────────────────────────
-function ReportTab({ data, answers, actions }: { data: WorkspaceData; answers: Record<string, string | string[] | undefined>; actions: WorkspaceActions }) {
-  const r = data.coachReport;
-  const [review, setReview] = useState(r?.review_state ?? "unreviewed");
-  if (!r) return <p className="text-[13px] text-taupe">The Coach Report is generated when the respondent completes the self-interview.</p>;
-  const c = r.content;
-  const reflection = answers["interconnections.reflection"];
-  return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
-      <div className="space-y-5">
-        <p className="rounded-[14px] bg-[#F3E9EC] px-4 py-3 text-[12px] text-burgundy">Private to coaches. Never shown in public results, the client PDF or any API the client can reach.</p>
-        {typeof reflection === "string" && reflection.trim() && (
-          <Card title="In their own words"><blockquote className="font-serif text-[18px] italic leading-relaxed">“{reflection}”</blockquote>
-            <p className="mt-2 text-[11px] text-taupe">interconnections.reflection — not used in any calculation</p></Card>
-        )}
-        {POST_MAP_REFLECTIONS.questions.some((q) => typeof answers[q.id] === "string") && <PostMapCard answers={answers} />}
-        {c.sections.map((s) => (
-          <Card key={s.key} title={s.title}>
-            {s.note && <p className="mb-1 text-[11.5px] text-taupe">{s.note}</p>}
-            {s.items.length ? <ul className="divide-y divide-linen-line">{s.items.map((i) => <ItemLine key={i.id} item={i} answers={answers} />)}</ul>
-              : <p className="text-[12.5px] text-taupe">Nothing in the answers points here.</p>}
-          </Card>
-        ))}
-        {c.provisional && (
-          <Card title="Congruence & attention · provisional">
-            <p className="mb-2 text-[11.5px] text-[#8A6420]">Computed per the F4/F5 Design Pack. Awaiting sign-off: not shown on the client's Map or PDF.</p>
-            <table className="w-full text-[12px]"><thead className="text-[9.5px] uppercase tracking-[0.08em] text-taupe"><tr>
-              <th className="text-left font-normal">Orbit</th><th className="text-right font-normal">Congruence</th><th className="text-left font-normal pl-3">Distance band</th>
-              <th className="text-right font-normal">Attention tier</th><th className="text-right font-normal">I</th><th className="text-right font-normal">G</th><th className="text-right font-normal">K</th><th className="text-left font-normal pl-3">Leverage / reported</th>
-            </tr></thead><tbody>
-              {c.provisional.congruence.map((x) => {
-                const t = c.provisional!.tiers.find((y) => y.orbit === x.orbit)!;
-                return (
-                  <tr key={x.orbit} className="border-t hairline" title={`Items: ${x.items.join(", ") || "—"} · evidence units ${x.evidenceUnits}`}>
-                    <td className="py-1">{x.name}</td><td className="text-right">{x.value === null ? "—" : x.value.toFixed(2)}</td><td className="pl-3">{x.band ?? "not enough information"}</td>
-                    <td className="text-right">{t.tier ?? "—"}</td><td className="text-right">{t.importance === null ? "—" : t.importance.toFixed(2)}</td><td className="text-right">{t.supportGap === null ? "—" : t.supportGap.toFixed(2)}</td><td className="text-right">{t.congruenceGap === null ? "—" : t.congruenceGap.toFixed(2)}</td>
-                    <td className="pl-3 text-taupe">{[t.leverage ? "leverage point" : "", ...t.modifiers.map((m) => m.replace("_", " "))].filter(Boolean).join(", ") || "—"}</td>
-                  </tr>
-                );
-              })}
-            </tbody></table>
-            <p className="mt-2 text-[10.5px] text-taupe">Tier 1 = start-here candidates (Formula B, 0.10 tie tolerance). G = support gap, K = congruence gap, I = importance.</p>
-          </Card>
-        )}
-        <Card title="Hypotheses and questions to validate">
-          {c.hypotheses.length ? <ul className="divide-y divide-linen-line">{c.hypotheses.map((h) => (
-            <li key={h.id} className="py-2"><ItemLine item={h} answers={answers} /><p className="text-[12.5px] text-burgundy">Ask: {h.questionToValidate}</p></li>
-          ))}</ul> : <p className="text-[12.5px] text-taupe">No hypotheses meet the evidence rules.</p>}
-        </Card>
-      </div>
-      <aside className="space-y-5">
-        <Card title="Review">
-          <select className={`${input} w-full`} value={review} onChange={async (e) => { const v = e.target.value as typeof review; setReview(v); await actions.setReview(r.id, v as never); }}>
-            <option value="unreviewed">Unreviewed</option><option value="in_review">In review</option><option value="reviewed">Reviewed</option>
-          </select>
-          <p className="mt-2 text-[11px] text-taupe">Template {r.template_version} · generated {fmtDate(r.created_at)}</p>
-        </Card>
-        <Card title="Metric provenance">
-          <table className="w-full text-[11.5px]"><thead className="text-[9.5px] uppercase tracking-[0.08em] text-taupe"><tr>
-            <th className="text-left font-normal">Orbit</th><th className="text-right font-normal">Imp.</th><th className="text-right font-normal">Energy</th><th className="text-right font-normal">Support</th><th className="text-right font-normal">n</th>
-          </tr></thead><tbody>
-            {c.provenance.map((p) => <tr key={p.orbit} className="border-t hairline"><td className="py-1">{p.name}</td><td className="text-right">{p.importanceDirect ?? "—"}</td>
-              <td className="text-right">{p.energySigned ?? "—"}</td><td className="text-right">{p.responseSupportIndex ?? "—"}</td><td className="text-right text-taupe">{p.coverage}</td></tr>)}
-          </tbody></table>
-          <p className="mt-2 text-[10.5px] text-taupe">Scoring {c.versions.scoring} ({c.scoringStatus}) · question bank {c.versions.questionBank}</p>
-        </Card>
-        <Card title="Formulas"><ul className="list-disc space-y-1 pl-4 text-[11.5px] text-mahogany/80">{c.formulas.map((f) => <li key={f}>{f}</li>)}</ul></Card>
-        <Card title="Open methodology flags"><ul className="space-y-1 text-[11.5px] text-mahogany/80">{c.openFlags.map((f) => <li key={f.id}><b className="font-normal text-burgundy">{f.id}</b> {f.item}</li>)}</ul></Card>
-      </aside>
     </div>
   );
 }
@@ -496,15 +439,8 @@ function NotesTab({ data, actions }: { data: WorkspaceData; actions: WorkspaceAc
           <textarea aria-label="Session notes" className={`${input} min-h-[220px] w-full leading-relaxed`} value={notes} onChange={(e) => setNotes(e.target.value)}
             placeholder="What the client said, corrected or clarified." />
         </Card>
-        <Card title="Hypotheses — confirmed or contradicted in session">
-          {hyps.length ? <ul className="divide-y divide-linen-line">{hyps.map((h) => (
-            <li key={h.id} className="flex flex-wrap items-start justify-between gap-3 py-2.5 text-[12.5px]">
-              <span className="max-w-[560px]">{h.text}</span>
-              <select aria-label="Validation" className={input} value={findings[h.id] ?? "not_discussed"} onChange={(e) => setFindings((f) => ({ ...f, [h.id]: e.target.value }))}>
-                {FINDING.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-              </select>
-            </li>
-          ))}</ul> : <p className="text-[12.5px] text-taupe">No hypotheses were generated for this assessment.</p>}
+        <Card title="Interpretations from the session">
+          <p className="text-[12.5px] leading-relaxed">Mark which interpretations they confirmed, clarified or challenged directly under each one in the Coach Report (tab C). Those marks, with the agreed next steps here, build the Client Understanding & Coaching Direction (tab H).</p>
         </Card>
       </div>
       <aside className="space-y-5">

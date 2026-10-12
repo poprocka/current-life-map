@@ -54,7 +54,10 @@ export function generateUnderstandingDocument(inp: UnderstandingInputs): Underst
   sections.push({ key: "summary", title: "Where they are now", items: [{
     source: "coach",
     text: confirmed.length + clarified.length
-      ? `In the Deep Dive, they confirmed ${confirmed.length} and clarified ${clarified.length} of the Map's interpretations${challenged.length ? `, and challenged ${challenged.length}` : ""}.${keyThemes.length ? ` The themes that held up in conversation: ${keyThemes.map((i) => i.title.toLowerCase()).join("; ")}.` : ""} Edit this summary in your own words.`
+      ? `In the Deep Dive, ${[
+          confirmed.length && `they confirmed ${confirmed.length}`,
+          clarified.length && `${confirmed.length ? "" : "they "}clarified ${clarified.length}`,
+        ].filter(Boolean).join(" and ")} of the Map's interpretations${challenged.length ? `, and challenged ${challenged.length}` : ""}.${keyThemes.length ? ` The themes that held up in conversation: ${keyThemes.map((i) => i.title.toLowerCase()).join("; ")}.` : ""} Edit this summary in your own words.`
       : "No interpretations have been marked yet. Mark what they confirmed, clarified or challenged in the Coach Report, then regenerate.",
   }] });
 
