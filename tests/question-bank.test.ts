@@ -4,7 +4,7 @@ import { QUESTION_BANK, ACTIVE_QUESTIONS } from "@/content/v10/question-bank";
 import { CHAPTERS } from "@/content/v10/chapters";
 
 const byId = Object.fromEntries(QUESTION_BANK.map((q) => [q.id, q]));
-const count = (ch: string, t = "truth") => QUESTION_BANK.filter((q) => q.chapterId === ch && q.responseType === t).length;
+const count = (ch: string, t = "truth") => QUESTION_BANK.filter((q) => q.chapterId === ch && q.responseType === t && q.measure !== "congruence").length;
 
 describe("registry (spec §11)", () => {
   it("exactly ten sections: Sun + eight Orbits + Life Interconnections", () => {
@@ -51,8 +51,14 @@ describe("registry (spec §11)", () => {
   it("truth statements have no approved signal tags yet (open item F1)", () => {
     expect(QUESTION_BANK.filter((q) => q.responseType === "truth").every((q) => q.signalTags.length === 0)).toBe(true);
   });
-  it("93 screens: the pre-Map reflection is retired (replaced by optional reflections after the results)", () => {
-    expect(ACTIVE_QUESTIONS).toHaveLength(93);
+  it("101 screens: 8 congruence statements added; the pre-Map reflection is retired", () => {
+    expect(ACTIVE_QUESTIONS).toHaveLength(101);
+    expect(ACTIVE_QUESTIONS.filter((q) => q.measure === "congruence").map((q) => q.id)).toEqual(
+      ["mind", "body", "restoration", "growth", "love", "social", "resources", "joy"].map((o) => `${o}.congruence`));
+    for (const o of ["mind", "love"]) {
+      const ids = ACTIVE_QUESTIONS.filter((q) => q.chapterId === o).map((q) => q.id);
+      expect(ids.indexOf(`${o}.congruence`)).toBe(ids.indexOf(`${o}.importance`) + 1); // right after importance
+    }
     expect(ACTIVE_QUESTIONS.some((q) => q.id === "interconnections.reflection")).toBe(false);
     expect(QUESTION_BANK.find((q) => q.id === "interconnections.reflection")).toMatchObject({ enabled: false }); // kept for earlier records
   });

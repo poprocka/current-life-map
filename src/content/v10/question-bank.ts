@@ -13,7 +13,7 @@ const PROPOSED_TAGS: Record<string, SignalTag> = PROPOSED_CONSTRUCT_MAP;
 
 export const CONTENT_VERSION = "v10" as const;
 /** Question bank = V10 + Jana's approved overrides of 12 Oct 2026 (see docs/02-question-registry-diff.md). */
-export const QUESTION_BANK_VERSION = "v10-oct12";
+export const QUESTION_BANK_VERSION = "v10-oct12.2"; // .2 = F4 congruence statements added
 export const ASSESSMENT_VERSION = "v10-with-approved-oct12-overrides";
 
 const SUPPORT_CUE = "Stronger agreement indicates more of this reported capacity/experience; interpret in context.";
@@ -157,6 +157,9 @@ const SOCIAL_SUBTHEME: Record<string, "career" | "community" | "both"> = {
   "social.05": "community", "social.06": "community", "social.07": "community",
 };
 
+/** Draft wording from the F4/F5 design pack; Jana may refine. Shown on each Orbit's screen, so "this area" names the Orbit. */
+export const CONGRUENCE_PROMPT = "The way I currently live this area of my life reflects what genuinely matters to me, not what I feel I should do.";
+
 function build(): Question[] {
   const out: Question[] = [];
   const orbitOptions = ORBIT_IDS.map((id) => ({ value: id, label: chapterById(id).name }));
@@ -209,6 +212,27 @@ function build(): Question[] {
         cue: { construct: "Importance", signal: "Stated importance", text: "Orbit importance." },
         direction: "context",
         signalTags: ["IMPORTANCE"],
+        reverseKeyed: false,
+        optional: false,
+        allowNotApplicable: false,
+        enabled: true,
+      });
+      // F4 Option A (approved by Jana, 12 Oct 2026): one parallel congruence statement per Orbit, right after importance.
+      // Same wording in every Orbit so the eight are comparable. Not part of support/brightness.
+      out.push({
+        id: `${chapter.id}.congruence`,
+        version: CONTENT_VERSION,
+        chapterId: chapter.id,
+        order: n + 1.5,
+        prompt: CONGRUENCE_PROMPT,
+        responseType: "truth",
+        options: TRUTH_SCALE,
+        exploreCategory: "congruence",
+        cue: { construct: "Congruence", signal: "Lived choices reflect own values and needs", text: "Parallel congruence statement (F4). Stronger agreement = this area is lived more in line with what matters to the respondent." },
+        direction: "context",
+        measure: "congruence",
+        signalTags: [],
+        proposedSignalTags: ["CONGRUENCE"],
         reverseKeyed: false,
         optional: false,
         allowNotApplicable: false,

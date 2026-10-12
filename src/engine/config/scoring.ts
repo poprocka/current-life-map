@@ -72,3 +72,9 @@ export const OPEN_FLAGS = [
   { id: "F8", item: "Emotional-state option sets vs active frontend (verified identical 12 Oct)", blocks: [] },
   { id: "F9", item: "Production legal / data-flow verification", blocks: ["launch"] },
 ] as const;
+
+/**
+ * Release switches for F4/F5. Both stay false until every row of the Design Pack sign-off table is approved
+ * and the pilot passes. While false: distance stays neutral and attention stays qualitative on the client's Map and PDF.
+ */
+export const FEATURES = { personalisedDistance: false, attentionTiers: false } as const;

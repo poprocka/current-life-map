@@ -1,7 +1,8 @@
 /**
- * F4 (congruence → distance) and F5 (attention ranking) — PROPOSAL PROTOTYPE, NOT LIVE.
- * Nothing in the app imports this file. It exists so the design pack's numbers are computed, testable and reproducible.
- * See docs/08-f4-f5-design-pack.md.
+ * F4 (congruence → distance) and F5 (attention tiers), per the F4/F5 Design Pack.
+ * Option A (8 parallel congruence statements) approved by Jana, 12 Oct 2026.
+ * Calculation, bands, Formula B and tiers are computed for the private Coach Report only, labelled provisional.
+ * They reach the client's Map only when FEATURES flags are switched on after sign-off (see config/scoring.ts).
  */
 import type { OrbitId } from "@/content/types";
 import { ORBIT_IDS } from "@/content/v10/chapters";
@@ -18,7 +19,7 @@ export const CONGRUENCE_ITEMS: Record<OrbitId, { id: string; strength: "direct" 
   resources: [{ id: "resources.02", strength: "direct" }, { id: "resources.05", strength: "partial" }],
   joy: [{ id: "joy.05", strength: "direct" }, { id: "joy.02", strength: "partial" }],
 };
-/** Proposed new parallel item per Orbit (Option A). Ids reserved; not in the question bank. */
+/** The parallel congruence statement per Orbit (Option A), in the question bank as `[orbit].congruence`. */
 export const ANCHOR_ID = (o: OrbitId) => `${o}.congruence`;
 
 export interface F4Config { anchorWeight: number; partialWeight: number; minDirectEvidence: number; tolerance: number }

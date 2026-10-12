@@ -4,7 +4,7 @@ import { ACTIVE_QUESTIONS } from "../src/content/v10/question-bank";
 import { NOT_APPLICABLE } from "../src/content/types";
 import { ORBIT_IDS } from "../src/content/v10/chapters";
 import { computeLifeMap } from "../src/engine/compute";
-import { f4, f5, tiers, f4Distance, type F5Row } from "../src/engine/proposals/f4f5";
+import { f4, f5, tiers, f4Distance, type F5Row } from "../src/engine/congruence";
 
 type A = Record<string, string | string[]>;
 const base = (): A => {

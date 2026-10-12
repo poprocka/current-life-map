@@ -207,7 +207,7 @@ export function computeLifeMap(answers: Answers, cfg: ScoringConfig = PROVISIONA
 
   // ── Orbits ──────────────────────────────────────────────────────────────
   const orbits: OrbitResult[] = ORBIT_IDS.map((orbit) => {
-    const statements = QUESTION_BANK.filter((q) => q.chapterId === orbit && q.responseType === "truth" && q.enabled);
+    const statements = QUESTION_BANK.filter((q) => q.chapterId === orbit && q.responseType === "truth" && q.enabled && q.measure !== "congruence");
     const items = statements.map((q) => itemEvidence(q.id, answers[q.id]));
     const coverage = coverageOf(items);
     const confidence = confidenceOf(coverage, cfg);

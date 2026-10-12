@@ -209,6 +209,27 @@ function ReportTab({ data, answers, actions }: { data: WorkspaceData; answers: R
               : <p className="text-[12.5px] text-taupe">Nothing in the answers points here.</p>}
           </Card>
         ))}
+        {c.provisional && (
+          <Card title="Congruence & attention · provisional">
+            <p className="mb-2 text-[11.5px] text-[#8A6420]">Computed per the F4/F5 Design Pack. Awaiting sign-off: not shown on the client's Map or PDF.</p>
+            <table className="w-full text-[12px]"><thead className="text-[9.5px] uppercase tracking-[0.08em] text-taupe"><tr>
+              <th className="text-left font-normal">Orbit</th><th className="text-right font-normal">Congruence</th><th className="text-left font-normal pl-3">Distance band</th>
+              <th className="text-right font-normal">Attention tier</th><th className="text-right font-normal">I</th><th className="text-right font-normal">G</th><th className="text-right font-normal">K</th><th className="text-left font-normal pl-3">Leverage / reported</th>
+            </tr></thead><tbody>
+              {c.provisional.congruence.map((x) => {
+                const t = c.provisional!.tiers.find((y) => y.orbit === x.orbit)!;
+                return (
+                  <tr key={x.orbit} className="border-t hairline" title={`Items: ${x.items.join(", ") || "—"} · evidence units ${x.evidenceUnits}`}>
+                    <td className="py-1">{x.name}</td><td className="text-right">{x.value === null ? "—" : x.value.toFixed(2)}</td><td className="pl-3">{x.band ?? "not enough information"}</td>
+                    <td className="text-right">{t.tier ?? "—"}</td><td className="text-right">{t.importance === null ? "—" : t.importance.toFixed(2)}</td><td className="text-right">{t.supportGap === null ? "—" : t.supportGap.toFixed(2)}</td><td className="text-right">{t.congruenceGap === null ? "—" : t.congruenceGap.toFixed(2)}</td>
+                    <td className="pl-3 text-taupe">{[t.leverage ? "leverage point" : "", ...t.modifiers.map((m) => m.replace("_", " "))].filter(Boolean).join(", ") || "—"}</td>
+                  </tr>
+                );
+              })}
+            </tbody></table>
+            <p className="mt-2 text-[10.5px] text-taupe">Tier 1 = start-here candidates (Formula B, 0.10 tie tolerance). G = support gap, K = congruence gap, I = importance.</p>
+          </Card>
+        )}
         <Card title="Hypotheses and questions to validate">
           {c.hypotheses.length ? <ul className="divide-y divide-linen-line">{c.hypotheses.map((h) => (
             <li key={h.id} className="py-2"><ItemLine item={h} answers={answers} /><p className="text-[12.5px] text-burgundy">Ask: {h.questionToValidate}</p></li>

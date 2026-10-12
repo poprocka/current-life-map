@@ -8,6 +8,7 @@ import { PROVISIONAL_1 } from "@/engine/config/scoring";
 import { QUESTION_BANK } from "@/content/v10/question-bank";
 import { NOT_APPLICABLE } from "@/content/types";
 import { type Answers, type CoachItem, answerLabel, direct, pct, quote } from "./shared";
+import { f4, f5 } from "@/engine/congruence";
 
 export const COACH_REPORT_TEMPLATE_VERSION = "coach-report-1";
 
@@ -23,6 +24,11 @@ export interface CoachReport {
   }[];
   formulas: string[];
   openFlags: { id: string; item: string }[];
+  /** F4/F5 per the Design Pack — coach-only, awaiting sign-off, never shown to the client while FEATURES are off. */
+  provisional?: {
+    congruence: { orbit: string; name: string; value: number | null; band: string | null; items: string[]; evidenceUnits: number }[];
+    tiers: { orbit: string; name: string; tier: number | null; importance: number | null; supportGap: number | null; congruenceGap: number | null; leverage: number; modifiers: string[]; score: number | null }[];
+  };
 }
 
 const T = PROVISIONAL_1.thresholds;
@@ -111,8 +117,8 @@ export function generateCoachReport(result: LifeMapResult, answers: Answers): Co
   // Assumptions vs evidence
   const assumptions: CoachItem[] = [
     { id: "assume.brightness", basis: "derived", evidence: [], text: "Brightness uses a supportive-response proxy (unweighted mean of keyed statements), not vitality. Vitality waits for the construct mapping (F1)." },
-    { id: "assume.distance", basis: "derived", evidence: [], text: "Distance on the Map is neutral for every Orbit; no congruence measure is approved (F4)." },
-    { id: "assume.attention", basis: "derived", evidence: [], text: "Attention areas are qualitative and unranked; no leverage score is approved (F5)." },
+    { id: "assume.distance", basis: "derived", evidence: [], text: "Congruence is now measured (8 parallel statements, approved 12 Oct 2026) and shown below for coaches only. The client's Map keeps a neutral distance until the remaining F4 sign-offs and the pilot." },
+    { id: "assume.attention", basis: "derived", evidence: [], text: "The client sees unranked attention candidates. Provisional attention tiers (Formula B) are shown below for coaches only, pending F5 sign-off." },
     { id: "assume.feelings", basis: "direct", evidence: [], text: "Feelings are quoted, never scored." },
   ];
 
@@ -153,5 +159,14 @@ export function generateCoachReport(result: LifeMapResult, answers: Answers): Co
       "N/A and missing answers are excluded; denominators adjust; never imputed.",
     ],
     openFlags: result.openFlags.map((f) => ({ id: f.id, item: f.item })),
+    provisional: (() => {
+      const name = (id: string) => result.orbits.find((o) => o.orbit === id)?.name ?? id;
+      const c = f4(answers), p = f5(answers);
+      const tierOf = (id: string) => { const i = p.tiersB.findIndex((t) => t.includes(id as never)); return i < 0 ? null : i + 1; };
+      return {
+        congruence: c.map((x) => ({ orbit: x.orbit, name: name(x.orbit), value: x.congruence, band: x.band, items: x.usedItems, evidenceUnits: x.evidenceUnits })),
+        tiers: p.rows.map((r) => ({ orbit: r.orbit, name: name(r.orbit), tier: tierOf(r.orbit), importance: r.importance, supportGap: r.supportGap, congruenceGap: r.congruenceGap, leverage: r.leverage, modifiers: r.modifiers, score: r.scoreB })),
+      };
+    })(),
   };
 }

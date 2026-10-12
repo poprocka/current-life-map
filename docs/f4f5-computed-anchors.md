@@ -54,12 +54,12 @@ Tiers B: Mind = Body = Restoration = Growth = Love = Social World = Resources = 
 
 | Profile | Formula | Single-answer changes tested | Max tier move for any Orbit | Changes that move the top tier |
 |---|---|---|---|---|
-| P1 | A | 147 | 0 | 0 (0%) |
-| P1 | B | 147 | 1 | 0 (0%) |
-| P2 | A | 151 | 0 | 0 (0%) |
-| P2 | B | 151 | 1 | 0 (0%) |
-| P3 | A | 152 | 0 | 0 (0%) |
-| P3 | B | 152 | 1 | 8 (5%) |
+| P1 | A | 162 | 0 | 0 (0%) |
+| P1 | B | 162 | 1 | 0 (0%) |
+| P2 | A | 167 | 0 | 0 (0%) |
+| P2 | B | 167 | 1 | 0 (0%) |
+| P3 | A | 168 | 0 | 0 (0%) |
+| P3 | B | 168 | 1 | 8 (5%) |
 
 ### Love N/A check
 

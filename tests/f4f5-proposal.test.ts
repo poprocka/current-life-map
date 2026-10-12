@@ -5,7 +5,9 @@ import path from "path";
 import { ACTIVE_QUESTIONS } from "@/content/v10/question-bank";
 import { NOT_APPLICABLE } from "@/content/types";
 import { ORBIT_IDS } from "@/content/v10/chapters";
-import { f4, f5 } from "@/engine/proposals/f4f5";
+import { f4, f5 } from "@/engine/congruence";
+import { computeLifeMap } from "@/engine/compute";
+import { FEATURES } from "@/engine/config/scoring";
 
 const base = () => {
   const a: Record<string, string | string[]> = {};
@@ -19,11 +21,18 @@ const base = () => {
 };
 
 describe("F4/F5 proposal prototype", () => {
-  it("is not imported by the app", () => {
-    const hits = fs.readdirSync(path.join(__dirname, "../src"), { recursive: true }).map(String)
-      .filter((f) => /\.(ts|tsx)$/.test(f) && !f.includes("proposals"))
-      .filter((f) => fs.readFileSync(path.join(__dirname, "../src", f), "utf8").includes("proposals/f4f5"));
-    expect(hits).toEqual([]);
+  it("stays off the client's Map until sign-off: distance neutral, no ranking", () => {
+    expect(FEATURES).toEqual({ personalisedDistance: false, attentionTiers: false });
+    const r = computeLifeMap(base());
+    expect(r.orbits.every((o) => o.congruence === null)).toBe(true);
+    expect(r.attention.rankedOrbits).toEqual([]);
+    // the client-facing UI never imports the F4/F5 module
+    for (const f of ["components/ResultsView.tsx", "components/PersonalMap.tsx", "lib/pdf/clientReport.ts", "lib/pdf/model.ts"])
+      expect(fs.readFileSync(path.join(__dirname, "../src", f), "utf8")).not.toContain("engine/congruence");
+  });
+  it("congruence statements never feed support/brightness", () => {
+    const a = base(), b = { ...base(), "mind.congruence": "4" };
+    expect(computeLifeMap(b).orbits.find((o) => o.orbit === "mind")!.responseSupportIndex).toBe(computeLifeMap(a).orbits.find((o) => o.orbit === "mind")!.responseSupportIndex);
   });
   it("without the new items, five Orbits lack congruence evidence", () => {
     const a = base(); for (const o of ORBIT_IDS) delete a[`${o}.congruence`];

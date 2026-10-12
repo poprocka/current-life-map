@@ -76,6 +76,8 @@ export interface Question {
   proposedSignalTags?: SignalTag[];
   /** Social World only: which narrative subtheme the item belongs to (proposed, see registry diff). */
   subtheme?: "career" | "community" | "both";
+  /** "congruence": the parallel F4 statement (Option A, approved 12 Oct 2026). Excluded from support/brightness. */
+  measure?: "congruence";
   /** False = defined in the model but not shown (blocked content dependency) */
   enabled: boolean;
   interpretationNotes?: string;

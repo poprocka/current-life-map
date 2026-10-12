@@ -162,7 +162,7 @@ describe("emotions, reflections, determinism", () => {
   });
   it("results carry version identifiers", () => {
     expect(computeLifeMap(fill("3")).versions).toEqual({
-      assessment: "v10-with-approved-oct12-overrides", questionBank: "v10-oct12", scoring: "provisional-1", templates: "1", mapRender: "1",
+      assessment: "v10-with-approved-oct12-overrides", questionBank: "v10-oct12.2", scoring: "provisional-1", templates: "1", mapRender: "1",
     });
   });
 });
