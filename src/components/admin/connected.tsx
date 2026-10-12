@@ -39,6 +39,7 @@ export function ConnectedWorkspace({ data }: { data: WorkspaceData }) {
       saveNote: async (n) => (await post(`/api/admin/assessments/${id}/notes`, n)).id,
       setReview: async (reportId, state) => { await post(`/api/admin/assessments/${id}/review`, { reportId, state }); },
       setBookingOutcome: async (bookingId, state) => { await post(`/api/admin/bookings/${bookingId}`, { action: "outcome", state }); },
+      setCoaching: async (enrolled, since) => { await post(`/api/admin/assessments/${id}/coaching`, { enrolled, since }); router.refresh(); },
       setName: async (name) => { await post(`/api/admin/assessments/${id}/name`, { name }); router.refresh(); },
       deleteAssessment: async () => { await post(`/api/admin/assessments/${id}/delete`, { confirm: "DELETE" }); router.push("/admin"); router.refresh(); },
       pdfHref: data.result ? `/api/admin/assessments/${id}/pdf` : null,

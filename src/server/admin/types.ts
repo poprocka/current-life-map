@@ -5,7 +5,7 @@ import type { DeepDiveScript } from "@/engine/coach/script";
 
 export interface ListRow {
   assessment_id: string; created_at: string; completed_at: string | null; status: string; sections_completed: number; assessment_version: string;
-  last_activity_at: string; client_name: string | null; client_email: string | null; contact_source: string | null; email_delivery_state: string | null;
+  last_activity_at: string; client_name: string | null; client_email: string | null; coaching_enrolled: boolean; contact_source: string | null; email_delivery_state: string | null;
   booking_state: string | null; scheduled_start: string | null; timezone: string | null; payment_state: string | null; report_status: string | null;
   coach_review_state: string | null; follow_up_status: string | null;
 }
@@ -34,7 +34,7 @@ export interface WorkspaceData {
   result: { snapshot: LifeMapResult; sha256: string; generated_at: string; scoring_version: string } | null;
   coachReport: { id: string; content: CoachReport; review_state: string; template_version: string; created_at: string } | null;
   scripts: ScriptVersion[];
-  clients: { id: string; name: string | null; email: string | null; phone: string | null; link_source: string; linked_at: string; verified_at: string | null }[];
+  clients: { id: string; name: string | null; email: string | null; phone: string | null; link_source: string; linked_at: string; verified_at: string | null; coaching_enrolled: boolean; coaching_enrolled_at: string | null }[];
   bookings: BookingView[];
   pdfRequests: { id: string; email: string; requested_at: string; delivery_state: string; provider_message_id: string | null; retry_count: number; marketing_consent: boolean; last_error: string | null }[];
   consents: { consent_type: string; notice_version: string; status: string; source: string; created_at: string }[];

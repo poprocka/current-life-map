@@ -68,7 +68,7 @@ export async function loadWorkspace(sql: Sql, viewer: WorkspaceData["viewer"], i
     `select id, content, review_state, template_version, created_at from coach_reports where assessment_id = $1 order by created_at desc limit 1`))[0] ?? null;
   const scripts = await q<never>(`select id, version, kind, booking_id, content, created_at from session_scripts where assessment_id = $1 order by version desc`);
   const clients = await q<never>(
-    `select c.id, c.name, c.email, c.phone, l.link_source, l.linked_at, l.verified_at from assessment_client_links l join clients c on c.id = l.client_id
+    `select c.id, c.name, c.email, c.phone, l.link_source, l.linked_at, l.verified_at, c.coaching_enrolled, c.coaching_enrolled_at::text as coaching_enrolled_at from assessment_client_links l join clients c on c.id = l.client_id
      where l.assessment_id = $1 order by l.linked_at`);
   const bookings = await q<WorkspaceData["bookings"][number] & Record<string, unknown>>(
     `select id, provider, provider_event_id, provider_invitee_id, booking_state, scheduled_start, scheduled_end, timezone, meeting_url, booked_name, booked_email,

@@ -39,7 +39,7 @@ function answersFor(seed: number): Record<string, string | string[]> {
 }
 
 interface Person { id: string; name: string | null; email: string | null; seed: number; complete: boolean; sections: number; created: number;
-  booking?: { state: string; payment: string; start: string; tz: string; rescheduled?: boolean }; pdf?: string; review: string; follow: string; email2?: string }
+  booking?: { state: string; payment: string; start: string; tz: string; rescheduled?: boolean }; pdf?: string; review: string; follow: string; email2?: string; coaching?: string }
 const PEOPLE: Person[] = [
   { id: "3f9c2a71-8d4e-4b1a-9c55-2e7f0a6b1d01", name: "Alex Rivera", email: "alex@example.com", seed: 0, complete: true, sections: 10, created: 4,
     booking: { state: "confirmed", payment: "paid", start: ahead(3, 9), tz: "Europe/Lisbon" }, pdf: "delivered", review: "in_review", follow: "none", email2: "alex.r@work.example" },
@@ -47,7 +47,7 @@ const PEOPLE: Person[] = [
   { id: "c4a8f613-5e2b-4d7c-8f19-6a0b2c3d5e03", name: null, email: null, seed: 3, complete: false, sections: 6, created: 1, review: "", follow: "none" },
   { id: "e2d7b904-1a6c-4f3e-9d28-7b1c0d4e6f04", name: null, email: "sam@example.com", seed: 2, complete: true, sections: 10, created: 6, pdf: "sent", review: "unreviewed", follow: "none" },
   { id: "a9f3c185-6b2d-4e1f-8a37-8c2d1e5f7a05", name: "Mira Chen", email: "mira@example.com", seed: 4, complete: true, sections: 10, created: 9,
-    booking: { state: "confirmed", payment: "paid", start: ahead(8, 15), tz: "America/New_York", rescheduled: true }, review: "reviewed", follow: "planned" },
+    booking: { state: "confirmed", payment: "paid", start: ahead(8, 15), tz: "America/New_York", rescheduled: true }, review: "reviewed", follow: "planned", coaching: "2026-10-01" },
   { id: "5d2b7e46-9c1a-4b3f-a6e8-9d3e2f6a8b06", name: "Jordan Lee", email: "jordan@example.com", seed: 5, complete: true, sections: 10, created: 14,
     booking: { state: "cancelled", payment: "refunded", start: ago(2, 14), tz: "Europe/London" }, review: "unreviewed", follow: "none" },
 ];
@@ -56,7 +56,7 @@ function listRow(p: Person): ListRow {
   return {
     assessment_id: p.id, created_at: ago(p.created, 9), completed_at: p.complete ? ago(p.created, 9) : null, status: p.complete ? "completed" : "in_progress",
     sections_completed: p.sections, assessment_version: ASSESSMENT_VERSION, last_activity_at: ago(Math.max(0, p.created - 1), 16),
-    client_name: p.name, client_email: p.booking && p.email2 ? p.email : p.email, contact_source: [p.pdf && "pdf_request", p.booking && "booking"].filter(Boolean).join(",") || null,
+    coaching_enrolled: !!p.coaching, client_name: p.name, client_email: p.booking && p.email2 ? p.email : p.email, contact_source: [p.pdf && "pdf_request", p.booking && "booking"].filter(Boolean).join(",") || null,
     email_delivery_state: p.pdf ?? null, booking_state: p.booking?.state ?? null, scheduled_start: p.booking?.start ?? null, timezone: p.booking?.tz ?? null,
     payment_state: p.booking?.payment ?? null, report_status: p.complete ? "ready" : null, coach_review_state: p.complete ? p.review : null, follow_up_status: p.follow,
   };
@@ -88,8 +88,8 @@ function workspace(p: Person): WorkspaceData {
       { id: "s1", version: 1, kind: "generated" as const, booking_id: null, content: gen, created_at: ago(p.created, 9) },
     ] : [],
     clients: [
-      ...(p.pdf ? [{ id: "c1", name: null, email: p.email, phone: null, link_source: "pdf_request", linked_at: ago(p.created, 9), verified_at: null }] : []),
-      ...(p.booking ? [{ id: "c2", name: p.name, email: p.email2 ?? p.email, phone: null, link_source: "booking", linked_at: ago(p.created - 1, 11), verified_at: null }] : []),
+      ...(p.pdf ? [{ id: "c1", name: null, email: p.email, phone: null, link_source: "pdf_request", linked_at: ago(p.created, 9), verified_at: null, coaching_enrolled: false, coaching_enrolled_at: null }] : []),
+      ...(p.booking ? [{ id: "c2", name: p.name, email: p.email2 ?? p.email, phone: null, link_source: "booking", linked_at: ago(p.created - 1, 11), verified_at: null, coaching_enrolled: !!p.coaching, coaching_enrolled_at: p.coaching ?? null }] : []),
     ],
     bookings: p.booking ? [
       ...(p.booking.rescheduled ? [{ id: "b-old", provider: "calendly", provider_event_id: "https://api.calendly.com/scheduled_events/DEMO-OLD", provider_invitee_id: "inv-old",
@@ -162,7 +162,7 @@ export function AdminDemo({ path }: { path: string }) {
       {person ? (
         <Workspace key={person.id} data={workspace(person)} actions={{
           saveScript: async () => { await later(); return 3; }, saveNote: async () => { await later(); return "n1"; },
-          setReview: later, setBookingOutcome: later, setName: later, deleteAssessment: async () => { await later(); navigate("/admin"); },
+          setReview: later, setBookingOutcome: later, setName: later, setCoaching: later, deleteAssessment: async () => { await later(); navigate("/admin"); },
           pdfHref: null, exportHref: null, listHref: "/admin",
         }} />
       ) : (

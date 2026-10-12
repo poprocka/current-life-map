@@ -45,6 +45,23 @@ export async function setBookingOutcome(sql: Sql, coachId: string, bookingId: st
  * Name shown for an assessment: updates the most recently linked client's name, or (anonymous assessment)
  * creates a client with only that name, linked as coach_manual. Email is never touched or merged.
  */
+/** The client record behind an assessment, created (coach_manual, no details) when the assessment is anonymous. */
+async function clientFor(sql: Sql, assessmentId: string): Promise<string> {
+  const linked = await sql.query<{ client_id: string }>(
+    `select client_id from assessment_client_links where assessment_id = $1 order by linked_at desc limit 1`, [assessmentId]);
+  if (linked.rows[0]) return linked.rows[0].client_id;
+  const id = (await sql.query<{ id: string }>(`insert into clients default values returning id`)).rows[0].id;
+  await sql.query(`insert into assessment_client_links (assessment_id, client_id, link_source, legal_basis, verified_at) values ($1,$2,'coach_manual','coach_entered', now())`, [assessmentId, id]);
+  return id;
+}
+
+/** Enrolled on 1:1 coaching (set by the coach), with an optional start date. */
+export async function setCoachingEnrollment(sql: Sql, coachId: string, assessmentId: string, enrolled: boolean, since: string | null) {
+  const clientId = await clientFor(sql, assessmentId);
+  await sql.query(`update clients set coaching_enrolled = $2, coaching_enrolled_at = $3 where id = $1`, [clientId, enrolled, enrolled ? since : null]);
+  await audit(sql, coachId, enrolled ? "client.coaching_enrolled" : "client.coaching_unenrolled", "assessment", assessmentId);
+}
+
 export async function setDisplayName(sql: Sql, coachId: string, assessmentId: string, name: string | null) {
   const clean = name?.trim() ? name.trim().slice(0, 120) : null;
   const linked = await sql.query<{ client_id: string }>(

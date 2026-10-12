@@ -20,6 +20,7 @@ export interface WorkspaceActions {
   setBookingOutcome(bookingId: string, state: "completed" | "no_show"): Promise<void>;
   deleteAssessment(): Promise<void>;
   setName(name: string | null): Promise<void>;
+  setCoaching(enrolled: boolean, since: string | null): Promise<void>;
   pdfHref: string | null;
   exportHref: string | null;
   listHref: string;
@@ -44,6 +45,7 @@ export function Workspace({ data, actions }: { data: WorkspaceData; actions: Wor
         <div>
           <p className="eyebrow">Assessment <span className="font-mono normal-case tracking-normal">{data.assessment.id}</span></p>
           <NameHeading id={data.assessment.id} initial={data.clients.map((c) => c.name).filter(Boolean).at(-1) ?? null} onSave={actions.setName} />
+          <CoachingLine initial={(() => { const c = data.clients.find((x) => x.coaching_enrolled); return { enrolled: !!c, since: c?.coaching_enrolled_at ?? null }; })()} onSave={actions.setCoaching} />
           <p className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-taupe">
             <Badge v={data.assessment.status} /> {data.assessment.status === "completed" ? `Completed ${fmtDate(data.assessment.completed_at)}` : `${data.assessment.sections_completed}/10 sections`}
             {booking && <> · Deep Dive <Badge v={booking.booking_state} /> {fmtDate(booking.scheduled_start, booking.timezone)} <Badge v={booking.payment_state} /></>}
@@ -73,6 +75,31 @@ export function Workspace({ data, actions }: { data: WorkspaceData; actions: Wor
         {tab === "notes" && <NotesTab data={data} actions={actions} />}
         {tab === "activity" && <ActivityTab data={data} />}
       </div>
+    </div>
+  );
+}
+
+/** Client profile: enrolled on 1:1 coaching (more profile details can join this line later). */
+function CoachingLine({ initial, onSave }: { initial: { enrolled: boolean; since: string | null }; onSave: WorkspaceActions["setCoaching"] }) {
+  const [state, setState] = useState(initial);
+  const [err, setErr] = useState(false);
+  const save = async (next: { enrolled: boolean; since: string | null }) => {
+    const prev = state; setState(next); setErr(false);
+    try { await onSave(next.enrolled, next.since); } catch { setState(prev); setErr(true); }
+  };
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-3 text-[12.5px]">
+      <label className="flex cursor-pointer items-center gap-2">
+        <input type="checkbox" checked={state.enrolled}
+          onChange={(e) => save({ enrolled: e.target.checked, since: e.target.checked ? state.since ?? new Date().toISOString().slice(0, 10) : null })} />
+        <span className={state.enrolled ? "text-burgundy" : "text-mahogany/80"}>Enrolled on 1:1 coaching</span>
+      </label>
+      {state.enrolled && (
+        <label className="flex items-center gap-2 text-taupe">since
+          <input type="date" className={`${input} py-1`} value={state.since ?? ""} onChange={(e) => save({ enrolled: true, since: e.target.value || null })} />
+        </label>
+      )}
+      {err && <span role="alert" className="text-[12px] text-burgundy">Couldn’t save.</span>}
     </div>
   );
 }

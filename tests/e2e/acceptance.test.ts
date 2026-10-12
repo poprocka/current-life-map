@@ -330,3 +330,17 @@ describe("reconciliation search", () => {
     expect(await asJana((sql) => searchAssessments(sql, "x"))).toEqual([]);
   });
 });
+
+import { setCoachingEnrollment } from "@/server/admin/mutations";
+describe("client profile: 1:1 coaching", () => {
+  it("coach marks enrollment; shown in workspace and list; works for anonymous assessments", async () => {
+    const { id } = await completedAssessment();
+    await asJana((sql) => setCoachingEnrollment(sql, JANA, id, true, "2026-10-01"));
+    const ws = (await asJana((sql) => loadWorkspace(sql, { userId: JANA, role: "admin" }, id)))!;
+    expect(ws.clients[0]).toMatchObject({ coaching_enrolled: true, coaching_enrolled_at: "2026-10-01", email: null, name: null });
+    expect((await asJana((sql) => listAssessments(sql, { q: id.slice(0, 8) }))).rows[0].coaching_enrolled).toBe(true);
+    await asJana((sql) => setCoachingEnrollment(sql, JANA, id, false, null));
+    expect((await asJana((sql) => listAssessments(sql, { q: id.slice(0, 8) }))).rows[0].coaching_enrolled).toBe(false);
+    expect((await pg.query(`select 1 from assessment_client_links where assessment_id = $1`, [id])).rows).toHaveLength(1);
+  });
+});

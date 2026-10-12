@@ -66,13 +66,13 @@ export function AdminTable(p: AdminTableProps) {
       </form>
 
       <div className="overflow-x-auto rounded-[18px] border hairline bg-white/40">
-        <table className="w-full min-w-[1500px] text-[12px] text-mahogany/90">
+        <table className="w-full min-w-[1600px] text-[12px] text-mahogany/90">
           <thead className="border-b hairline text-[10px] uppercase tracking-[0.1em] text-taupe">
             <tr>
               <Th>Assessment</Th><Th k="created_at">Created</Th><Th k="completed_at">Completed</Th><Th>Progress</Th><Th>Version</Th>
               <Th>Client</Th><Th>Email</Th><Th>Contact source</Th><Th>Email delivery</Th>
               <Th>Booking</Th><Th k="scheduled_start">Session</Th><Th>Payment</Th>
-              <Th>Report</Th><Th>Coach review</Th><Th>Follow-up</Th><Th k="last_activity_at">Last activity</Th>
+              <Th>Report</Th><Th>Coach review</Th><Th>Follow-up</Th><Th>1:1 coaching</Th><Th k="last_activity_at">Last activity</Th>
             </tr>
           </thead>
           <tbody>
@@ -93,10 +93,11 @@ export function AdminTable(p: AdminTableProps) {
                 <td className="px-3 py-2.5"><Badge v={r.report_status} /></td>
                 <td className="px-3 py-2.5"><Badge v={r.coach_review_state} /></td>
                 <td className="px-3 py-2.5"><Badge v={r.follow_up_status === "none" ? null : r.follow_up_status} /></td>
+                <td className="px-3 py-2.5">{r.coaching_enrolled ? <Badge v="confirmed" label="enrolled" /> : <span className="text-taupe/70">—</span>}</td>
                 <td className="whitespace-nowrap px-3 py-2.5 text-taupe">{fmtDate(r.last_activity_at)}</td>
               </tr>
             ))}
-            {!p.rows.length && <tr><td colSpan={16} className="px-3 py-10 text-center text-taupe">No assessments match these filters.</td></tr>}
+            {!p.rows.length && <tr><td colSpan={17} className="px-3 py-10 text-center text-taupe">No assessments match these filters.</td></tr>}
           </tbody>
         </table>
       </div>

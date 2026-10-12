@@ -79,6 +79,8 @@ create table clients (
   email text,
   phone text,
   privacy_status text not null default 'active' check (privacy_status in ('active', 'deletion_requested', 'deleted')),
+  coaching_enrolled boolean not null default false,     -- set by the coach: enrolled on 1:1 coaching
+  coaching_enrolled_at date,
   created_at timestamptz not null default now()
 );
 -- Deliberately NOT unique on email: contacts are never merged automatically.
@@ -221,7 +223,7 @@ create table audit_events (
 create view admin_assessment_list with (security_invoker = true) as
 select
   a.id as assessment_id, a.created_at, a.completed_at, a.status, a.sections_completed, a.assessment_version, a.last_activity_at,
-  c.name as client_name, c.email as client_email,
+  c.name as client_name, c.email as client_email, coalesce(c.coaching_enrolled, false) as coaching_enrolled,
   (select string_agg(distinct l.link_source, ',') from assessment_client_links l where l.assessment_id = a.id) as contact_source,
   (select p.delivery_state from pdf_requests p where p.assessment_id = a.id order by p.requested_at desc limit 1) as email_delivery_state,
   b.booking_state, b.scheduled_start, b.timezone, b.payment_state,
