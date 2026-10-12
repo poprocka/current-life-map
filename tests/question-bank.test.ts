@@ -13,14 +13,15 @@ describe("V10 question bank completeness", () => {
     expect(QUESTION_BANK.filter((q) => q.responseType === "energy")).toHaveLength(8);
   });
   it("has 7 interconnection selections", () => {
-    expect(QUESTION_BANK.filter((q) => q.chapterId === "interconnections")).toHaveLength(7);
+    expect(QUESTION_BANK.filter((q) => q.chapterId === "interconnections" && q.responseType !== "text")).toHaveLength(7);
   });
   it("marks exactly the five V10 reverse-keyed items", () => {
     expect(QUESTION_BANK.filter((q) => q.reverseKeyed).map((q) => q.id).sort()).toEqual(
       ["growth.03", "growth.06", "mind.05", "resources.05", "restoration.02"]);
   });
-  it("presents 93 screens including one feelings question per Orbit", () => {
-    expect(ACTIVE_QUESTIONS).toHaveLength(93);
+  it("presents 94 screens including one feelings question per Orbit and the closing reflection", () => {
+    expect(ACTIVE_QUESTIONS).toHaveLength(94);
+    expect(ACTIVE_QUESTIONS[ACTIVE_QUESTIONS.length - 1]).toMatchObject({ id: "interconnections.reflection", optional: true, responseType: "text" });
     const em = QUESTION_BANK.filter((q) => q.responseType === "emotional_state" && q.enabled);
     expect(em).toHaveLength(8);
     expect(em.every((q) => q.options.length === 12 && q.maxSelections === 3)).toBe(true);

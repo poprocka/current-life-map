@@ -252,6 +252,27 @@ function build(): Question[] {
     });
   });
 
+  // Optional closing reflection, shown last, before the Map (Jana, 2026-10-12).
+  // Free text: never scored; stored with the sensitive reflections, not with scored answers.
+  out.push({
+    id: "interconnections.reflection",
+    version: CONTENT_VERSION,
+    chapterId: "interconnections",
+    order: INTERCONNECTIONS.length + 1,
+    prompt: "What truth about your current life became harder to ignore while answering these questions?",
+    instruction: "Optional.",
+    responseType: "text",
+    options: [],
+    maxLength: 2000,
+    exploreCategory: "reflection",
+    cue: { construct: "Reflection", signal: "Truth becoming harder to ignore", text: "Free-text reflection. Not scored; context for the respondent's report and the Coach Report." },
+    direction: "context",
+    reverseKeyed: false,
+    optional: true,
+    allowNotApplicable: false,
+    enabled: true,
+  });
+
   return out;
 }
 

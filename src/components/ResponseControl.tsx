@@ -20,6 +20,24 @@ export function ResponseControl({
   const name = `q-${q.id}`;
   const isOrbit = q.responseType === "orbit_select";
 
+  if (q.responseType === "text") {
+    const text = typeof value === "string" ? value : "";
+    return (
+      <div>
+        <textarea
+          id={name}
+          aria-labelledby={labelledBy}
+          value={text}
+          maxLength={q.maxLength}
+          rows={6}
+          placeholder="Write as much or as little as feels true."
+          onChange={(e) => onChange(e.target.value === "" ? undefined : e.target.value)}
+          className="w-full resize-y rounded-[20px] border border-linen-line bg-linen/60 px-5 py-4 text-[15px] leading-relaxed text-mahogany placeholder:text-taupe/70 focus:border-burgundy focus:outline-none"
+        />
+      </div>
+    );
+  }
+
   const toggle = (v: string) => {
     if (!multi) return onChange(v);
     const next = new Set(selected);

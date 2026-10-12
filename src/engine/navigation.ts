@@ -17,10 +17,16 @@ export function progress(answers: Record<string, AnswerValue | undefined>): numb
 export function isAnswered(q: Question, a: AnswerValue | undefined): boolean {
   if (a === undefined) return false;
   if (Array.isArray(a)) return a.length > 0;
-  return a !== "";
+  return a.trim() !== "";
 }
 
 export function validate(q: Question, a: AnswerValue | undefined): string | null {
+  if (q.responseType === "text") {
+    if (!isAnswered(q, a)) return q.optional ? null : "Write a few words, or skip this question.";
+    if (typeof a !== "string") return "That answer isn't valid.";
+    if (q.maxLength && a.length > q.maxLength) return `Please keep this under ${q.maxLength} characters.`;
+    return null;
+  }
   if (!isAnswered(q, a)) {
     if (q.optional) return null;
     return q.responseType === "emotional_state" ? "Choose at least one, up to three." : "Choose the answer that is most true for you.";

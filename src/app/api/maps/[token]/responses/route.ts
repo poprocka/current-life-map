@@ -5,7 +5,7 @@ import { CONTENT_VERSION, questionById } from "@/content/v10/question-bank";
 import { validate, isComplete } from "@/engine/navigation";
 
 const Body = z.object({
-  answers: z.record(z.string().max(64), z.union([z.string().max(64), z.array(z.string().max(64)).max(8)])),
+  answers: z.record(z.string().max(64), z.union([z.string().max(4000), z.array(z.string().max(64)).max(8)])),
 });
 
 export async function PUT(req: Request, { params }: { params: Promise<{ token: string }> }) {
@@ -19,6 +19,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ token: s
   for (const [id, value] of Object.entries(parsed.data.answers)) {
     const q = questionById(id);
     if (!q || !q.enabled || validate(q, value) !== null) return NextResponse.json({ error: "invalid_answer", id }, { status: 422 });
+    // Free-text reflections belong in the encrypted reflections table (Phase 5), never in scored responses.
+    if (q.responseType === "text") continue;
     rows.push({ question_id: id, value, content_version: CONTENT_VERSION });
   }
 

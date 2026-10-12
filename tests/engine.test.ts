@@ -106,6 +106,14 @@ describe("navigation", () => {
     expect(validate(em, ["clarity", "peace", "curiosity", "openness"])).not.toBeNull();
     expect(validate(em, ["happy"])).not.toBeNull();
   });
+  it("closing reflection is optional free text", () => {
+    const r = QUESTION_BANK.find((q) => q.id === "interconnections.reflection")!;
+    expect(validate(r, undefined)).toBeNull();
+    expect(validate(r, "Something I keep postponing.")).toBeNull();
+    expect(validate(r, "x".repeat(2001))).not.toBeNull();
+    const a = fill("2"); delete a["interconnections.reflection"];
+    expect(isComplete(a)).toBe(true);
+  });
   it("validates options and NA", () => {
     const love1 = QUESTION_BANK.find((q) => q.id === "love.02")!;
     const mind1 = QUESTION_BANK.find((q) => q.id === "mind.01")!;

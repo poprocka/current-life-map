@@ -114,6 +114,8 @@ export function MapLegend() {
   const item = "flex items-start gap-3";
   return (
     <ul className="grid gap-x-8 gap-y-3 text-[12.5px] leading-snug text-mahogany/80 sm:grid-cols-2">
+      <li className={`${item} sm:col-span-2`}><Swatch><circle cx="4" cy="9" r="3" fill="#D9B26A" /><circle cx="26" cy="9" r="4" fill="#B7AC9B" /><line x1="8" y1="9" x2="21" y2="9" stroke="#C2B3A3" strokeDasharray="2 2" /></Swatch>
+        <span><b className="font-normal text-mahogany">Distance from the Sun</b> — the closer an area is, the more connected it is to your authentic self</span></li>
       <li className={item}><Swatch><circle cx="9" cy="9" r="4" fill="#B7AC9B" /><circle cx="22" cy="9" r="8" fill="#B7AC9B" /></Swatch>
         <span><b className="font-normal text-mahogany">Size</b> — how important the area is to you right now</span></li>
       <li className={item}><Swatch><circle cx="9" cy="9" r="6" fill="#B7AC9B" opacity=".3" /><circle cx="22" cy="9" r="6" fill="#B7AC9B" /></Swatch>
@@ -126,8 +128,6 @@ export function MapLegend() {
           <line x1="2" y1="9" x2="28" y2="9" stroke={OUT} strokeWidth="2.6" strokeLinecap="round" strokeDasharray="6 6" className="energy-flow-sm" style={{ animationDuration: "1.6s", animationDirection: "reverse", filter: "blur(0.8px)" }} />
         </Swatch>
         <span><b className="font-normal text-mahogany">Energy out</b> — <span style={{ color: OUT }}>rose</span> light flowing away from the Sun: this area takes energy. Stronger light means more energy</span></li>
-      <li className={`${item} sm:col-span-2`}><Swatch><circle cx="4" cy="9" r="3" fill="#D9B26A" /><circle cx="26" cy="9" r="4" fill="#B7AC9B" /><line x1="8" y1="9" x2="21" y2="9" stroke="#C2B3A3" strokeDasharray="2 2" /></Swatch>
-        <span><b className="font-normal text-mahogany">Distance from the Sun</b> — the closer an area is, the more connected it is to your authentic self</span></li>
     </ul>
   );
 }

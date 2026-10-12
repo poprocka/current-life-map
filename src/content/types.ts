@@ -33,7 +33,8 @@ export type ResponseType =
   | "energy"
   | "orbit_select"
   | "single_choice"
-  | "emotional_state";
+  | "emotional_state"
+  | "text";
 
 /** support: agreement = more of the capacity. friction: reverse-keyed. context: importance/energy/emotion. selection: interconnections. */
 export type ResponseDirection = "support" | "friction" | "context" | "selection";
@@ -64,6 +65,8 @@ export interface Question {
   allowNotApplicable: boolean;
   /** For emotional_state: max selections */
   maxSelections?: number;
+  /** For text: maximum characters */
+  maxLength?: number;
   /** False = defined in the model but not shown (blocked content dependency) */
   enabled: boolean;
   interpretationNotes?: string;
