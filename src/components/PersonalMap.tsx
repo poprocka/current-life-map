@@ -151,12 +151,12 @@ export function MapLegend({ distancePending = true }: { distancePending?: boolea
   return (
     <div className="grid gap-x-8 gap-y-3 text-[12.5px] leading-snug text-mahogany/80 sm:grid-cols-2">
       <div className={item}><Swatch><FlowSwatch color={IN} inward /></Swatch>
-        <span><b className="font-normal text-mahogany">Energy in</b> — <span style={{ color: "#B8963A" }}>yellow</span> light flowing toward the Sun: this area gives you energy</span></div>
+        <span><b className="font-normal text-mahogany">Energy in</b> — this area gives you energy</span></div>
       <div className={item}><Swatch><FlowSwatch color={OUT} /></Swatch>
-        <span><b className="font-normal text-mahogany">Energy out</b> — <span style={{ color: "#94795C" }}>beige</span> light flowing away from the Sun: this area takes energy. Wider, brighter light means more energy</span></div>
+        <span><b className="font-normal text-mahogany">Energy out</b> — this area takes energy. Wider, brighter light means more energy</span></div>
       <div className="flex flex-col gap-3">
         <div className={item}><Swatch><line x1="2" y1="9" x2="28" y2="9" stroke={STEADY} strokeWidth="1.4" strokeLinecap="round" /></Swatch>
-          <span><b className="font-normal text-mahogany">Steady</b> — a fine, quiet thread: this area keeps your energy fairly stable</span></div>
+          <span><b className="font-normal text-mahogany">Steady</b> — this area keeps your energy fairly stable</span></div>
         <div className={item}><Swatch><circle cx="4" cy="9" r="3" fill="#D9B26A" /><circle cx="26" cy="9" r="4" fill="#B7AC9B" /><line x1="8" y1="9" x2="21" y2="9" stroke="#C2B3A3" strokeDasharray="2 2" /></Swatch>
           <span><b className="font-normal text-mahogany">Distance from the Sun</b> — {distancePending
             ? <>will show how connected each area is to your authentic self. <span className="text-taupe">Not shown yet: every Orbit sits at the same distance while this measure is being finalised.</span></>
