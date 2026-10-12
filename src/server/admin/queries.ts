@@ -30,6 +30,18 @@ export async function listAssessments(sql: Sql, f: ListFilters): Promise<{ rows:
   return { rows, total, page, pages: Math.max(1, Math.ceil(total / PAGE)) };
 }
 
+/** Name, email or assessment-ID prefix search for reconciliation (max 8). Reads the RLS-protected list view. */
+export async function searchAssessments(sql: Sql, q: string): Promise<import("./types").SearchHit[]> {
+  const term = q.trim().slice(0, 120);
+  if (term.length < 2) return [];
+  return (await sql.query<import("./types").SearchHit>(
+    `select assessment_id, created_at, status, client_name, client_email, booking_state from admin_assessment_list
+     where assessment_id::text ilike $1 || '%' or client_email ilike '%' || $1 || '%' or client_name ilike '%' || $1 || '%'
+        or exists (select 1 from assessment_client_links l join clients c on c.id = l.client_id
+                   where l.assessment_id = admin_assessment_list.assessment_id and (c.email ilike '%' || $1 || '%' or c.name ilike '%' || $1 || '%'))
+     order by created_at desc limit 8`, [term])).rows.map(isoRow);
+}
+
 export async function reconciliationQueue(sql: Sql): Promise<ReconRow[]> {
   return (await sql.query<ReconRow>(
     `select id, booked_name, booked_email, scheduled_start, booking_state, payment_state, reconciliation_reason, assessment_id, created_at

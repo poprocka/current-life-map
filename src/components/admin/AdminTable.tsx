@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import type { ListFilters, ListRow, ReconRow } from "@/server/admin/types";
+import { useEffect } from "react";
+import type { ListFilters, ListRow, ReconRow, SearchHit } from "@/server/admin/types";
 import { Badge, btn, btnPrimary, fmtDate, input, shortId } from "./ui";
 
 const BOOKING_STATES = ["none", "pending", "confirmed", "rescheduled", "cancelled", "completed", "no_show"];
@@ -12,6 +13,8 @@ export interface AdminTableProps {
   canExport: boolean;
   onFilter: (f: ListFilters) => void;
   onReconcile: (bookingId: string, assessmentId: string) => Promise<void>;
+  /** Find assessments by name, email or assessment ID (prefix). */
+  onSearch: (q: string) => Promise<SearchHit[]>;
   exportHref?: string;
   workspaceHref: (id: string) => string;
 }
@@ -29,7 +32,7 @@ export function AdminTable(p: AdminTableProps) {
 
   return (
     <div className="space-y-6">
-      {p.recon.length > 0 && <ReconQueue rows={p.recon} onReconcile={p.onReconcile} />}
+      {p.recon.length > 0 && <ReconQueue rows={p.recon} onReconcile={p.onReconcile} onSearch={p.onSearch} />}
 
       <form className="flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); p.onFilter({ ...f, page: 1 }); }}>
         <label className="flex flex-col gap-1 text-[10.5px] uppercase tracking-[0.12em] text-taupe">Search
@@ -109,35 +112,69 @@ export function AdminTable(p: AdminTableProps) {
   );
 }
 
-function ReconQueue({ rows, onReconcile }: { rows: ReconRow[]; onReconcile: AdminTableProps["onReconcile"] }) {
-  const [target, setTarget] = useState<Record<string, string>>({});
-  const [busy, setBusy] = useState<string | null>(null);
-  const [err, setErr] = useState<string | null>(null);
+function ReconQueue({ rows, onReconcile, onSearch }: { rows: ReconRow[]; onReconcile: AdminTableProps["onReconcile"]; onSearch: AdminTableProps["onSearch"] }) {
   return (
     <section className="rounded-[18px] border border-[#E7C98F] bg-[#FBF3E3] p-5" aria-labelledby="recon-h">
       <h2 id="recon-h" className="text-[10.5px] uppercase tracking-[0.16em] text-[#8A6420]">Needs reconciliation · {rows.length}</h2>
-      <p className="mt-1 text-[12px] text-mahogany/70">Booking events that could not be matched safely, or need a decision. Nothing about the assessment was shared with the scheduler.</p>
+      <p className="mt-1 text-[12px] text-mahogany/70">Bookings that couldn’t be matched to a self-interview automatically. Find the right assessment by name, email or assessment ID, then confirm the link. Nothing is linked until you confirm.</p>
       <ul className="mt-4 divide-y divide-[#EBD9B4]">
-        {rows.map((r) => (
-          <li key={r.id} className="flex flex-wrap items-center gap-3 py-3 text-[12.5px]">
-            <span className="min-w-[200px]"><b className="font-normal">{r.booked_name ?? "Unknown"}</b> <span className="text-taupe">{r.booked_email}</span></span>
-            <span className="text-taupe">{fmtDate(r.scheduled_start)}</span>
-            <Badge v={r.booking_state} /><Badge v={r.payment_state} />
-            <span className="flex-1 text-[#8A6420]">{r.reconciliation_reason}</span>
-            {!r.assessment_id && (
-              <span className="flex items-center gap-2">
-                <input className={`${input} w-[300px] font-mono text-[11px]`} placeholder="Assessment ID to link" value={target[r.id] ?? ""}
-                  onChange={(e) => setTarget((t) => ({ ...t, [r.id]: e.target.value.trim() }))} />
-                <button className={btn} disabled={!/^[0-9a-f-]{36}$/.test(target[r.id] ?? "") || busy === r.id}
-                  onClick={async () => { setBusy(r.id); setErr(null); try { await onReconcile(r.id, target[r.id]); } catch { setErr("Couldn't link that booking. Check the assessment ID."); } setBusy(null); }}>
-                  Link
-                </button>
-              </span>
-            )}
-          </li>
-        ))}
+        {rows.map((r) => <ReconItem key={r.id} r={r} onReconcile={onReconcile} onSearch={onSearch} />)}
       </ul>
-      {err && <p role="alert" className="mt-2 text-[12px] text-burgundy">{err}</p>}
     </section>
+  );
+}
+
+function ReconItem({ r, onReconcile, onSearch }: { r: ReconRow; onReconcile: AdminTableProps["onReconcile"]; onSearch: AdminTableProps["onSearch"] }) {
+  const [q, setQ] = useState(r.booked_email ?? r.booked_name ?? "");
+  const [hits, setHits] = useState<SearchHit[] | null>(null);
+  const [picked, setPicked] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const run = async (term: string) => {
+    if (term.trim().length < 2) return setHits(null);
+    try { setHits(await onSearch(term.trim())); } catch { setHits([]); }
+  };
+  useEffect(() => { const t = setTimeout(() => run(q), 250); return () => clearTimeout(t); }, [q]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <li className="py-4 text-[12.5px]">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="min-w-[200px]"><b className="font-normal">{r.booked_name ?? "Unknown"}</b> <span className="text-taupe">{r.booked_email}</span></span>
+        <span className="text-taupe">{fmtDate(r.scheduled_start)}</span>
+        <Badge v={r.booking_state} /><Badge v={r.payment_state} />
+        <span className="flex-1 text-[#8A6420]">{r.reconciliation_reason}</span>
+      </div>
+      {!r.assessment_id && (
+        <div className="mt-3 rounded-[12px] bg-white/60 p-3">
+          <label className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.12em] text-taupe">Find assessment
+            <input className={`${input} w-[340px] normal-case tracking-normal`} placeholder="Name, email or assessment ID" value={q}
+              onChange={(e) => { setQ(e.target.value); setPicked(null); }} />
+          </label>
+          {hits && (hits.length ? (
+            <ul className="mt-2 space-y-1">
+              {hits.map((h) => (
+                <li key={h.assessment_id}>
+                  <label className={`flex cursor-pointer flex-wrap items-center gap-3 rounded-lg px-2 py-1.5 ${picked === h.assessment_id ? "bg-linen-deep" : "hover:bg-linen-deep/50"}`}>
+                    <input type="radio" name={`pick-${r.id}`} checked={picked === h.assessment_id} onChange={() => setPicked(h.assessment_id)} />
+                    <span className="font-mono text-[11px] text-burgundy">{shortId(h.assessment_id)}</span>
+                    <span>{h.client_name ?? <span className="text-taupe">No name</span>}</span>
+                    <span className="text-taupe">{h.client_email ?? "no email"}</span>
+                    <span className="text-taupe">{fmtDate(h.created_at)}</span>
+                    <Badge v={h.status} />
+                    {h.booking_state && <span className="text-[11px] text-taupe">already has a booking: {h.booking_state}</span>}
+                  </label>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="mt-2 text-[12px] text-taupe">No assessments match. If they haven’t taken the self-interview yet, send it to them first.</p>)}
+          <div className="mt-3 flex items-center gap-3">
+            <button className={btnPrimary} disabled={!picked || busy}
+              onClick={async () => { setBusy(true); setErr(null); try { await onReconcile(r.id, picked!); } catch { setErr("Couldn’t link that booking. Please try again."); } setBusy(false); }}>
+              Link booking to selected assessment
+            </button>
+            {err && <span role="alert" className="text-[12px] text-burgundy">{err}</span>}
+          </div>
+        </div>
+      )}
+    </li>
   );
 }

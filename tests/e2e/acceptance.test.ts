@@ -318,3 +318,15 @@ describe("display name", () => {
     expect(list.rows[0].client_name).toBe("Robin K.");
   });
 });
+
+import { searchAssessments } from "@/server/admin/queries";
+describe("reconciliation search", () => {
+  it("finds assessments by name, email or assessment ID prefix", async () => {
+    const { id, token } = await completedAssessment();
+    await requestPdfEmail(db, token, "searchme@example.com");
+    await asJana((sql) => setDisplayName(sql, JANA, id, "Quinn Search"));
+    for (const q of ["searchme@", "Quinn", id.slice(0, 8)])
+      expect((await asJana((sql) => searchAssessments(sql, q))).map((h) => h.assessment_id)).toContain(id);
+    expect(await asJana((sql) => searchAssessments(sql, "x"))).toEqual([]);
+  });
+});

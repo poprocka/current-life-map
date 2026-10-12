@@ -13,6 +13,7 @@ export interface ListFilters {
   q?: string; booking?: string; completion?: "completed" | "in_progress"; report?: "ready" | "none"; from?: string; to?: string;
   sort?: "created_at" | "completed_at" | "last_activity_at" | "scheduled_start"; dir?: "asc" | "desc"; page?: number;
 }
+export interface SearchHit { assessment_id: string; created_at: string; status: string; client_name: string | null; client_email: string | null; booking_state: string | null }
 export interface ReconRow { id: string; booked_name: string | null; booked_email: string | null; scheduled_start: string | null; booking_state: string; payment_state: string; reconciliation_reason: string | null; assessment_id: string | null; created_at: string }
 
 export interface AnswerRow { question_id: string; question_version: string; response_status: string; raw_ordinal: number | null; value: string | string[] | null; answered_at: string }

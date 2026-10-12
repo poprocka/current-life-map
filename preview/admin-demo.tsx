@@ -171,6 +171,11 @@ export function AdminDemo({ path }: { path: string }) {
           <div className="mt-6">
             <AdminTable rows={rows} total={rows.length} page={1} pages={1} filters={filters} recon={recon} canExport={false}
               onFilter={setFilters} workspaceHref={(i) => `/admin/assessments/${i}`}
+              onSearch={async (q) => {
+                const t = q.toLowerCase();
+                return PEOPLE.filter((x) => x.id.startsWith(t) || x.email?.includes(t) || x.name?.toLowerCase().includes(t))
+                  .map((x) => ({ assessment_id: x.id, created_at: ago(x.created, 9), status: x.complete ? "completed" : "in_progress", client_name: x.name, client_email: x.email, booking_state: x.booking?.state ?? null }));
+              }}
               onReconcile={async (bid) => { await later(); setRecon((r) => r.filter((x) => x.id !== bid)); }} />
           </div>
         </main>

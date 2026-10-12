@@ -19,12 +19,13 @@ async function post(url: string, body: unknown) {
   return r.json();
 }
 
-export function ConnectedTable(props: Omit<AdminTableProps, "onFilter" | "onReconcile" | "workspaceHref" | "exportHref">) {
+export function ConnectedTable(props: Omit<AdminTableProps, "onFilter" | "onReconcile" | "onSearch" | "workspaceHref" | "exportHref">) {
   const router = useRouter();
   return (
     <AdminTable {...props} exportHref={`/api/admin/export${qs({ ...props.filters, page: undefined })}`}
       workspaceHref={(id) => `/admin/assessments/${id}`}
       onFilter={(f) => router.push(`/admin${qs(f)}`)}
+      onSearch={async (q) => { const r = await fetch(`/api/admin/assessments/search`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ q }) }); if (!r.ok) throw new Error(); return (await r.json()).hits; }}
       onReconcile={async (bookingId, assessmentId) => { await post(`/api/admin/bookings/${bookingId}`, { action: "reconcile", assessmentId }); router.refresh(); }} />
   );
 }
