@@ -40,9 +40,9 @@ export function ResultsView({ result, children, embedded }: { result: LifeMapRes
             <div className="mt-8 border-t hairline pt-6"><MapLegend distancePending={distancePending} /></div>
           </div>
           <div className="min-w-0 lg:pt-10">
-            <h2 className="eyebrow">Map interpretation</h2>
-            <div className="mt-4 overflow-x-auto">
-              <table className="w-full text-left text-[12.5px] text-mahogany/85">
+            {/* Visible title removed (Jana, 2026-10-12); the table keeps an accessible name */}
+            <div className="overflow-x-auto">
+              <table aria-label="Map interpretation" className="w-full text-left text-[12.5px] text-mahogany/85">
                 <thead className="text-[10.5px] uppercase tracking-[0.12em] text-taupe">
                   <tr>
                     <th scope="col" className="pb-3 pr-3 font-normal">Orbit</th>
