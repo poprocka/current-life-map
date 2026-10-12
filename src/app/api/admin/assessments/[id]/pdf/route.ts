@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { asCoach } from "@/server/db";
 import { coachForApi } from "@/server/auth";
-import { frozenResult } from "@/server/assessments";
+import { frozenResult, loadAnswers } from "@/server/assessments";
+import { generateResultInsights } from "@/engine/insights";
+import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
 import { buildClientPdf } from "@/lib/pdf/clientReport";
 import { audit } from "@/server/audit";
 
@@ -10,12 +12,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const s = await coachForApi(req);
   if (s instanceof NextResponse) return s;
   const { id } = await params;
-  const frozen = await asCoach(s.db, s.ctx, async (sql) => {
+  const got = await asCoach(s.db, s.ctx, async (sql) => {
     const f = await frozenResult(sql, id);
-    if (f) await audit(sql, s.ctx.userId, "client_pdf.viewed", "assessment", id);
-    return f;
+    if (!f) return null;
+    await audit(sql, s.ctx.userId, "client_pdf.viewed", "assessment", id);
+    return { f, answers: await loadAnswers(sql, id, { includeText: true }) };
   });
-  if (!frozen) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  const pdf = await buildClientPdf(frozen.snapshot, { generatedAt: frozen.generatedAt });
+  if (!got) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const { f: frozen, answers } = got;
+  const reflections = POST_MAP_REFLECTIONS.questions.filter((q) => typeof answers[q.id] === "string" && (answers[q.id] as string).trim()).map((q) => ({ prompt: q.prompt, text: answers[q.id] as string }));
+  const pdf = await buildClientPdf(frozen.snapshot, { generatedAt: frozen.generatedAt, insights: generateResultInsights(frozen.snapshot, answers), reflections });
   return new NextResponse(pdf as unknown as BodyInit, { headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="current-life-map-${id.slice(0, 8)}.pdf"`, "Cache-Control": "private, no-store" } });
 }

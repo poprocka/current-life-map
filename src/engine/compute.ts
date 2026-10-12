@@ -314,9 +314,11 @@ export function computeLifeMap(answers: Answers, cfg: ScoringConfig = PROVISIONA
   if (supported.length >= 2) {
     const hi = Math.max(...supported.map((o) => o.responseSupportIndex!));
     const lo = Math.min(...supported.map((o) => o.responseSupportIndex!));
-    const top = supported.filter((o) => o.responseSupportIndex === hi).map((o) => o.orbit);
-    const bottom = supported.filter((o) => o.responseSupportIndex === lo).map((o) => o.orbit);
-    const differs = hi !== lo;
+    // F6: Orbits within 0.05 of the highest / lowest are named together (no false precision between near-equal values)
+    const top = supported.filter((o) => hi - o.responseSupportIndex! < 0.05).map((o) => o.orbit);
+    const bottom = supported.filter((o) => o.responseSupportIndex! - lo < 0.05).map((o) => o.orbit);
+    // F6 (Decision Guide): name a "most"/"least" only when the spread is meaningful (≥ 0.10); otherwise describe as similar.
+    const differs = hi - lo >= 0.1;
     snapshot.push({
       key: "mostSupported", label: "Most supported", orbits: differs ? top : [], available: differs, evidenceType: "derived",
       body: differs ? `Your answers about ${listNames(top)} describe the most support across the statements in ${top.length > 1 ? "those areas" : "that area"}.` : "",

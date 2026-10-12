@@ -10,6 +10,7 @@ import { CHAPTERS } from "@/content/v10/chapters";
 import { QUESTION_BANK, QUESTION_BANK_VERSION, questionById } from "@/content/v10/question-bank";
 import { NOT_APPLICABLE } from "@/content/types";
 import { ResultsView } from "@/components/ResultsView";
+import { generateResultInsights } from "@/engine/insights";
 import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
 import { Badge, Card, btn, btnPrimary, fmtDate, input, shortId } from "./ui";
 
@@ -233,7 +234,7 @@ function MapTab({ data, pdfHref }: { data: WorkspaceData; pdfHref: string | null
         {pdfHref && <a className={btn} href={pdfHref} target="_blank" rel="noopener noreferrer">Open client PDF</a>}
       </div>
       <div className="mt-2 rounded-[24px] border hairline bg-linen">
-        <ResultsView result={data.result.snapshot} embedded />
+        <ResultsView result={data.result.snapshot} insights={generateResultInsights(data.result.snapshot, Object.fromEntries(data.answers.map((a) => [a.question_id, a.value ?? undefined])))} embedded />
       </div>
     </div>
   );

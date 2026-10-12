@@ -6,6 +6,7 @@ import { NextSteps } from "@/components/NextSteps";
 import { OptionalReflections } from "@/components/OptionalReflections";
 import { readStored } from "@/lib/useInterview";
 import { computeLifeMap, type LifeMapResult } from "@/engine/compute";
+import { generateResultInsights } from "@/engine/insights";
 import { isComplete } from "@/engine/navigation";
 import type { AnswerValue } from "@/content/types";
 
@@ -34,7 +35,7 @@ export default function Results() {
     );
 
   return (
-    <ResultsView result={result}>
+    <ResultsView result={result} insights={generateResultInsights(result, answers)}>
       {/* 5. Next steps — download, PDF by email and Life Map Deep Dive, each with the privacy notice link */}
       <NextSteps result={result} token={token} />
       {/* Optional reflections below the PDF and Deep Dive cards (Jana, 2026-10-12) */}

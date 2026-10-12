@@ -4,6 +4,7 @@ import { buildClientPdf } from "@/lib/pdf/clientReport";
 import type { Db } from "./db";
 import { frozenResult, loadAnswers, resolveToken } from "./assessments";
 import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
+import { generateResultInsights } from "@/engine/insights";
 import { audit } from "./audit";
 import { hmacB64, safeEqual } from "./crypto";
 
@@ -23,6 +24,7 @@ export const resend = (apiKey: string, from: string): EmailProvider => ({
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "Idempotency-Key": m.idempotencyKey },
       body: JSON.stringify({
         from, to: [m.to], subject: m.subject, text: m.text,
+        ...(process.env.EMAIL_REPLY_TO ? { reply_to: process.env.EMAIL_REPLY_TO } : {}),
         attachments: m.attachments?.map((a) => ({ filename: a.filename, content: Buffer.from(a.content).toString("base64") })),
       }),
     });
@@ -43,12 +45,25 @@ export type PdfEmailResult =
   | { ok: true; state: "sent" }
   | { ok: false; error: "not_configured" | "not_found" | "not_completed" | "send_failed" };
 
-const EMAIL_TEXT = `Hello,
+/** Email sent with the PDF (draft wording for Jana's approval). Plain text: reads well everywhere, no tracking. */
+export const EMAIL_SUBJECT = "Your Current Life Map";
+export const EMAIL_TEXT = `Hello,
 
-Your Current Life Map is attached as a PDF. It reflects the answers you gave in the self-interview.
+Thank you for taking the time to complete the self-interview. Your Current Life Map is attached as a PDF.
 
-You asked for this report, so we've sent it once. Providing your email for report delivery does not subscribe you to marketing.
+It reflects the life you described: what matters most to you right now, what gives and takes your energy, and how the different parts of your life influence one another. It isn't a verdict or a diagnosis. It's a starting point for seeing your life more clearly.
 
+A few suggestions as you read it:
+- Take your time. Notice what feels accurate, and what doesn't.
+- Pay attention to anything that surprises you.
+- Come back to the questions in your insights when you have a quiet moment.
+
+If you'd like to explore your Map together, you can book a Life Map Deep Dive from your results page.
+
+You're receiving this email only because you asked for your PDF. You haven't been added to any mailing list.
+
+With warmth,
+Jana
 The Current Life Map`;
 
 /**
@@ -81,14 +96,15 @@ export async function requestPdfEmail(db: Db, token: string, email: string): Pro
     const reflections = POST_MAP_REFLECTIONS.questions
       .filter((q) => typeof stored[q.id] === "string" && (stored[q.id] as string).trim())
       .map((q) => ({ prompt: q.prompt, text: stored[q.id] as string }));
-    return { assessmentId: a.id, requestId: req.rows[0].id, frozen, email: normalized, reflections };
+    const insights = generateResultInsights(frozen.snapshot, stored);
+    return { assessmentId: a.id, requestId: req.rows[0].id, frozen, email: normalized, reflections, insights };
   });
   if ("error" in prep) return { ok: false, error: prep.error! };
 
   try {
-    const pdf = await buildClientPdf(prep.frozen.snapshot, { generatedAt: prep.frozen.generatedAt, reflections: prep.reflections });
+    const pdf = await buildClientPdf(prep.frozen.snapshot, { generatedAt: prep.frozen.generatedAt, reflections: prep.reflections, insights: prep.insights });
     const sent = await provider.send({
-      to: prep.email, subject: "Your Current Life Map", text: EMAIL_TEXT,
+      to: prep.email, subject: EMAIL_SUBJECT, text: EMAIL_TEXT,
       attachments: [{ filename: "current-life-map.pdf", content: pdf }], idempotencyKey: `pdf-${prep.requestId}`,
     });
     await db.query(`update pdf_requests set delivery_state = 'sent', provider_message_id = $2 where id = $1`, [prep.requestId, sent.id]);

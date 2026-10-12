@@ -9,6 +9,7 @@ import { ORBIT_TINT, orbitGeometry } from "@/components/map-geometry";
 import { OPENING } from "@/content/v10/opening";
 import { snapshotFingerprint } from "@/lib/stable";
 import { reportModel } from "./model";
+import { INSIGHT_DISCLAIMER, type ResultInsights } from "@/engine/insights";
 
 const LINEN = rgb(0.961, 0.929, 0.886);
 const MAHOGANY = rgb(0.122, 0.078, 0.067);
@@ -43,6 +44,8 @@ export interface PdfOptions {
   generatedAt?: Date;
   /** The person's own optional reflections, included verbatim when they wrote any. Never part of the snapshot. */
   reflections?: { prompt: string; text: string }[];
+  /** Personal insights and Orbit narratives exactly as on the results page. */
+  insights?: ResultInsights;
 }
 
 export async function buildClientPdf(result: LifeMapResult, opts: PdfOptions = {}): Promise<Uint8Array> {
@@ -117,10 +120,39 @@ export async function buildClientPdf(result: LifeMapResult, opts: PdfOptions = {
     text(s.body, { size: 9.5, color: TAUPE, gap: 6 });
   }
 
-  eyebrow("Energy Architecture");
-  for (const l of model.reported) text(l, { size: 9.5 });
-  y -= 6;
-  for (const l of model.suggests) text(`- ${l}`, { size: 9.5, gap: 2 });
+  if (opts.insights) {
+    need(160);
+    y -= 14;
+    eyebrow("Personal insights");
+    text("A closer look at your reality", { font: serif, size: 22, gap: 4 });
+    text("Interpretations of the answers you gave, including the places that support you and the patterns that may deserve attention.", { size: 9.5, color: TAUPE, gap: 6 });
+    opts.insights.cards.forEach((c, i) => {
+      need(90);
+      y -= 12;
+      text(`INSIGHT ${i + 1} OF ${opts.insights!.cards.length}`, { font: sansBold, size: 7, color: TAUPE, gap: 2 });
+      text(c.title, { font: serif, size: 17, gap: 1 });
+      text(c.lead, { size: 9, color: TAUPE, gap: 6 });
+      for (const sct of c.sections) {
+        const isQ = sct.id === "begin.question";
+        text(sct.heading, { font: serif, size: 12, color: isQ ? BURGUNDY : MAHOGANY, gap: 1 });
+        text(sct.text, { font: isQ ? serif : sans, size: isQ ? 11 : 9.5, color: isQ ? BURGUNDY : MAHOGANY, gap: 6 });
+      }
+    });
+    text(INSIGHT_DISCLAIMER, { size: 8, color: TAUPE, gap: 4 });
+
+    eyebrow("Your Orbits, one by one");
+    for (const o of opts.insights.orbits) {
+      need(60);
+      text(o.name, { font: serif, size: 13 });
+      for (const p of o.paragraphs) text(p, { size: 9.5, gap: 2 });
+      text(o.question, { font: serif, size: 10.5, color: BURGUNDY, gap: 8 });
+    }
+  } else {
+    eyebrow("Energy Architecture");
+    for (const l of model.reported) text(l, { size: 9.5 });
+    y -= 6;
+    for (const l of model.suggests) text(`- ${l}`, { size: 9.5, gap: 2 });
+  }
 
   const refl = (opts.reflections ?? []).filter((r) => r.text.trim());
   if (refl.length) {
@@ -137,7 +169,7 @@ export async function buildClientPdf(result: LifeMapResult, opts: PdfOptions = {
   // Footer on every page: versions + snapshot fingerprint (matches the record in the coach workspace)
   const pages = doc.getPages();
   pages.forEach((p, i) => {
-    const f = winAnsi(`Assessment ${result.versions.assessment} - scoring ${result.versions.scoring} - snapshot ${fingerprint.slice(0, 12)} - page ${i + 1} of ${pages.length}`);
+    const f = winAnsi(`The Current Life Map - page ${i + 1} of ${pages.length} - reference ${fingerprint.slice(0, 12)}`);
     p.drawText(f, { x: M, y: 28, size: 6.5, font: sans, color: TAUPE });
   });
   return doc.save({ useObjectStreams: false });

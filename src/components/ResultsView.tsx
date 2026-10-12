@@ -3,13 +3,15 @@ import { MapLegend, PersonalMap } from "@/components/PersonalMap";
 import { ORBIT_TINT } from "@/components/LifeSystem";
 import type { LifeMapResult } from "@/engine/compute";
 import { OPENING } from "@/content/v10/opening";
+import type { ResultInsights } from "@/engine/insights";
+import { PersonalInsights } from "@/components/PersonalInsights";
 import { ENERGY_SHORT, IMPORTANCE_SHORT, MAP_INTRO, energyInsightsOf } from "@/lib/pdf/model";
 
 /**
  * Exactly what the respondent sees (results page) — also rendered read-only in the coach workspace
  * from the frozen snapshot, so "Client's Map" is the same component and the same data.
  */
-export function ResultsView({ result, children, embedded }: { result: LifeMapResult; children?: React.ReactNode; embedded?: boolean }) {
+export function ResultsView({ result, insights, children, embedded }: { result: LifeMapResult; insights?: ResultInsights; children?: React.ReactNode; embedded?: boolean }) {
   const Root = embedded ? "div" : "main";
   const byId = Object.fromEntries(result.orbits.map((o) => [o.orbit, o]));
   const giving = result.orbits.filter((o) => (o.energySigned ?? 0) > 0);
@@ -88,28 +90,8 @@ export function ResultsView({ result, children, embedded }: { result: LifeMapRes
         </div>
       </section>
 
-      {/* 3. Energy Architecture — what was reported, then evidence-backed observations */}
-      <section className="mt-24 grid gap-12 lg:grid-cols-2" aria-labelledby="energy-h">
-        <div>
-          <p className="eyebrow">Energy Architecture</p>
-          <h2 id="energy-h" className="mt-3 font-serif text-[36px] font-light">Where your energy goes</h2>
-          <ul className="mt-8 space-y-2 text-[14px] leading-relaxed">
-            <li><span className="text-taupe">Gives you energy: </span>{giving.length ? giving.map((o) => o.name).join(", ") : "none of the eight areas"}</li>
-            <li><span className="text-taupe">Takes energy: </span>{taking.length ? taking.map((o) => o.name).join(", ") : "none of the eight areas"}</li>
-            {result.interconnections.overallSupport && (
-              <li><span className="text-taupe">How the areas relate: </span>{result.interconnections.overallSupport.label}</li>
-            )}
-          </ul>
-        </div>
-        {/* Sub-labels removed (Jana, 2026-10-12) */}
-        <div className="lg:pt-[113px]">
-          <ul className="space-y-4 text-[14px] leading-relaxed text-mahogany/85">
-            {energyInsights.map((i) => (
-              <li key={i.id}>{i.body}</li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      {/* 3. Personal insights (Decision Guide): five evidence-led cards + eight Orbits. Energy Architecture now lives in its card. */}
+      {insights && <PersonalInsights insights={insights} />}
 
       {/* "Where attention may matter most" removed from the client view (Jana, 2026-10-12); still in the Coach Report and script */}
       {children}

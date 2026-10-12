@@ -12,6 +12,7 @@ import { computeLifeMap } from "@/engine/compute";
 import { generateCoachReport } from "@/engine/coach/report";
 import { generateDeepDiveScript } from "@/engine/coach/script";
 import { reportModel } from "@/lib/pdf/model";
+import { generateResultInsights } from "@/engine/insights";
 import { NOT_APPLICABLE } from "@/content/types";
 import fs from "fs";
 import path from "path";
@@ -62,7 +63,7 @@ describe("gender-inclusive language", () => {
     for (let i = 0; i < 200; i++) {
       const a = persona(i, { loveNA: i % 3 === 0 });
       const r = computeLifeMap(a);
-      const blob = JSON.stringify([r.snapshot, r.insights, r.attention, reportModel(r), generateCoachReport(r, a), generateDeepDiveScript(r, a)]);
+      const blob = JSON.stringify([r.snapshot, r.insights, r.attention, reportModel(r), generateCoachReport(r, a), generateDeepDiveScript(r, a), generateResultInsights(r, a)]);
       expect(blob).not.toMatch(GENDERED);
     }
   });
@@ -89,7 +90,8 @@ describe("one measurement model for everyone", () => {
     const p = computeLifeMap(partnered), s = computeLifeMap(single);
     for (const o of p.orbits.filter((x) => x.orbit !== "love")) expect(s.orbits.find((x) => x.orbit === o.orbit)).toEqual(o);
     expect(JSON.stringify(s.sun)).toBe(JSON.stringify(p.sun));
-    expect(JSON.stringify(generateCoachReport(s, single))).not.toMatch(/single|unpartnered|alone/i);
+    const text = JSON.stringify([generateCoachReport(s, single), generateResultInsights(s, single)]);
+    expect(text).not.toMatch(/\b(are|is|being) single\b|unpartnered|sexually inactive|(you|they) are alone/i);
   });
 
   it("the database has no gender, sex or pronoun fields", () => {
