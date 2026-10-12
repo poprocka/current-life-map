@@ -306,3 +306,15 @@ describe("optional reflections in the emailed PDF", () => {
     expect((await frozenResult(db, id))!.sha256).toBe(before);
   });
 });
+
+import { setDisplayName } from "@/server/admin/mutations";
+describe("display name", () => {
+  it("coach can add a name to an anonymous assessment without inventing other details", async () => {
+    const { id } = await completedAssessment();
+    await asJana((sql) => setDisplayName(sql, JANA, id, "Robin K."));
+    const ws = (await asJana((sql) => loadWorkspace(sql, { userId: JANA, role: "admin" }, id)))!;
+    expect(ws.clients).toEqual([expect.objectContaining({ name: "Robin K.", email: null, link_source: "coach_manual" })]);
+    const list = await asJana((sql) => listAssessments(sql, { q: id.slice(0, 8) }));
+    expect(list.rows[0].client_name).toBe("Robin K.");
+  });
+});

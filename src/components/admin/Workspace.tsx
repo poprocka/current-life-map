@@ -19,6 +19,7 @@ export interface WorkspaceActions {
   setReview(reportId: string, state: "unreviewed" | "in_review" | "reviewed"): Promise<void>;
   setBookingOutcome(bookingId: string, state: "completed" | "no_show"): Promise<void>;
   deleteAssessment(): Promise<void>;
+  setName(name: string | null): Promise<void>;
   pdfHref: string | null;
   exportHref: string | null;
   listHref: string;
@@ -34,7 +35,6 @@ type Tab = (typeof TABS)[number][0];
 export function Workspace({ data, actions }: { data: WorkspaceData; actions: WorkspaceActions }) {
   const [tab, setTab] = useState<Tab>("answers");
   const answers = useMemo(() => Object.fromEntries(data.answers.map((a) => [a.question_id, a.value ?? undefined])) as Record<string, string | string[] | undefined>, [data.answers]);
-  const client = data.clients.at(-1);
   const booking = data.bookings.filter((b) => b.booking_state !== "rescheduled").at(-1);
 
   return (
@@ -43,7 +43,7 @@ export function Workspace({ data, actions }: { data: WorkspaceData; actions: Wor
       <header className="mt-4 flex flex-wrap items-end justify-between gap-4 border-b hairline pb-5">
         <div>
           <p className="eyebrow">Assessment <span className="font-mono normal-case tracking-normal">{data.assessment.id}</span></p>
-          <h1 className="mt-2 font-serif text-[34px] font-light leading-tight">{client?.name ?? client?.email ?? "Anonymous respondent"}</h1>
+          <NameHeading id={data.assessment.id} initial={data.clients.map((c) => c.name).filter(Boolean).at(-1) ?? null} onSave={actions.setName} />
           <p className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-taupe">
             <Badge v={data.assessment.status} /> {data.assessment.status === "completed" ? `Completed ${fmtDate(data.assessment.completed_at)}` : `${data.assessment.sections_completed}/10 sections`}
             {booking && <> · Deep Dive <Badge v={booking.booking_state} /> {fmtDate(booking.scheduled_start, booking.timezone)} <Badge v={booking.payment_state} /></>}
@@ -73,6 +73,32 @@ export function Workspace({ data, actions }: { data: WorkspaceData; actions: Wor
         {tab === "notes" && <NotesTab data={data} actions={actions} />}
         {tab === "activity" && <ActivityTab data={data} />}
       </div>
+    </div>
+  );
+}
+
+/** Name only when the person shared it or a coach added it; otherwise the assessment ID (never the email). */
+function NameHeading({ id, initial, onSave }: { id: string; initial: string | null; onSave: (n: string | null) => Promise<void> }) {
+  const [name, setName] = useState(initial);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(initial ?? "");
+  const [err, setErr] = useState(false);
+  if (editing)
+    return (
+      <form className="mt-2 flex items-center gap-2" onSubmit={async (e) => {
+        e.preventDefault(); setErr(false);
+        try { await onSave(draft.trim() || null); setName(draft.trim() || null); setEditing(false); } catch { setErr(true); }
+      }}>
+        <input autoFocus aria-label="Name" className={`${input} w-[320px] font-serif text-[22px]`} value={draft} maxLength={120} onChange={(e) => setDraft(e.target.value)} placeholder="Name" />
+        <button className={btnPrimary} type="submit">Save</button>
+        <button className={btn} type="button" onClick={() => { setDraft(name ?? ""); setEditing(false); }}>Cancel</button>
+        {err && <span role="alert" className="text-[12px] text-burgundy">Couldn’t save.</span>}
+      </form>
+    );
+  return (
+    <div className="mt-2 flex items-baseline gap-3">
+      <h1 className="font-serif text-[34px] font-light leading-tight">{name ?? <>Assessment <span className="font-mono text-[28px]">{shortId(id)}</span></>}</h1>
+      <button className="text-[11px] uppercase tracking-[0.12em] text-taupe underline-offset-4 hover:text-burgundy hover:underline" onClick={() => setEditing(true)}>{name ? "Edit name" : "Add name"}</button>
     </div>
   );
 }

@@ -281,6 +281,8 @@ create policy coach_write_notes on session_notes for all to authenticated using 
 create policy coach_update_bookings on bookings for update to authenticated using (is_coach_mfa()) with check (is_coach_mfa());
 -- Manual reconciliation: a coach may create a client from booking details and link it (source coach_manual)
 create policy coach_insert_clients on clients for insert to authenticated with check (is_coach_mfa());
+-- A coach may correct or add a display name (never email merging)
+create policy coach_update_clients on clients for update to authenticated using (is_coach_mfa()) with check (is_coach_mfa());
 create policy coach_insert_links on assessment_client_links for insert to authenticated with check (is_coach_mfa() and link_source = 'coach_manual');
 create policy coach_update_reviews on coach_reports for update to authenticated using (is_coach_mfa()) with check (is_coach_mfa());
 create policy coach_audit_insert on audit_events for insert to authenticated with check (is_coach_mfa() and actor_id = auth.uid());

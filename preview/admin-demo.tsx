@@ -162,7 +162,7 @@ export function AdminDemo({ path }: { path: string }) {
       {person ? (
         <Workspace key={person.id} data={workspace(person)} actions={{
           saveScript: async () => { await later(); return 3; }, saveNote: async () => { await later(); return "n1"; },
-          setReview: later, setBookingOutcome: later, deleteAssessment: async () => { await later(); navigate("/admin"); },
+          setReview: later, setBookingOutcome: later, setName: later, deleteAssessment: async () => { await later(); navigate("/admin"); },
           pdfHref: null, exportHref: null, listHref: "/admin",
         }} />
       ) : (
