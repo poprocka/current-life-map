@@ -116,7 +116,6 @@ export function NextSteps({ result, token }: { result: LifeMapResult; token?: st
           {state.kind === "sent" && <span className="text-mahogany">Your PDF is on its way to {email}.</span>}
           {state.kind === "error" && <span className="text-burgundy">{state.message}</span>}
         </p>
-        <p className="mt-2 text-[12px] leading-relaxed text-taupe">How your email is used: {privacyLink}.</p>
       </div>
 
       {/* Deep Dive */}
@@ -141,10 +140,9 @@ export function NextSteps({ result, token }: { result: LifeMapResult; token?: st
             Booking opens soon
           </span>
         )}
-        <p className="mt-6 text-[12px] leading-relaxed text-linen/70">
-          How your booking details are connected to your Map: <Link href="/privacy" className="underline underline-offset-4 hover:text-white">Privacy &amp; Data Use Notice</Link>.
-        </p>
       </div>
+      {/* Card notices removed (Jana, 2026-10-12); one quiet link remains where details are collected */}
+      <p className="text-center text-[11.5px] text-taupe lg:col-span-2">{privacyLink}</p>
     </section>
   );
 }
