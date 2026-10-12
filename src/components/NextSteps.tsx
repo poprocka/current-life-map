@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
 import type { LifeMapResult } from "@/engine/compute";
 import { saveFile } from "@/lib/saveFile";
@@ -78,10 +77,6 @@ export function NextSteps({ result, token }: { result: LifeMapResult; token?: st
     }
   }
 
-  const privacyLink = (
-    <Link href="/privacy" className="underline underline-offset-4 hover:text-burgundy">Privacy &amp; Data Use Notice</Link>
-  );
-
   return (
     <section className="mt-24 grid gap-6 lg:grid-cols-2" aria-label="Next steps">
       {/* PDF by email */}
@@ -141,8 +136,6 @@ export function NextSteps({ result, token }: { result: LifeMapResult; token?: st
           </span>
         )}
       </div>
-      {/* Card notices removed (Jana, 2026-10-12); one quiet link remains where details are collected */}
-      <p className="text-center text-[11.5px] text-taupe lg:col-span-2">{privacyLink}</p>
     </section>
   );
 }
