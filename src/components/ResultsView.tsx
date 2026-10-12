@@ -26,7 +26,7 @@ export function ResultsView({ result, children, embedded }: { result: LifeMapRes
       )}
 
       {/* 1. Map — in its own block so it stands out (Jana, 2026-10-12) */}
-      <section className="mt-8 rounded-[32px] border hairline bg-linen-deep/70 px-5 pb-10 pt-10 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_24px_60px_-40px_rgba(84,15,38,0.25)] sm:px-10 lg:mt-10 lg:px-14 lg:pb-14 lg:pt-14 xl:-mx-20" aria-labelledby="map-h">
+      <section className="mt-8 rounded-[32px] border hairline bg-linen-deep/70 px-5 pb-10 pt-10 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_24px_60px_-40px_rgba(84,15,38,0.25)] sm:px-10 lg:mt-10 lg:px-14 lg:pb-14 lg:pt-14 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-labelledby="map-h">
         <header className="mx-auto max-w-[600px] text-center">
           <p className="eyebrow">Your Current Life Map</p>
           <h1 id="map-h" className="mt-3 font-serif text-[28px] font-light leading-[1.1] [text-wrap:balance] sm:text-[34px]">{OPENING.title}</h1>
@@ -34,7 +34,7 @@ export function ResultsView({ result, children, embedded }: { result: LifeMapRes
             {MAP_INTRO}
           </p>
         </header>
-        <div className="mt-4 grid gap-12 lg:mt-2 lg:grid-cols-[1.7fr_1fr] lg:items-start lg:gap-24">
+        <div className="mt-4 grid gap-12 lg:mt-2 lg:grid-cols-[1.45fr_1fr] lg:items-start lg:gap-16">
           <div className="min-w-0">
             <PersonalMap result={result} />
             <div className="mt-8 border-t hairline pt-6"><MapLegend distancePending={distancePending} /></div>
