@@ -116,7 +116,6 @@ export async function buildClientPdf(result: LifeMapResult, opts: PdfOptions = {
   eyebrow("Energy Architecture");
   for (const l of model.reported) text(l, { size: 9.5 });
   y -= 6;
-  text("What the Map suggests - to explore, not conclude", { font: sansBold, size: 8.5, color: BURGUNDY, gap: 2 });
   for (const l of model.suggests) text(`- ${l}`, { size: 9.5, gap: 2 });
 
   eyebrow("Where attention may matter most");

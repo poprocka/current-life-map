@@ -93,8 +93,7 @@ export function ResultsView({ result, children, embedded }: { result: LifeMapRes
         <div>
           <p className="eyebrow">Energy Architecture</p>
           <h2 id="energy-h" className="mt-3 font-serif text-[36px] font-light">Where your energy goes</h2>
-          <h3 className="mt-8 text-[11px] uppercase tracking-[0.16em] text-burgundy">What you reported</h3>
-          <ul className="mt-4 space-y-2 text-[14px] leading-relaxed">
+          <ul className="mt-8 space-y-2 text-[14px] leading-relaxed">
             <li><span className="text-taupe">Gives you energy: </span>{giving.length ? giving.map((o) => o.name).join(", ") : "none of the eight areas"}</li>
             <li><span className="text-taupe">Takes energy: </span>{taking.length ? taking.map((o) => o.name).join(", ") : "none of the eight areas"}</li>
             {result.interconnections.overallSupport && (
@@ -102,9 +101,9 @@ export function ResultsView({ result, children, embedded }: { result: LifeMapRes
             )}
           </ul>
         </div>
-        <div className="lg:pt-[92px]">
-          <h3 className="text-[11px] uppercase tracking-[0.16em] text-burgundy">What the Map suggests — to explore, not conclude</h3>
-          <ul className="mt-4 space-y-4 text-[14px] leading-relaxed text-mahogany/85">
+        {/* Sub-labels removed (Jana, 2026-10-12) */}
+        <div className="lg:pt-[113px]">
+          <ul className="space-y-4 text-[14px] leading-relaxed text-mahogany/85">
             {energyInsights.map((i) => (
               <li key={i.id}>{i.body}</li>
             ))}
