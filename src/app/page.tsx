@@ -20,7 +20,8 @@ export default function Introduction() {
           </div>
           <p className="mt-8 font-serif text-[21px] italic leading-snug text-burgundy">{OPENING.closing}</p>
 
-          <div className="mt-11 flex flex-wrap items-center gap-x-7 gap-y-4">
+          <p className="mt-10 text-[12px] uppercase tracking-[0.14em] text-taupe">{OPENING.estimatedTime}</p>
+          <div className="mt-4 flex flex-wrap items-center gap-x-7 gap-y-4">
             <Link href="/interview"
               className="rounded-full bg-burgundy px-8 py-[15px] text-[13px] font-normal uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-burgundy">
               {OPENING.cta}

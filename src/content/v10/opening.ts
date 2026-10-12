@@ -9,6 +9,8 @@ export const OPENING = {
   ],
   closing: "You don't need to change anything right now. First, see it clearly.",
   cta: "Begin self-interview",
+  /** Shown above the CTA (Jana, 2026-10-12) */
+  estimatedTime: "Estimated time: 20–25 minutes",
 } as const;
 
 /**

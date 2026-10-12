@@ -67,12 +67,23 @@ export interface Question {
   maxSelections?: number;
   /** For text: maximum characters */
   maxLength?: number;
+  /**
+   * Approved signal lenses this item may evidence (backend spec §2). Empty = none approved yet.
+   * Truth statements have NO approved tags until Jana signs off the question-by-question mapping.
+   */
+  signalTags: SignalTag[];
+  /** Proposed (unapproved) lenses for review only — never used in scoring. */
+  proposedSignalTags?: SignalTag[];
+  /** Social World only: which narrative subtheme the item belongs to (proposed, see registry diff). */
+  subtheme?: "career" | "community" | "both";
   /** False = defined in the model but not shown (blocked content dependency) */
   enabled: boolean;
   interpretationNotes?: string;
   /** Open questions about this item, surfaced in admin and tests */
   needsConfirmation?: string[];
 }
+
+export type SignalTag = "REALITY" | "INNER_STATE" | "RELATIONSHIP" | "AGENCY" | "IMPORTANCE" | "CONGRUENCE" | "ENERGY";
 
 export type AnswerValue = string | string[];
 export const NOT_APPLICABLE = "__not_applicable__";

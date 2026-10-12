@@ -1,0 +1,74 @@
+/**
+ * Scoring configuration — version "provisional-1" (backend spec, 12 Oct 2026).
+ *
+ * Only metrics that are fully defined are ACTIVE. The appendix formulas are stored for reference
+ * but stay INACTIVE until the open approval items are signed off (see docs/03-scoring-and-open-flags.md).
+ * Any change to this file requires a new scoringVersion so old Maps stay reproducible.
+ */
+export const SCORING_VERSION = "provisional-1";
+export const TEMPLATE_VERSION = "1";
+export const MAP_RENDER_VERSION = "1";
+
+export interface ScoringConfig {
+  scoringVersion: string;
+  status: "provisional" | "approved";
+  /** §5.1 interim aggregation choice */
+  aggregation: "mean";
+  /** §5.7 proposed engineering gate — NOT approved */
+  coverage: { minValid: number; minShare: number; approved: boolean };
+  /** §9 example thresholds — provisional, NOT calibrated */
+  thresholds: { highImportance: number; lowSupport: number; highSupport: number; approved: boolean };
+  active: {
+    /** Orbit size: direct stated importance only (80/20 blend disabled) */
+    importance: "direct_only" | "composite_80_20";
+    /** Brightness: supportive-response proxy (vitality 55/45 disabled) */
+    brightness: "response_support_proxy" | "vitality_55_45";
+    /** Distance: neutral fixed placement (congruence disabled) */
+    distance: "neutral_fixed" | "congruence";
+    /** Attention: qualitative candidates only (ranking disabled) */
+    attention: "qualitative_pending_approval" | "ranked";
+    /** Sun: transparent interim unweighted mean */
+    sun: "unweighted_mean_interim";
+  };
+  /** Appendix formulas, stored for reference only. */
+  inactiveFormulas: {
+    importance: { direct: number; revealedPriorityConsistency: number };
+    vitality: { reality: number; relationship: number };
+    congruence: { agency: number; relationship: number; selfCongruence: number };
+    attention: { importance: number; lowVitality: number; lowCongruence: number; systemLeverage: number };
+  };
+}
+
+export const PROVISIONAL_1: ScoringConfig = {
+  scoringVersion: SCORING_VERSION,
+  status: "provisional",
+  aggregation: "mean",
+  coverage: { minValid: 3, minShare: 0.6, approved: false },
+  thresholds: { highImportance: 0.75, lowSupport: 0.4, highSupport: 0.75, approved: false },
+  active: {
+    importance: "direct_only",
+    brightness: "response_support_proxy",
+    distance: "neutral_fixed",
+    attention: "qualitative_pending_approval",
+    sun: "unweighted_mean_interim",
+  },
+  inactiveFormulas: {
+    importance: { direct: 0.8, revealedPriorityConsistency: 0.2 },
+    vitality: { reality: 0.55, relationship: 0.45 },
+    congruence: { agency: 0.45, relationship: 0.4, selfCongruence: 0.15 },
+    attention: { importance: 0.35, lowVitality: 0.25, lowCongruence: 0.2, systemLeverage: 0.2 },
+  },
+};
+
+/** Open approval items (spec §12) surfaced in results payload, admin and docs. */
+export const OPEN_FLAGS = [
+  { id: "F1", item: "Question-by-question REALITY / RELATIONSHIP / AGENCY / SELF_CONGRUENCE mapping", blocks: ["vitality", "congruence"] },
+  { id: "F2", item: "Sun composite weighting beyond the interim mean", blocks: ["sun_weighted"] },
+  { id: "F3", item: "Revealed-priority consistency definition", blocks: ["importance_composite"] },
+  { id: "F4", item: "Orbit-specific congruence measurement", blocks: ["distance", "least_connected"] },
+  { id: "F5", item: "System leverage numeric mapping and bounded modifiers", blocks: ["attention_ranking"] },
+  { id: "F6", item: "Coverage gate (max(3, 60%)) and numeric thresholds (0.75 / 0.40)", blocks: ["support_status", "attention_candidates"] },
+  { id: "F7", item: "Life Interconnections IDs/options vs newest frontend; 'None / unsure' option not approved", blocks: [] },
+  { id: "F8", item: "Emotional-state option sets vs active frontend (verified identical 12 Oct)", blocks: [] },
+  { id: "F9", item: "Production legal / data-flow verification", blocks: ["launch"] },
+] as const;

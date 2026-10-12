@@ -1,46 +1,62 @@
+/** Spec §11 registry/content tests. */
 import { describe, it, expect } from "vitest";
 import { QUESTION_BANK, ACTIVE_QUESTIONS } from "@/content/v10/question-bank";
+import { CHAPTERS } from "@/content/v10/chapters";
 
+const byId = Object.fromEntries(QUESTION_BANK.map((q) => [q.id, q]));
 const count = (ch: string, t = "truth") => QUESTION_BANK.filter((q) => q.chapterId === ch && q.responseType === t).length;
 
-describe("V10 question bank completeness", () => {
-  it("has the V10 statement counts per chapter", () => {
-    expect([count("sun"), count("mind"), count("body"), count("restoration"), count("growth"),
-      count("love"), count("social"), count("resources"), count("joy")]).toEqual([11, 7, 7, 6, 6, 6, 7, 6, 6]);
+describe("registry (spec §11)", () => {
+  it("exactly ten sections: Sun + eight Orbits + Life Interconnections", () => {
+    expect(CHAPTERS.map((c) => c.id)).toEqual(["sun", "mind", "body", "restoration", "growth", "love", "social", "resources", "joy", "interconnections"]);
   });
-  it("has importance + energy for each of the eight Orbits", () => {
-    expect(QUESTION_BANK.filter((q) => q.responseType === "importance")).toHaveLength(8);
-    expect(QUESTION_BANK.filter((q) => q.responseType === "energy")).toHaveLength(8);
+  it("statement counts per section", () => {
+    expect(["sun", "mind", "body", "restoration", "growth", "love", "social", "resources", "joy"].map((c) => count(c))).toEqual([11, 7, 7, 6, 6, 6, 7, 6, 6]);
   });
-  it("has 7 interconnection selections", () => {
-    expect(QUESTION_BANK.filter((q) => q.chapterId === "interconnections" && q.responseType !== "text")).toHaveLength(7);
+  it("exactly two N/A-enabled questions, both Love, exact prompts", () => {
+    const na = QUESTION_BANK.filter((q) => q.allowNotApplicable).map((q) => q.prompt).sort();
+    expect(na).toEqual([
+      "I can openly communicate my needs, desires and boundaries in my intimate life.",
+      "My romantic or intimate life feels fulfilling for the stage of life I'm in.",
+    ]);
   });
-  it("marks exactly the five V10 reverse-keyed items", () => {
-    expect(QUESTION_BANK.filter((q) => q.reverseKeyed).map((q) => q.id).sort()).toEqual(
-      ["growth.03", "growth.06", "mind.05", "resources.05", "restoration.02"]);
+  it("Resources familiarity question uses the short wording and is reverse-keyed", () => {
+    expect(byId["resources.05"].prompt).toBe("I tend to stay in familiar financial or living circumstances because change feels uncertain.");
+    expect(byId["resources.05"].reverseKeyed).toBe(true);
   });
-  it("presents 94 screens including one feelings question per Orbit and the closing reflection", () => {
+  it("Joy creativity question present, removed enjoyment question absent", () => {
+    expect(byId["joy.06"].prompt).toBe("I give myself opportunities to express my creativity and talents.");
+    expect(byId["joy.06"].reverseKeyed).toBe(false);
+    expect(byId["joy.06"].exploreCategory).toBe("Creativity & Self-Expression");
+    expect(QUESTION_BANK.some((q) => q.prompt === "I make room for enjoyment that feels genuinely my own.")).toBe(false);
+  });
+  it("external expectations question exact wording, selection type", () => {
+    expect(byId["interconnections.06"].prompt).toBe("Which Orbit is most influenced by other people’s expectations or social standards?");
+    expect(byId["interconnections.06"].responseType).toBe("orbit_select");
+    expect(byId["interconnections.06"].direction).toBe("selection");
+  });
+  it("Social World subtitle is Community & Career", () => {
+    expect(CHAPTERS.find((c) => c.id === "social")!.subtitle).toBe("Community & Career");
+  });
+  it("exactly the five known reverse-keyed items", () => {
+    expect(QUESTION_BANK.filter((q) => q.reverseKeyed).map((q) => q.id).sort()).toEqual(["growth.03", "growth.06", "mind.05", "resources.05", "restoration.02"]);
+  });
+  it("emotion options per Orbit: 12 each, max 3, no Sun feelings item", () => {
+    const em = QUESTION_BANK.filter((q) => q.responseType === "emotional_state");
+    expect(em.map((q) => q.chapterId)).toEqual(["mind", "body", "restoration", "growth", "love", "social", "resources", "joy"]);
+    expect(em.every((q) => q.options.length === 12 && q.maxSelections === 3 && q.enabled)).toBe(true);
+    expect(em[0].options.map((o) => o.label)).toEqual(["Clarity", "Peace", "Curiosity", "Confidence", "Openness", "Neutrality", "Busyness", "Unease", "Rumination", "Pressure", "Distraction", "Fatigue"]);
+    expect(em.find((q) => q.chapterId === "social")!.prompt).toBe("When you think about your Social World Orbit as it is today, which feelings or inner states are most present?");
+  });
+  it("truth statements have no approved signal tags yet (open item F1)", () => {
+    expect(QUESTION_BANK.filter((q) => q.responseType === "truth").every((q) => q.signalTags.length === 0)).toBe(true);
+  });
+  it("94 screens: statements, importance, energy, feelings, interconnections, closing reflection", () => {
     expect(ACTIVE_QUESTIONS).toHaveLength(94);
-    expect(ACTIVE_QUESTIONS[ACTIVE_QUESTIONS.length - 1]).toMatchObject({ id: "interconnections.reflection", optional: true, responseType: "text" });
-    const em = QUESTION_BANK.filter((q) => q.responseType === "emotional_state" && q.enabled);
-    expect(em).toHaveLength(8);
-    expect(em.every((q) => q.options.length === 12 && q.maxSelections === 3)).toBe(true);
-    expect(em.find((q) => q.chapterId === "social")!.prompt).toBe(
-      "When you think about your Social World Orbit as it is today, which feelings or inner states are most present?");
-    expect(em[0].instruction).toBe("Choose up to 3.");
+    expect(ACTIVE_QUESTIONS[ACTIVE_QUESTIONS.length - 1]).toMatchObject({ id: "interconnections.reflection", optional: true });
   });
-  it("has unique stable ids and no empty prompts", () => {
+  it("unique stable ids, no empty prompts", () => {
     expect(new Set(QUESTION_BANK.map((q) => q.id)).size).toBe(QUESTION_BANK.length);
     expect(ACTIVE_QUESTIONS.every((q) => q.prompt.length > 0)).toBe(true);
-  });
-  it("preserves exact wording (spot checks)", () => {
-    const byId = Object.fromEntries(QUESTION_BANK.map((q) => [q.id, q]));
-    expect(byId["sun.09"].prompt).toBe("I accept that I can be ambitious and sensitive, independent and still need closeness.");
-    expect(byId["mind.importance"].prompt).toBe("How important is Mind in your life right now?");
-    expect(byId["social.energy"].prompt).toBe("As Social World exists in your life today, what happens to your energy?");
-    expect(byId["love.03"].cue.text.startsWith("Intimacy → Current fulfillment.")).toBe(true);
-  });
-  it("offers Not applicable only on Love items", () => {
-    expect(QUESTION_BANK.filter((q) => q.allowNotApplicable).every((q) => q.chapterId === "love")).toBe(true);
   });
 });

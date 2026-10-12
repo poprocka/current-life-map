@@ -6,8 +6,15 @@
 import type { ChapterId, Question, OrbitId } from "../types";
 import { CHAPTERS, ORBIT_IDS, chapterById } from "./chapters";
 import { TRUTH_SCALE, IMPORTANCE_SCALE, ENERGY_SCALE, SUPPORT_COMPETE_OPTIONS } from "./scales";
+import { PROPOSED_CONSTRUCT_MAP } from "@/engine/config/proposed-mappings";
+import type { SignalTag } from "../types";
+
+const PROPOSED_TAGS: Record<string, SignalTag> = PROPOSED_CONSTRUCT_MAP;
 
 export const CONTENT_VERSION = "v10" as const;
+/** Question bank = V10 + Jana's approved overrides of 12 Oct 2026 (see docs/02-question-registry-diff.md). */
+export const QUESTION_BANK_VERSION = "v10-oct12";
+export const ASSESSMENT_VERSION = "v10-with-approved-oct12-overrides";
 
 const SUPPORT_CUE = "Stronger agreement indicates more of this reported capacity/experience; interpret in context.";
 const FRICTION_CUE = "Reverse-keyed: stronger agreement indicates greater friction in this construct.";
@@ -132,6 +139,24 @@ function exploreFor(chapterId: ChapterId, construct: string): string {
   return construct.toLowerCase();
 }
 
+/** Item-level overrides from the 12 Oct backend spec §1. */
+const ITEM_OVERRIDES: Record<string, { exploreCategory?: string; cueText?: string }> = {
+  "joy.06": {
+    exploreCategory: "Creativity & Self-Expression",
+    cueText: "Creativity & Self-Expression → whether creativity and talents have a place in lived experience. Positive-keyed.",
+  },
+  "resources.05": {
+    cueText:
+      "Readiness for change → Familiarity versus growth. Reverse-keyed: stronger agreement indicates greater reported uncertainty-related friction; it does not prove avoidance or that a change is needed.",
+  },
+};
+
+/** Social World subthemes (spec §1: analyse career and community separately). Proposed mapping. */
+const SOCIAL_SUBTHEME: Record<string, "career" | "community" | "both"> = {
+  "social.01": "community", "social.02": "community", "social.03": "both", "social.04": "career",
+  "social.05": "community", "social.06": "community", "social.07": "community",
+};
+
 function build(): Question[] {
   const out: Question[] = [];
   const orbitOptions = ORBIT_IDS.map((id) => ({ value: id, label: chapterById(id).name }));
@@ -141,10 +166,12 @@ function build(): Question[] {
     const rows = STATEMENTS[chapter.id as Exclude<ChapterId, "interconnections">];
     rows.forEach(([prompt, construct, signal, rev], i) => {
       const order = i + 1;
-      const explore = exploreFor(chapter.id, construct);
-      const inList = chapter.explores.includes(explore);
+      const id = `${chapter.id}.${String(order).padStart(2, "0")}`;
+      const ov = ITEM_OVERRIDES[id] ?? {};
+      const explore = ov.exploreCategory ?? exploreFor(chapter.id, construct);
+      const inList = chapter.explores.includes(explore.toLowerCase()) || !!ov.exploreCategory;
       out.push({
-        id: `${chapter.id}.${String(order).padStart(2, "0")}`,
+        id,
         version: CONTENT_VERSION,
         chapterId: chapter.id,
         order,
@@ -152,8 +179,11 @@ function build(): Question[] {
         responseType: "truth",
         options: TRUTH_SCALE,
         exploreCategory: explore,
-        cue: { construct, signal, text: `${construct} → ${signal}. ${rev ? FRICTION_CUE : SUPPORT_CUE}` },
+        cue: { construct, signal, text: ov.cueText ?? `${construct} → ${signal}. ${rev ? FRICTION_CUE : SUPPORT_CUE}` },
         direction: rev ? "friction" : "support",
+        signalTags: [],
+        proposedSignalTags: PROPOSED_TAGS[id] ? [PROPOSED_TAGS[id]] : undefined,
+        subtheme: chapter.id === "social" ? SOCIAL_SUBTHEME[id] : undefined,
         reverseKeyed: !!rev,
         optional: false,
         allowNotApplicable: chapter.id === "love" && LOVE_NOT_APPLICABLE.has(order),
@@ -178,6 +208,7 @@ function build(): Question[] {
         exploreCategory: "importance",
         cue: { construct: "Importance", signal: "Stated importance", text: "Orbit importance." },
         direction: "context",
+        signalTags: ["IMPORTANCE"],
         reverseKeyed: false,
         optional: false,
         allowNotApplicable: false,
@@ -194,6 +225,7 @@ function build(): Question[] {
         exploreCategory: "energy",
         cue: { construct: "Energy", signal: "Energy flow", text: "Orbit energy." },
         direction: "context",
+        signalTags: ["ENERGY"],
         reverseKeyed: false,
         optional: false,
         allowNotApplicable: false,
@@ -213,6 +245,7 @@ function build(): Question[] {
         exploreCategory: "inner state",
         cue: { construct: "Inner State", signal: "Orbit-specific feelings", text: "Choose up to three Orbit-specific feelings or inner states." },
         direction: "context",
+        signalTags: ["INNER_STATE"],
         reverseKeyed: false,
         optional: false, // at least one, up to three
         allowNotApplicable: false,
@@ -236,8 +269,9 @@ function build(): Question[] {
       options: isQ7 ? SUPPORT_COMPETE_OPTIONS : orbitOptions,
       exploreCategory: construct.toLowerCase(),
       // V10 cue text is retained verbatim, including its boilerplate (audit C6)
-      cue: { construct, signal, text: `${construct} → ${signal}. ${SUPPORT_CUE}` },
+      cue: { construct, signal, text: `${construct} → ${signal}. Selection/comparison, not an agreement score.` },
       direction: "selection",
+      signalTags: [],
       reverseKeyed: false,
       optional: false,
       allowNotApplicable: false,
@@ -245,7 +279,6 @@ function build(): Question[] {
       interpretationNotes:
         "Selection/comparison, not an agreement score. Informs cross-Orbit hypotheses and attention order; never summed as a scale.",
       needsConfirmation: [
-        "C6: cue boilerplate refers to agreement",
         ...(!isQ7 ? ["C5: option set assumed to be the eight Orbits (Sun not selectable)"] : []),
         ...(order === 5 ? ["C5: Orbit selection vs free text"] : []),
       ],
@@ -267,6 +300,7 @@ function build(): Question[] {
     exploreCategory: "reflection",
     cue: { construct: "Reflection", signal: "Truth becoming harder to ignore", text: "Free-text reflection. Not scored; context for the respondent's report and the Coach Report." },
     direction: "context",
+    signalTags: [],
     reverseKeyed: false,
     optional: true,
     allowNotApplicable: false,

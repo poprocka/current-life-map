@@ -11,4 +11,4 @@ const globals = { name: "globals", setup(b) {
 }};
 await build({ entryPoints: ["preview/main.tsx"], bundle: true, minify: true, format: "iife", outfile: "preview/out/app.js",
   jsx: "transform", jsxFactory: "React.createElement", jsxFragment: "React.Fragment", inject: ["preview/react-inject.js"],
-  alias: { "@": "./src" }, plugins: [globals], define: { "process.env.NODE_ENV": '"production"' }, target: "es2019" });
+  alias: { "@": "./src" }, plugins: [globals], define: { "process.env.NODE_ENV": '"production"', "process.env.NEXT_PUBLIC_BOOKING_URL": '""' }, target: "es2019" });

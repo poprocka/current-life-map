@@ -2,7 +2,7 @@
 
 A guided Self-Interview built on the Life System methodology. Content version **V10**, engine config `v10-provisional-2026-10-08` (status: proposed).
 
-Start with **`docs/01-content-audit.md`** — it lists every open content and methodology decision.
+Start with **`docs/03-scoring-and-open-flags.md`** (what scoring runs and what waits for approval), then `docs/02-question-registry-diff.md` and `docs/01-content-audit.md`.
 
 ## Run locally
 
@@ -37,7 +37,7 @@ Raw answers → `responses`; calculated values → `derived_metrics` (keyed by e
 | 1 Source audit | Done — `docs/01-content-audit.md` |
 | 2 Architecture | Done — schema, question bank, engine interfaces |
 | 3 Introduction + Self-Interview | Done — 85 screens, autosave/resume, back, validation, NA on Love, keyboard + screen-reader semantics, mobile |
-| 4 Results | First pass — personalised Map + legend + text table, Reality Snapshot, Energy Architecture (reported vs suggested), full attention order with reasons |
+| 4 Results | Scoring `provisional-1` per the 12 Oct backend spec (see docs/03). Unapproved metrics stay inactive; open flags F1–F9 |
 | 5 PDF, email, booking | Next — optional reflections, server-rendered PDF, Resend delivery, Calendly webhook linkage, Deep Dive section |
 | 6 Coach Dashboard | Next — Supabase Auth, Map records, Coach Report, recognition/support marking, client history |
 | 7 Testing | Ongoing — add Playwright journey, axe accessibility and RLS tests |
