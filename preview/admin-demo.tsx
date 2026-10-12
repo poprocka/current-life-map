@@ -31,6 +31,10 @@ function answersFor(seed: number): Record<string, string | string[]> {
   Object.assign(a, { "interconnections.01": o[seed % 8], "interconnections.02": o[(seed + 1) % 8], "interconnections.03": o[(seed + 2) % 8], "interconnections.04": o[(seed + 2) % 8],
     "interconnections.05": o[(seed + 3) % 8], "interconnections.06": o[(seed + 4) % 8], "interconnections.07": "somewhat_compete" });
   if (seed % 2 === 0) a["interconnections.reflection"] = "That I have been calling exhaustion “a busy season” for two years.";
+  if (seed === 0) {
+    a["postmap.02"] = "My work. It looks like the career I wanted, but most days I'm performing it.";
+    a["postmap.05"] = "That I'm tired of being the steady one.";
+  }
   return a;
 }
 
@@ -71,9 +75,9 @@ function workspace(p: Person): WorkspaceData {
     assessment: { id: p.id, status: p.complete ? "completed" : "in_progress", created_at: ago(p.created, 9), completed_at: p.complete ? ago(p.created, 9) : null,
       sections_completed: p.sections, assessment_version: ASSESSMENT_VERSION, question_bank_version: QUESTION_BANK_VERSION, last_activity_at: ago(p.created - 1, 16) },
     answers: Object.entries(shown).map(([id, v]) => {
-      const q = questionById(id)!;
+      const q = questionById(id) ?? { responseType: "text" };
       const n = typeof v === "string" ? Number(v) : NaN;
-      return { question_id: id, question_version: QUESTION_BANK_VERSION, response_status: v === NOT_APPLICABLE ? "not_applicable" : "answered",
+      return { question_id: id, question_version: id.startsWith("postmap.") ? "postmap-1" : QUESTION_BANK_VERSION, response_status: v === NOT_APPLICABLE ? "not_applicable" : "answered",
         raw_ordinal: v === NOT_APPLICABLE ? null : q.responseType === "truth" || q.responseType === "importance" ? n + 1 : q.responseType === "energy" ? 3 - n : null,
         value: v, answered_at: ago(p.created, 9) };
     }),

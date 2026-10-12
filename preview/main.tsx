@@ -37,7 +37,7 @@ function PreviewBar() {
     <div className="fixed bottom-3 right-3 z-50 flex items-center gap-3 rounded-full border border-linen-line bg-linen/95 px-4 py-2 text-[11px] text-taupe shadow-sm"
       style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}>
       <span className="uppercase tracking-[0.14em]">Preview</span>
-      <button className={btn} onClick={() => { try { localStorage.removeItem(KEY); } catch {} navigate("/"); location.reload(); }}>Restart</button>
+      <button className={btn} onClick={() => { try { localStorage.removeItem(KEY); localStorage.removeItem("clm:v10:postmap"); } catch {} navigate("/"); location.reload(); }}>Restart</button>
       <button className={btn} onClick={() => {
         try { localStorage.setItem(KEY, JSON.stringify({ version: "v10", answers: sampleAnswers(), step: ACTIVE_QUESTIONS.length - 1, updatedAt: new Date().toISOString() })); } catch {}
         navigate("/results");

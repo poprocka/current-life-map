@@ -10,6 +10,7 @@ import { CHAPTERS } from "@/content/v10/chapters";
 import { QUESTION_BANK, QUESTION_BANK_VERSION, questionById } from "@/content/v10/question-bank";
 import { NOT_APPLICABLE } from "@/content/types";
 import { ResultsView } from "@/components/ResultsView";
+import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
 import { Badge, Card, btn, btnPrimary, fmtDate, input, shortId } from "./ui";
 
 export interface WorkspaceActions {
@@ -145,7 +146,27 @@ function AnswersTab({ data, answers }: { data: WorkspaceData; answers: Record<st
           </Card>
         );
       })}
+      <PostMapCard answers={answers} rows={rows} />
     </div>
+  );
+}
+
+function PostMapCard({ answers, rows }: { answers: Record<string, string | string[] | undefined>; rows?: Record<string, { answered_at: string }> }) {
+  const any = POST_MAP_REFLECTIONS.questions.some((q) => typeof answers[q.id] === "string");
+  return (
+    <Card title="Optional reflections (after the Map)">
+      {any ? (
+        <ul className="divide-y divide-linen-line">
+          {POST_MAP_REFLECTIONS.questions.map((q) => (
+            <li key={q.id} className="py-2.5 text-[12.5px]">
+              <span className="block text-taupe">{q.prompt}</span>
+              {typeof answers[q.id] === "string" ? <q className="mt-1 block font-serif text-[16px] italic text-mahogany">{answers[q.id]}</q> : <span className="text-taupe/70">Not answered</span>}
+              {rows?.[q.id] && <span className="block text-[10.5px] text-taupe">{fmtDate(rows[q.id].answered_at)}</span>}
+            </li>
+          ))}
+        </ul>
+      ) : <p className="text-[12.5px] text-taupe">None written. They are optional and don’t affect the Map.</p>}
+    </Card>
   );
 }
 
@@ -180,6 +201,7 @@ function ReportTab({ data, answers, actions }: { data: WorkspaceData; answers: R
           <Card title="In their own words"><blockquote className="font-serif text-[18px] italic leading-relaxed">“{reflection}”</blockquote>
             <p className="mt-2 text-[11px] text-taupe">interconnections.reflection — not used in any calculation</p></Card>
         )}
+        {POST_MAP_REFLECTIONS.questions.some((q) => typeof answers[q.id] === "string") && <PostMapCard answers={answers} />}
         {c.sections.map((s) => (
           <Card key={s.key} title={s.title}>
             {s.note && <p className="mb-1 text-[11.5px] text-taupe">{s.note}</p>}

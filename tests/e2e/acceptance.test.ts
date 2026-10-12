@@ -276,3 +276,18 @@ describe("§9 acceptance", () => {
     expect(blob).not.toContain("Private note");
   });
 });
+
+import { saveReflections } from "@/server/assessments";
+describe("optional reflections after the Map", () => {
+  it("save encrypted after completion, show in the workspace, and never change the frozen snapshot", async () => {
+    const { id, token } = await completedAssessment();
+    const before = (await frozenResult(db, id))!.sha256;
+    expect(await saveReflections(db, token, { "postmap.02": "My job looks right but isn't mine." })).toEqual({ ok: true, saved: 1 });
+    expect(await saveReflections(db, token, { "bogus.01": "x" })).toEqual({ ok: false, error: "invalid" });
+    const raw = await pg.query<{ text_ciphertext: string }>(`select text_ciphertext from assessment_answers where assessment_id = $1 and question_id = 'postmap.02'`, [id]);
+    expect(raw.rows[0].text_ciphertext).not.toContain("job");
+    expect((await frozenResult(db, id))!.sha256).toBe(before);
+    const ws = (await asJana((sql) => loadWorkspace(sql, { userId: JANA, role: "admin" }, id)))!;
+    expect(ws.answers.find((a) => a.question_id === "postmap.02")?.value).toBe("My job looks right but isn't mine.");
+  });
+});

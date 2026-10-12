@@ -78,7 +78,7 @@ export async function saveAnswers(db: Db, token: string, answers: Answers): Prom
       );
       saved++;
     }
-    await sql.query(`delete from assessment_answers where assessment_id = $1 and not (question_id = any($2::text[]))`, [a.id, Object.keys(answers)]);
+    await sql.query(`delete from assessment_answers where assessment_id = $1 and question_id not like 'postmap.%' and not (question_id = any($2::text[]))`, [a.id, Object.keys(answers)]);
     await sql.query(`update assessments set sections_completed = $2, last_activity_at = now() where id = $1`, [a.id, sectionsCompleted(answers)]);
     return { ok: true as const, saved, complete: isComplete(answers) };
   });
@@ -157,4 +157,30 @@ async function nextArtifact(sql: Sql, assessmentId: string, type: string) {
   await sql.query(
     `insert into report_artifacts (assessment_id, artifact_type, version, generation_status)
      select $1, $2, coalesce(max(version), 0) + 1, 'ready' from report_artifacts where assessment_id = $1 and artifact_type = $2`, [assessmentId, type]);
+}
+
+/**
+ * Optional post-Map reflections. Allowed after completion because they never touch the frozen snapshot.
+ * Stored encrypted; nothing is stored when encryption isn't configured.
+ */
+export async function saveReflections(db: Db, token: string, reflections: Record<string, string>): Promise<{ ok: true; saved: number } | { ok: false; error: "not_found" | "invalid" | "not_configured" }> {
+  const { POST_MAP_IDS, POST_MAP_REFLECTIONS } = await import("@/content/v10/reflections");
+  for (const [id, v] of Object.entries(reflections)) if (!POST_MAP_IDS.includes(id) || v.length > POST_MAP_REFLECTIONS.maxLength) return { ok: false, error: "invalid" };
+  if (!encryptionConfigured()) return { ok: false, error: "not_configured" };
+  return db.tx(async (sql) => {
+    const a = await resolveToken(sql, token);
+    if (!a) return { ok: false as const, error: "not_found" as const };
+    let saved = 0;
+    for (const [id, v] of Object.entries(reflections)) {
+      if (!v.trim()) { await sql.query(`delete from assessment_answers where assessment_id = $1 and question_id = $2`, [a.id, id]); continue; }
+      await sql.query(
+        `insert into assessment_answers (assessment_id, question_id, question_version, response_status, text_ciphertext, answered_at)
+         values ($1,$2,'postmap-1','answered',$3, now())
+         on conflict (assessment_id, question_id) do update set text_ciphertext = excluded.text_ciphertext, answered_at = now()`,
+        [a.id, id, encrypt(v)]);
+      saved++;
+    }
+    await sql.query(`update assessments set last_activity_at = now() where id = $1`, [a.id]);
+    return { ok: true as const, saved };
+  });
 }

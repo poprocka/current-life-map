@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ResultsView } from "@/components/ResultsView";
 import { NextSteps } from "@/components/NextSteps";
+import { OptionalReflections } from "@/components/OptionalReflections";
 import { readStored } from "@/lib/useInterview";
 import { computeLifeMap, type LifeMapResult } from "@/engine/compute";
 import { isComplete } from "@/engine/navigation";
@@ -36,6 +37,8 @@ export default function Results() {
     <ResultsView result={result}>
       {/* 5. Next steps — download, PDF by email and Life Map Deep Dive, each with the privacy notice link */}
       <NextSteps result={result} token={token} />
+      {/* Optional reflections below the PDF and Deep Dive cards (Jana, 2026-10-12) */}
+      <OptionalReflections token={token} />
     </ResultsView>
   );
 }
