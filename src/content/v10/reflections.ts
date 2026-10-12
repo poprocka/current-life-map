@@ -1,7 +1,7 @@
 /** Optional reflections shown below the next-step cards on the results page (Jana, 2026-10-12). Verbatim. */
 export const POST_MAP_REFLECTIONS = {
-  eyebrow: "See your reality more clearly · Optional reflections",
-  title: "Stay with what you noticed.",
+  eyebrow: "Optional reflections",
+  title: "See your reality more clearly", // headline per Jana, 2026-10-12
   intro:
     "These reflections do not change the visual Map. They give you a little more space to put language around what became visible, question an old story, or name something you may have been moving past. Answer any that feel useful.",
   placeholder: "Optional — write what comes up",
