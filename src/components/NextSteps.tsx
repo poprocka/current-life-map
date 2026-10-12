@@ -69,7 +69,7 @@ export function NextSteps({ result, token }: { result: LifeMapResult; token?: st
         <p className="eyebrow">Keep your Map</p>
         <h2 className="mt-3 font-serif text-[30px] font-light leading-tight">Receive your results as a PDF</h2>
         <p className="mt-3 text-[13.5px] leading-relaxed text-mahogany/75">
-          We’ll email you a copy of your Current Life Map and interpretation. We use your email to deliver this report and to communicate about your request.
+          We’ll email you a copy of your Current Life Map and interpretation.
         </p>
         <form onSubmit={send} className="mt-6 flex flex-col gap-3 sm:flex-row" noValidate>
           <label htmlFor="pdf-email" className="sr-only">Email address</label>
