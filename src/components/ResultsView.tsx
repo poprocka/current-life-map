@@ -34,12 +34,13 @@ export function ResultsView({ result, children, embedded }: { result: LifeMapRes
             {MAP_INTRO}
           </p>
         </header>
-        <div className="mt-4 grid gap-12 lg:mt-2 lg:grid-cols-[1.45fr_1fr] lg:items-start lg:gap-16">
-          <div className="min-w-0">
+        {/* Map and table share a row and are centred against each other; the legend sits under the Map (Jana, 2026-10-12) */}
+        <div className="mt-4 grid gap-12 lg:mt-2 lg:grid-cols-[1.45fr_1fr] lg:items-center lg:gap-x-16 lg:gap-y-2">
+          <div className="min-w-0 lg:col-start-1 lg:row-start-1">
             <PersonalMap result={result} />
-            <div className="mt-8 border-t hairline pt-6"><MapLegend distancePending={distancePending} /></div>
           </div>
-          <div className="min-w-0 lg:pt-10">
+          <div className="min-w-0 border-t hairline pt-6 lg:col-start-1 lg:row-start-2"><MapLegend distancePending={distancePending} /></div>
+          <div className="min-w-0 lg:col-start-2 lg:row-start-1">
             {/* Visible title removed (Jana, 2026-10-12); the table keeps an accessible name */}
             <div className="overflow-x-auto">
               <table aria-label="Map interpretation" className="w-full text-left text-[12.5px] text-mahogany/85">
