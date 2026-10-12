@@ -8,7 +8,7 @@ import { C, ORBIT_TINT, orbitAngle, orbitGeometry, SUN_R, ORBIT_MIN, ORBIT_MAX, 
 export { orbitGeometry };
 
 const IN = "#E0C26A"; // inflow: muted gold — energy coming in to you
-const OUT = "#B39C82"; // outflow: deeper beige, from the brand taupe family (Jana, 2026-10-12)
+const OUT = "#9DB8CC"; // outflow: soft light blue (Jana, 2026-10-12)
 const STEADY = "#CDBDA9"; // stable: a quiet thread in light taupe
 
 /**
@@ -149,25 +149,22 @@ export function PersonalMap({ result }: { result: LifeMapResult }) {
  */
 export function MapLegend({ distancePending = true }: { distancePending?: boolean }) {
   const item = "flex items-start gap-3";
-  // Two-column grid (Jana, 2026-10-12): energy in | energy out, then steady + distance + size | brightness.
+  // Two-column grid, wording by Jana (2026-10-12): energy in | out, steady | brightness, distance | size.
   return (
     <div className="grid gap-x-8 gap-y-3 text-[12.5px] leading-snug text-mahogany/80 sm:grid-cols-2">
       <div className={item}><Swatch><FlowSwatch color={IN} inward /></Swatch>
-        <span><b className="font-normal text-mahogany">Energy in</b> — this area gives you energy</span></div>
+        <span><b className="font-normal text-mahogany">Energy in</b> — This Orbit gives you energy.</span></div>
       <div className={item}><Swatch><FlowSwatch color={OUT} /></Swatch>
-        <span><b className="font-normal text-mahogany">Energy out</b> — this area takes energy. Wider, brighter light means more energy</span></div>
-      <div className="flex flex-col gap-3">
-        <div className={item}><Swatch><line x1="2" y1="9" x2="28" y2="9" stroke={STEADY} strokeWidth="1.4" strokeLinecap="round" /></Swatch>
-          <span><b className="font-normal text-mahogany">Steady</b> — this area keeps your energy fairly stable</span></div>
-        <div className={item}><Swatch><circle cx="4" cy="9" r="3" fill="#D9B26A" /><circle cx="26" cy="9" r="4" fill="#B7AC9B" /><line x1="8" y1="9" x2="21" y2="9" stroke="#C2B3A3" strokeDasharray="2 2" /></Swatch>
-          <span><b className="font-normal text-mahogany">Distance from the Sun</b> — {distancePending
-            ? <>will show how connected each area is to your authentic self. <span className="text-taupe">Not shown yet: every Orbit sits at the same distance while this measure is being finalised.</span></>
-            : "the closer an area is, the more connected it is to your authentic self"}</span></div>
-        <div className={item}><Swatch><circle cx="9" cy="9" r="4" fill="#B7AC9B" /><circle cx="22" cy="9" r="8" fill="#B7AC9B" /></Swatch>
-          <span><b className="font-normal text-mahogany">Size</b> — how important the area is to you right now</span></div>
-      </div>
+        <span><b className="font-normal text-mahogany">Energy out</b> — This Orbit requires your energy.</span></div>
+      <div className={item}><Swatch><line x1="2" y1="9" x2="28" y2="9" stroke={STEADY} strokeWidth="1.4" strokeLinecap="round" /></Swatch>
+        <span><b className="font-normal text-mahogany">Steady</b> — This Orbit keeps your energy relatively balanced.</span></div>
       <div className={item}><Swatch><circle cx="9" cy="9" r="6" fill="#B7AC9B" opacity=".3" /><circle cx="22" cy="9" r="6" fill="#B7AC9B" /></Swatch>
-        <span><b className="font-normal text-mahogany">Brightness</b> — how alive and supported this area feels, based on your answers to its statements</span></div>
+        <span><b className="font-normal text-mahogany">Brightness</b> — How supported and fulfilling this Orbit feels in your current life, based on your answers.</span></div>
+      <div className={item}><Swatch><circle cx="4" cy="9" r="3" fill="#D9B26A" /><circle cx="26" cy="9" r="4" fill="#B7AC9B" /><line x1="8" y1="9" x2="21" y2="9" stroke="#C2B3A3" strokeDasharray="2 2" /></Swatch>
+        <span><b className="font-normal text-mahogany">Distance from the Sun</b> — How closely this Orbit reflects who you are and what matters to you.
+          {distancePending && <span className="text-taupe"> Not shown yet: every Orbit sits at the same distance while this measure is being finalised.</span>}</span></div>
+      <div className={item}><Swatch><circle cx="9" cy="9" r="4" fill="#B7AC9B" /><circle cx="22" cy="9" r="8" fill="#B7AC9B" /></Swatch>
+        <span><b className="font-normal text-mahogany">Size</b> — How important this Orbit is to you at this stage of your life.</span></div>
     </div>
   );
 }
