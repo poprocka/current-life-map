@@ -34,7 +34,7 @@ export interface EngineConfig {
 }
 
 export const V10_PROVISIONAL: EngineConfig = {
-  id: "v10-provisional-2026-10-08",
+  id: "v10-provisional-2026-10-12",
   contentVersion: "v10",
   status: "proposed",
   scale: { truthMax: 4, importanceMax: 4, energyMin: -2, energyMax: 2 },
@@ -71,7 +71,7 @@ export const V10_PROVISIONAL: EngineConfig = {
     "joy.04": "agency", "joy.05": "relationship", "joy.06": "agency",
   },
   // proposed (M3): authenticity / authorship items
-  selfCongruenceItems: ["mind.03", "growth.05", "love.01", "love.05", "social.03", "joy.05", "joy.06"],
+  selfCongruenceItems: ["mind.03", "growth.05", "love.01", "love.05", "social.03", "joy.05"],
   // proposed (M4): the nine facets named in the Appendix
   sunFacets: {
     "Self-knowledge": ["sun.01"],

@@ -85,7 +85,8 @@ const STATEMENTS: Record<Exclude<ChapterId, "interconnections">, Row[]> = {
     ["The way I earn, spend and save money supports the lifestyle I want to live.", "Financial habits", "Alignment of money choices"],
     ["My home and surroundings support my wellbeing and everyday routines.", "Physical environment", "Daily surroundings"],
     ["I feel able to make meaningful decisions about my finances and living conditions.", "Agency", "Practical choice"],
-    ["I tend to stay in familiar financial or living circumstances because change feels uncertain, even when I know those circumstances no longer support the life I want.", "Readiness for change", "Familiarity versus growth", true],
+    // Shortened from V10 by Jana, 2026-10-12 (removed ", even when I know those circumstances no longer support the life I want")
+    ["I tend to stay in familiar financial or living circumstances because change feels uncertain.", "Readiness for change", "Familiarity versus growth", true],
     ["My financial and living situation give me enough freedom and room to grow at this stage of my life.", "Freedom", "Room to grow"],
   ],
   joy: [
@@ -94,7 +95,9 @@ const STATEMENTS: Record<Exclude<ChapterId, "interconnections">, Row[]> = {
     ["My life has enough room for creativity, beauty, play or meaningful experiences.", "Creativity", "Space for play and beauty"],
     ["I make time for what makes me feel alive.", "Aliveness", "Vital experiences"],
     ["The things I enjoy reflect my own interests rather than what looks impressive to others.", "Authenticity", "Intrinsic interests"],
-    ["I make room for enjoyment that feels genuinely my own.", "Happiness", "Self-directed enjoyment"],
+    // Replaced by Jana, 2026-10-12. Was: "I make room for enjoyment that feels genuinely my own." (Happiness → Self-directed enjoyment)
+    // Cue for the new item is proposed (construct/signal not yet approved).
+    ["I give myself opportunities to express my creativity and talents.", "Creativity", "Creative self-expression"],
   ],
 };
 
@@ -109,8 +112,20 @@ const INTERCONNECTIONS: Row[] = [
   ["Do the different areas of your life mostly help each other, or do they compete for your time and energy?", "Interdependence", "Support versus competition"],
 ];
 
+/** Feelings / inner states per Orbit — exact lists supplied by Jana, 2026-10-12. Order preserved. */
+const EMOTION_OPTIONS: Record<OrbitId, string[]> = {
+  mind: ["Clarity", "Peace", "Curiosity", "Confidence", "Openness", "Neutrality", "Busyness", "Unease", "Rumination", "Pressure", "Distraction", "Fatigue"],
+  body: ["Strength", "Energy", "Capability", "Ease", "Connection", "Neutrality", "Self-consciousness", "Frustration", "Tension", "Depletion", "Criticism", "Disconnection"],
+  restoration: ["Restfulness", "Calm", "Softness", "Replenishment", "Care", "Spaciousness", "Restlessness", "Rush", "Overload", "Depletion", "Guilt", "Exhaustion"],
+  growth: ["Curiosity", "Inspiration", "Excitement", "Capability", "Hope", "Momentum", "Stretch", "Uncertainty", "Impatience", "Stagnation", "Intimidation", "Overwhelm"],
+  love: ["Connection", "Safety", "Desire", "Tenderness", "Aliveness", "Ease", "Longing", "Uncertainty", "Loneliness", "Frustration", "Guardedness", "Resentment"],
+  social: ["Connection", "Support", "Belonging", "Recognition", "Energy", "Ease", "Stretch", "Self-consciousness", "Loneliness", "Drain", "Pressure", "Displacement"],
+  resources: ["Security", "Clarity", "Capability", "Freedom", "Groundedness", "Stability", "Constraint", "Uncertainty", "Pressure", "Avoidance", "Overwhelm", "Fear"],
+  joy: ["Aliveness", "Playfulness", "Inspiration", "Peace", "Delight", "Freedom", "Restlessness", "Boredom", "Guilt", "Disconnection", "Deprivation", "Numbness"],
+};
+
 /** Audit C4: Love items that presuppose a romantic relationship. */
-const LOVE_NOT_APPLICABLE = new Set([1, 2, 3]);
+const LOVE_NOT_APPLICABLE = new Set([2, 3]); // Q1 removed (Jana, 2026-10-12)
 
 function exploreFor(chapterId: ChapterId, construct: string): string {
   return construct.toLowerCase();
@@ -183,24 +198,25 @@ function build(): Question[] {
         allowNotApplicable: false,
         enabled: true,
       });
-      // Audit C1: options not yet supplied. Kept in the model, not shown.
+      // Audit C1 resolved: wording and options supplied by Jana, 2026-10-12.
       out.push({
         id: `${chapter.id}.emotion`,
         version: CONTENT_VERSION,
         chapterId: chapter.id,
         order: n + 3,
-        prompt: "",
+        prompt: `When you think about your ${chapter.name} Orbit as it is today, which feelings or inner states are most present? Choose up to 3.`,
         responseType: "emotional_state",
-        options: [],
+        options: EMOTION_OPTIONS[chapter.id as OrbitId].map((label) => ({ value: label.toLowerCase().replace(/[^a-z]+/g, "-"), label })),
         maxSelections: 3,
         exploreCategory: "inner state",
         cue: { construct: "Inner State", signal: "Orbit-specific feelings", text: "Choose up to three Orbit-specific feelings or inner states." },
         direction: "context",
         reverseKeyed: false,
-        optional: true,
+        optional: false, // at least one, up to three
         allowNotApplicable: false,
-        enabled: false,
-        needsConfirmation: ["C1: noun-based emotional-state options from earlier drafts not yet supplied"],
+        enabled: true,
+        interpretationNotes:
+          "Raw selections only. Not scored into Vitality or Congruence until a mapping is approved; shown as reported feelings in results and the Coach Report.",
       });
     }
   }

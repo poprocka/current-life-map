@@ -38,10 +38,10 @@ These are content/methodology decisions, not engineering ones. Nothing below has
 
 | # | Item | What V10 says | What's built now | Needs from you |
 |---|---|---|---|---|
-| C1 | **Emotional-state options** | "Keep the individual noun-based options from our earlier drafts" | Data model + UI control exist; questions are **disabled** (`enabled: false`) | The exact earlier noun lists, per Orbit |
+| C1 | **Emotional-state options** — RESOLVED 2026-10-12: wording and 12 options per Orbit supplied; 1–3 required | "Keep the individual noun-based options from our earlier drafts" | Data model + UI control exist; questions are **disabled** (`enabled: false`) | The exact earlier noun lists, per Orbit |
 | C2 | **Privacy wording on the welcome screen** | Required, but no wording supplied | A one-line draft, marked `DRAFT` in `opening.ts` | Approved line |
 | C3 | **Privacy & Data Use Notice** | Required, linked from welcome | `/privacy` page with a visible "draft — not yet reviewed" banner | Approved notice after legal/vendor review |
-| C4 | **Love "Not applicable" scope** | "where appropriate" | Offered on Love Q1, Q2, Q3 (the items that presuppose a romantic relationship) | Confirm which items |
+| C4 | **Love "Not applicable" scope** | "where appropriate" | Offered on Love Q2 and Q3. **Decided 2026-10-12:** removed from Q1 | Confirm Q2–Q3 |
 | C5 | **Life Interconnections Q1–Q6 options** | Only Q7 has options | Q1–Q4, Q6: choose one of the eight Orbits. Q5: choose one Orbit | Confirm Orbit list is the option set; is the Sun selectable? Should Q5 be free text instead? |
 | C6 | **Interconnections cue text** | Every cue repeats "Stronger agreement indicates…" | Kept verbatim in data; engine treats them as selections per the framework | Confirm the boilerplate can be dropped from these cues |
 | C7 | **Optional reflections** | Results order says "Optional reflections after results" but no reflection questions are listed separately | The nine chapter **Reflection cues** are used as the optional reflection prompts (free text, after results) | Confirm, or supply the reflection set |
@@ -68,3 +68,16 @@ Every derived value carries an `evidence` record (which answers, which weights, 
 ## 5. Technical decisions (mine, not content)
 
 Next.js 15 + TypeScript, Tailwind 3, SVG visualisation, Supabase Postgres + RLS (server-only service key), Vitest. Autosave to device on every answer plus server sync when Supabase is configured; when it isn't, the UI says "saved on this device" instead of pretending.
+
+## 6. Content changes approved by Jana after V10 (preview review, 2026-10-12)
+
+| Item | V10 | Now |
+|---|---|---|
+| Sun chapter heading | The Sun | You (label above: "The Sun") |
+| Social World subtitle | Community, Career & Contribution | Community & Career |
+| Love Q1 | Not applicable offered | Not applicable removed |
+| Resources Q5 | "…because change feels uncertain, even when I know those circumstances no longer support the life I want." | "…because change feels uncertain." |
+| "Self-Interview" | Title case | lowercase "self-interview" in running copy |
+| Orbit labels | Orbit numbers hidden | "Orbit I" – "Orbit VIII" shown |
+| Joy Q6 | "I make room for enjoyment that feels genuinely my own." (Happiness → Self-directed enjoyment) | Replaced with "I give myself opportunities to express my creativity and talents." Proposed cue: Creativity → Creative self-expression (needs approval) |
+| Feelings question | Options pending (disabled) | Added to every Orbit after Energy: "When you think about your [Orbit] Orbit as it is today, which feelings or inner states are most present? Choose up to 3." 12 options each; 1–3 required. Self-interview now 93 screens |

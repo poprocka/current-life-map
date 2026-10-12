@@ -12,6 +12,7 @@ function fill(v: string, over: Answers = {}): Answers {
     if (q.responseType === "orbit_select") a[q.id] = "mind";
     else if (q.responseType === "single_choice") a[q.id] = "mix";
     else if (q.responseType === "energy") a[q.id] = "0";
+    else if (q.responseType === "emotional_state") a[q.id] = [q.options[0].value];
     else a[q.id] = v;
   }
   return { ...a, ...over };
@@ -45,7 +46,7 @@ describe("scoring", () => {
 
 describe("insufficient evidence", () => {
   it("does not fabricate Love metrics when most items are Not applicable", () => {
-    const a = fill("3", { "love.01": NOT_APPLICABLE, "love.02": NOT_APPLICABLE, "love.03": NOT_APPLICABLE, "love.04": undefined });
+    const a = fill("3", { "love.01": undefined, "love.02": NOT_APPLICABLE, "love.03": NOT_APPLICABLE, "love.04": undefined });
     const love = computeLifeMap(a).orbits.find((o) => o.orbit === "love")!;
     expect(love.evidence).toBe("insufficient");
     expect(love.vitality).toBeNull();
@@ -98,8 +99,15 @@ describe("navigation", () => {
     expect(ACTIVE_QUESTIONS[resumeStep(a)].id).toBe("growth.04");
     expect(isComplete(a)).toBe(false);
   });
+  it("validates feelings: 1 to 3 from the list", () => {
+    const em = QUESTION_BANK.find((q) => q.id === "mind.emotion")!;
+    expect(validate(em, undefined)).not.toBeNull();
+    expect(validate(em, ["clarity", "peace"])).toBeNull();
+    expect(validate(em, ["clarity", "peace", "curiosity", "openness"])).not.toBeNull();
+    expect(validate(em, ["happy"])).not.toBeNull();
+  });
   it("validates options and NA", () => {
-    const love1 = QUESTION_BANK.find((q) => q.id === "love.01")!;
+    const love1 = QUESTION_BANK.find((q) => q.id === "love.02")!;
     const mind1 = QUESTION_BANK.find((q) => q.id === "mind.01")!;
     expect(validate(love1, NOT_APPLICABLE)).toBeNull();
     expect(validate(mind1, NOT_APPLICABLE)).not.toBeNull();

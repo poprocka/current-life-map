@@ -19,9 +19,13 @@ describe("V10 question bank completeness", () => {
     expect(QUESTION_BANK.filter((q) => q.reverseKeyed).map((q) => q.id).sort()).toEqual(
       ["growth.03", "growth.06", "mind.05", "resources.05", "restoration.02"]);
   });
-  it("presents 85 screens while emotional-state options are pending", () => {
-    expect(ACTIVE_QUESTIONS).toHaveLength(85);
-    expect(QUESTION_BANK.filter((q) => q.responseType === "emotional_state" && q.enabled)).toHaveLength(0);
+  it("presents 93 screens including one feelings question per Orbit", () => {
+    expect(ACTIVE_QUESTIONS).toHaveLength(93);
+    const em = QUESTION_BANK.filter((q) => q.responseType === "emotional_state" && q.enabled);
+    expect(em).toHaveLength(8);
+    expect(em.every((q) => q.options.length === 12 && q.maxSelections === 3)).toBe(true);
+    expect(em.find((q) => q.chapterId === "social")!.prompt).toBe(
+      "When you think about your Social World Orbit as it is today, which feelings or inner states are most present? Choose up to 3.");
   });
   it("has unique stable ids and no empty prompts", () => {
     expect(new Set(QUESTION_BANK.map((q) => q.id)).size).toBe(QUESTION_BANK.length);

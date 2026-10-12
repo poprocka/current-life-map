@@ -21,7 +21,10 @@ export function isAnswered(q: Question, a: AnswerValue | undefined): boolean {
 }
 
 export function validate(q: Question, a: AnswerValue | undefined): string | null {
-  if (!isAnswered(q, a)) return q.optional ? null : "Choose the answer that is most true for you.";
+  if (!isAnswered(q, a)) {
+    if (q.optional) return null;
+    return q.responseType === "emotional_state" ? "Choose at least one, up to three." : "Choose the answer that is most true for you.";
+  }
   const values = Array.isArray(a) ? a : [a as string];
   const allowed = new Set(q.options.map((o) => o.value));
   if (q.allowNotApplicable) allowed.add(NOT_APPLICABLE);

@@ -5,9 +5,9 @@ import { OPENING, PRIVACY_LINE } from "@/content/v10/opening";
 
 export default function Introduction() {
   return (
-    <main className="min-h-dvh lg:grid lg:grid-cols-[1.05fr_1fr]">
-      <section className="flex items-center justify-center border-b hairline bg-linen-deep/60 px-6 py-10 lg:border-b-0 lg:border-r lg:px-10">
-        <LifeSystem labels="full" className="w-full max-w-[640px]" />
+    <main className="min-h-dvh lg:grid lg:grid-cols-[1.15fr_1fr]">
+      <section className="flex items-center justify-center border-b hairline bg-linen-deep/60 px-6 py-10 lg:border-b-0 lg:border-r lg:px-4">
+        <LifeSystem labels="full" className="w-full max-w-[780px]" />
       </section>
 
       <section className="flex items-center px-6 py-14 sm:px-12 lg:px-20">
@@ -18,7 +18,7 @@ export default function Introduction() {
           <div className="mt-8 space-y-4 text-[14.5px] leading-[1.75] text-mahogany/85">
             {OPENING.paragraphs.map((p) => <p key={p}>{p}</p>)}
           </div>
-          <p className="mt-8 border-l border-gold pl-4 font-serif text-[19px] italic leading-snug">{OPENING.closing}</p>
+          <p className="mt-8 font-serif text-[21px] italic leading-snug text-burgundy">{OPENING.closing}</p>
 
           <div className="mt-11 flex flex-wrap items-center gap-x-7 gap-y-4">
             <Link href="/interview"

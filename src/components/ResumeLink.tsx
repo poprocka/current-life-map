@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { readStored } from "@/lib/useInterview";
 import { isComplete } from "@/engine/navigation";
 
-/** Shown only when this device has a Self-Interview in progress or finished. */
+/** Shown only when this device has a self-interview in progress or finished. */
 export function ResumeLink() {
   const [state, setState] = useState<"none" | "resume" | "done">("none");
   useEffect(() => {

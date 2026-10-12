@@ -5,7 +5,7 @@ export const CHAPTERS: Chapter[] = [
   {
     id: "sun",
     kind: "sun",
-    name: "The Sun",
+    name: "You",
     subtitle: "Relationship With Self",
     description:
       "The center of the system: how well you know yourself, whether you listen to yourself, trust yourself and stay on your own side.",
@@ -69,7 +69,7 @@ export const CHAPTERS: Chapter[] = [
     id: "social",
     kind: "orbit",
     name: "Social World",
-    subtitle: "Community, Career & Contribution",
+    subtitle: "Community & Career", // shortened from V10 "Community, Career & Contribution" (Jana, 2026-10-12)
     description:
       "The people around you and the roles you hold in society influence your energy, perspective and sense of belonging. Your social and professional worlds should give you room to connect, contribute and express your authentic self.",
     reflectionCue:

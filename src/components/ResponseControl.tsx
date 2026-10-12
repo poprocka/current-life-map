@@ -30,11 +30,12 @@ export function ResponseControl({
 
   return (
     <div role={multi ? "group" : "radiogroup"} aria-labelledby={labelledBy}>
-      <div className={isOrbit ? "grid grid-cols-1 gap-2.5 sm:grid-cols-2" : "flex flex-col gap-2.5"}>
+      <div className={isOrbit ? "grid grid-cols-1 gap-2.5 sm:grid-cols-2" : multi ? "flex flex-wrap gap-2.5" : "flex flex-col gap-2.5"}>
         {q.options.map((o) => {
           const id = `${name}-${o.value}`;
+          const full = multi && !!q.maxSelections && selected.size >= q.maxSelections && !selected.has(o.value);
           return (
-            <div key={o.value}>
+            <div key={o.value} className={full ? "opacity-40" : undefined}>
               <input
                 id={id}
                 className="pill-input"
@@ -42,9 +43,11 @@ export function ResponseControl({
                 name={name}
                 value={o.value}
                 checked={selected.has(o.value)}
+                disabled={full}
                 onChange={() => toggle(o.value)}
               />
-              <label htmlFor={id} className="pill flex w-full items-center gap-3 text-left">
+              <label htmlFor={id}
+                className={multi ? `pill inline-flex px-4 py-2.5 ${full ? "cursor-default" : ""}` : "pill flex w-full items-center gap-3 text-left"}>
                 {isOrbit && (
                   <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: ORBIT_TINT[o.value as OrbitId] }} />
                 )}
@@ -54,6 +57,12 @@ export function ResponseControl({
           );
         })}
       </div>
+
+      {multi && q.maxSelections && (
+        <p className="mt-4 text-[12px] text-taupe" aria-live="polite">
+          {selected.size} of {q.maxSelections} chosen
+        </p>
+      )}
 
       {q.allowNotApplicable && (
         <div className="mt-4">

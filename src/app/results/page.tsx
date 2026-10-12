@@ -7,6 +7,7 @@ import { computeLifeMap, type LifeMapResult } from "@/engine/compute";
 import { isComplete } from "@/engine/navigation";
 import type { AnswerValue } from "@/content/types";
 import { SUPPORT_COMPETE_OPTIONS } from "@/content/v10/scales";
+import { questionById } from "@/content/v10/question-bank";
 
 const ENERGY_WORDS: Record<string, string> = {
   "1": "gives you a lot of energy",
@@ -26,13 +27,19 @@ export default function Results() {
     return (
       <main className="mx-auto flex min-h-dvh max-w-[520px] flex-col justify-center px-6">
         <h1 className="font-serif text-[36px] font-light">Your Map isn't ready yet.</h1>
-        <p className="mt-4 text-[14px] text-mahogany/75">It appears once every question in the Self-Interview has an answer.</p>
+        <p className="mt-4 text-[14px] text-mahogany/75">It appears once every question in the self-interview has an answer.</p>
         <Link href="/interview?resume=1" className="mt-8 self-start rounded-full bg-burgundy px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen">
-          Continue the Self-Interview
+          Continue the self-interview
         </Link>
       </main>
     );
 
+  const feelingsFor = (orbit: string) => {
+    const q = questionById(`${orbit}.emotion`);
+    const v = answers[`${orbit}.emotion`];
+    const vals = Array.isArray(v) ? v : [];
+    return q && vals.length ? vals.map((x) => q.options.find((o) => o.value === x)?.label ?? x).join(", ") : "—";
+  };
   const top3 = new Set(result.attentionOrder.slice(0, 3));
   const byId = Object.fromEntries(result.orbits.map((o) => [o.orbit, o]));
   const giving = result.orbits.filter((o) => (o.energy ?? 0) > 0);
@@ -60,13 +67,14 @@ export default function Results() {
           <details className="mt-6 text-[12.5px] text-mahogany/80">
             <summary className="cursor-pointer text-taupe underline underline-offset-4">Read the Map as text</summary>
             <table className="mt-4 w-full text-left">
-              <thead className="text-taupe"><tr><th className="py-1 font-normal">Orbit</th><th className="font-normal">Importance</th><th className="font-normal">Energy</th></tr></thead>
+              <thead className="text-taupe"><tr><th className="py-1 font-normal">Orbit</th><th className="font-normal">Importance</th><th className="font-normal">Energy</th><th className="font-normal">Feelings you chose</th></tr></thead>
               <tbody>
                 {result.orbits.map((o) => (
                   <tr key={o.orbit} className="border-t hairline">
                     <td className="py-1.5">{o.name}</td>
                     <td>{o.statedImportance === null ? "—" : ["Not important right now", "Slightly", "Moderately", "Very", "Highest priority"][Math.round(o.statedImportance * 4)]}</td>
                     <td>{o.energy === null ? "—" : ENERGY_WORDS[String(o.energy)]}</td>
+                    <td>{feelingsFor(o.orbit)}</td>
                   </tr>
                 ))}
               </tbody>

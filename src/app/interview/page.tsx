@@ -3,7 +3,8 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LifeSystem } from "@/components/LifeSystem";
 import { ResponseControl } from "@/components/ResponseControl";
-import { chapterById } from "@/content/v10/chapters";
+import { CHAPTERS, ORBIT_IDS, chapterById } from "@/content/v10/chapters";
+import type { OrbitId } from "@/content/types";
 import { ACTIVE_QUESTIONS } from "@/content/v10/question-bank";
 import { TOTAL_STEPS, isComplete, progress, questionAt, resumeStep, validate } from "@/engine/navigation";
 import { useInterview, type SyncState } from "@/lib/useInterview";
@@ -16,8 +17,12 @@ const SYNC_LABEL: Record<SyncState, string> = {
   error: "Couldn't reach the server — saved on this device",
 };
 
-function eyebrowFor(kind: string) {
-  return kind === "sun" ? "The Center" : kind === "orbit" ? "Orbit" : "The Life System";
+// Orbits are numbered in Roman numerals in the order of the Life System (Jana, 2026-10-12)
+const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
+function eyebrowFor(kind: string, id: string) {
+  if (kind === "sun") return "The Sun";
+  if (kind === "orbit") return `Orbit ${ROMAN[ORBIT_IDS.indexOf(id as OrbitId)]}`;
+  return "The Life System";
 }
 
 function Interview() {
@@ -46,7 +51,19 @@ function Interview() {
   const chapter = chapterById(q.chapterId);
   const value = answers[q.id];
   const last = step === TOTAL_STEPS - 1;
-  const pct = Math.round(progress(answers) * 100);
+  // Shows the current position from the first question; never drops below what has been answered.
+  const pct = Math.round(Math.max(progress(answers), (step + 1) / TOTAL_STEPS) * 100);
+
+  // Chapter-level progress
+  const chapterIndex = CHAPTERS.findIndex((c) => c.id === chapter.id);
+  const chapterQs = ACTIVE_QUESTIONS.filter((x) => x.chapterId === chapter.id);
+  const posInChapter = chapterQs.findIndex((x) => x.id === q.id) + 1;
+  const segments = CHAPTERS.map((c, i) => {
+    const qs = ACTIVE_QUESTIONS.filter((x) => x.chapterId === c.id);
+    const answered = qs.filter((x) => answers[x.id] !== undefined).length / (qs.length || 1);
+    const position = i < chapterIndex ? 1 : i === chapterIndex ? posInChapter / qs.length : 0;
+    return { id: c.id, fill: Math.max(answered, position) };
+  });
 
   const next = () => {
     const err = validate(q, value);
@@ -61,30 +78,30 @@ function Interview() {
   return (
     <main className="min-h-dvh lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
       {/* Left: area */}
-      <aside className="border-b hairline bg-linen-deep/60 px-6 pb-6 pt-6 lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:justify-center lg:border-b-0 lg:border-r lg:px-14">
-        <div className="flex items-center gap-5 lg:block">
-          <LifeSystem active={q.chapterId} labels="none" className="w-[84px] shrink-0 lg:mx-auto lg:w-full lg:max-w-[340px]"
+      <aside className="border-b hairline bg-linen-deep/60 px-6 pb-6 pt-6 lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:[justify-content:safe_center] lg:overflow-y-auto lg:py-10 lg:border-b-0 lg:border-r lg:px-14">
+        {/* Visual + text form one block, centred vertically in the pane (Jana, 2026-10-12) */}
+        <div className="flex items-center gap-5 lg:flex-col lg:items-stretch lg:gap-0">
+          <LifeSystem active={q.chapterId} labels="none" className="w-[84px] shrink-0 lg:mx-auto lg:w-full lg:max-w-[min(430px,48vh)]"
             title={`The Life System, currently showing ${chapter.name}.`} />
           <div key={chapter.id} className="animate-rise lg:mt-10">
-            <p className="eyebrow">{eyebrowFor(chapter.kind)}</p>
+            <p className="eyebrow">{eyebrowFor(chapter.kind, chapter.id)}</p>
             <h2 className="mt-1.5 font-serif text-[30px] font-light leading-none lg:mt-3 lg:text-[44px]">{chapter.name}</h2>
             {chapter.subtitle && <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-burgundy">{chapter.subtitle}</p>}
           </div>
         </div>
         <div key={`${chapter.id}-d`} className="animate-rise">
-          <p className="mt-4 max-w-[440px] text-[13px] leading-relaxed text-mahogany/75 lg:mt-5 lg:text-[13.5px]">{chapter.description}</p>
+          <p className="mt-4 max-w-[460px] text-[13px] leading-relaxed text-mahogany/75 lg:mt-5 lg:text-[13.5px]">{chapter.description}</p>
           {chapter.explores.length > 0 && (
-            <ul aria-label={`${chapter.name} explores`} className="-mx-6 mt-5 flex gap-2 overflow-x-auto px-6 pb-1 lg:mx-0 lg:flex-wrap lg:px-0">
-              {chapter.explores.map((e) => {
-                const on = e === q.exploreCategory;
-                return (
-                  <li key={e} aria-current={on ? "true" : undefined}
-                    className={`shrink-0 rounded-full border px-3 py-1 text-[11px] tracking-wide transition-colors duration-300 ${
-                      on ? "border-burgundy text-burgundy" : "border-linen-line text-taupe"}`}>
-                    {e}
-                  </li>
-                );
-              })}
+            <p id="explore-h" className="eyebrow mt-6">Explore</p>
+          )}
+          {chapter.explores.length > 0 && (
+            <ul aria-labelledby="explore-h" className="-mx-6 mt-3 flex gap-2 overflow-x-auto px-6 pb-1 lg:mx-0 lg:max-w-[460px] lg:flex-wrap lg:px-0">
+              {/* Static, all equally readable — no per-question highlight (Jana, 2026-10-12) */}
+              {chapter.explores.map((e) => (
+                <li key={e} className="shrink-0 rounded-full border border-taupe-light px-3 py-1 text-[11px] tracking-wide text-mahogany/80">
+                  {e}
+                </li>
+              ))}
             </ul>
           )}
         </div>
@@ -94,22 +111,29 @@ function Interview() {
       <section className="flex min-h-[60dvh] flex-col px-6 py-6 sm:px-12 lg:h-dvh lg:px-20 lg:py-10">
         <header>
           <div className="flex items-baseline justify-between text-[12px] text-taupe">
-            <span aria-live="polite">Question {step + 1} of {TOTAL_STEPS}</span>
-            <span className="text-[11px]">{SYNC_LABEL[sync]}</span>
-          </div>
-          <div className="mt-3 h-px w-full bg-linen-line" role="progressbar" aria-label="Overall progress"
+            <span aria-live="polite" className="eyebrow">
+              Chapter {chapterIndex + 1} of {CHAPTERS.length}
+              <span className="sr-only">, question {posInChapter} of {chapterQs.length} in this chapter</span>
+            </span>          </div>
+          {/* One segment per chapter; each fills question by question (Jana, 2026-10-12) */}
+          <div className="mt-3 flex gap-1.5" role="progressbar" aria-label="Overall progress"
             aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
-            <div className="h-px bg-burgundy transition-[width] duration-500" style={{ width: `${pct}%` }} />
+            {segments.map((s) => (
+              <div key={s.id} className="h-[3px] flex-1 overflow-hidden rounded-full bg-linen-line">
+                <div className="h-full rounded-full bg-burgundy transition-[width] duration-500" style={{ width: `${s.fill * 100}%` }} />
+              </div>
+            ))}
           </div>
+          <p className="mt-2 h-4 text-right text-[10.5px] text-taupe/80">{SYNC_LABEL[sync]}</p>
         </header>
 
         <form className="flex flex-1 flex-col" onSubmit={(e) => { e.preventDefault(); next(); }}>
           <div key={q.id} className="my-auto animate-rise py-10">
             <h1 id="prompt" ref={headingRef} tabIndex={-1}
-              className="max-w-[620px] font-serif text-[27px] font-light leading-[1.22] outline-none sm:text-[33px]">
+              className="max-w-[580px] font-serif text-[27px] font-light leading-[1.22] outline-none sm:text-[33px]">
               {q.prompt}
             </h1>
-            <div className="mt-9 max-w-[560px]">
+            <div className="mt-9 max-w-[580px]">
               <ResponseControl q={q} value={value} labelledBy="prompt"
                 onChange={(v) => { setError(null); answer(q.id, v); }} />
             </div>
@@ -117,8 +141,10 @@ function Interview() {
           </div>
 
           <nav className="flex items-center justify-between border-t hairline pt-5" aria-label="Question navigation">
-            <button type="button" onClick={() => goTo(step - 1)} disabled={step === 0}
-              className="px-1 py-2 text-[12px] uppercase tracking-[0.16em] text-taupe hover:text-mahogany disabled:invisible">
+            {/* On the first question, Back returns to the introduction; answers stay saved */}
+            <button type="button" onClick={() => (step === 0 ? router.push("/") : goTo(step - 1))}
+              aria-label={step === 0 ? "Back to the introduction" : "Back to the previous question"}
+              className="px-1 py-2 text-[12px] uppercase tracking-[0.16em] text-taupe hover:text-mahogany">
               ← Back
             </button>
             <button type="submit"
