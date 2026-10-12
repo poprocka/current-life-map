@@ -120,6 +120,12 @@ export function PersonalMap({ result }: { result: LifeMapResult }) {
       })}
 
       <SunGlyph r={SUN_R} />
+      {/* "You" on the Sun, as on the welcome page (Jana, 2026-10-12) */}
+      <text x={C} y={C - 6} textAnchor="middle" fill="#1F1411">
+        <tspan x={C} className="font-serif" fontSize={28}>You</tspan>
+        <tspan x={C} dy={17} className="font-sans" fontSize={8} letterSpacing="0.14em" opacity={0.85}>RELATIONSHIP</tspan>
+        <tspan x={C} dy={11} className="font-sans" fontSize={8} letterSpacing="0.14em" opacity={0.85}>WITH YOURSELF</tspan>
+      </text>
 
       {ORBIT_IDS.map((id) => {
         const o = by[id];
