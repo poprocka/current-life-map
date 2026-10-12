@@ -72,7 +72,7 @@ export default function Privacy() {
   return (
     <main className="mx-auto max-w-[680px] px-6 pb-24 pt-14">
       <Link href="/" className="eyebrow hover:text-burgundy">← The Current Life Map</Link>
-      <header className="mt-10 text-center">
+      <header className="mt-10">
         <h1 className="font-serif text-[40px] font-light leading-tight text-burgundy">Current Life Map</h1>
         <p className="eyebrow mt-3">Privacy &amp; Data Use Notice · October 2026</p>
       </header>
