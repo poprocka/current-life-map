@@ -25,7 +25,8 @@ describe("V10 question bank completeness", () => {
     expect(em).toHaveLength(8);
     expect(em.every((q) => q.options.length === 12 && q.maxSelections === 3)).toBe(true);
     expect(em.find((q) => q.chapterId === "social")!.prompt).toBe(
-      "When you think about your Social World Orbit as it is today, which feelings or inner states are most present? Choose up to 3.");
+      "When you think about your Social World Orbit as it is today, which feelings or inner states are most present?");
+    expect(em[0].instruction).toBe("Choose up to 3.");
   });
   it("has unique stable ids and no empty prompts", () => {
     expect(new Set(QUESTION_BANK.map((q) => q.id)).size).toBe(QUESTION_BANK.length);

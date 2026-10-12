@@ -275,7 +275,7 @@ function buildReasons(o: OrbitMetrics): Reason[] {
   if (o.selections.leverage) r.push({ basis: "reported", text: `You chose ${o.name} as the Orbit whose improvement could most influence the rest of your life.` });
   if (o.selections.crowdedOut) r.push({ basis: "reported", text: `You named ${o.name} as receiving less care because another area demands so much.` });
   if (o.selections.priorityMismatch) r.push({ basis: "reported", text: `You said ${o.name} matters but gets less time and energy than you'd like.` });
-  if (o.selections.autopilot) r.push({ basis: "reported", text: `You said ${o.name} feels most shaped by habit or others' expectations.` });
+  if (o.selections.autopilot) r.push({ basis: "reported", text: `You said ${o.name} is most influenced by other people’s expectations or social standards.` });
   if (o.vitalityGap !== null && o.vitalityGap >= 0.25)
     r.push({ basis: "calculated", text: `Its importance to you is noticeably higher than the support your answers describe in it.` });
   if (o.congruence !== null && o.congruence < 0.5)
@@ -320,12 +320,12 @@ function buildSnapshot(orbits: OrbitMetrics[], picks: Record<string, string | un
     why: sup ? `Your answers about ${sup.name} describe the most support in what's happening and how you relate to it.` : "Not enough evidence." });
 
   const need = pickBy(orbits, (o) => (o.vitalityGap && o.vitalityGap > 0 ? o.vitalityGap : null), "max");
-  items.push({ key: "needsSupport", label: "Needs more support", orbit: need?.orbit ?? null, basis: need ? "calculated" : "none",
+  items.push({ key: "needsSupport", label: "Needs more attention", orbit: need?.orbit ?? null, basis: need ? "calculated" : "none",
     why: need ? `${need.name} matters to you more than your answers say it is currently supported.` : "No Orbit shows importance clearly above its current support." });
 
   const least = pickBy(orbits, (o) => o.congruence, "min");
   items.push({ key: "leastConnected", label: "Least connected with you", orbit: least?.orbit ?? null, basis: least ? "calculated" : "none",
-    why: least ? `Your answers suggest ${least.name} currently feels least like your own${least.selections.autopilot ? ", and you named it as most shaped by habit or others' expectations" : ""}.` : "Not enough evidence." });
+    why: least ? `Your answers suggest ${least.name} currently feels least like your own${least.selections.autopilot ? ", and you named it as most influenced by other people’s expectations" : ""}.` : "Not enough evidence." });
 
   return items;
 }

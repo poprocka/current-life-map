@@ -16,6 +16,12 @@ body { font-family: theme(fontFamily.sans); font-weight: 300; -webkit-font-smoot
 .pill-input:focus-visible + .pill { @apply outline outline-1 outline-offset-2 outline-burgundy; }
 .pill-input:checked + .pill { @apply border-burgundy bg-burgundy text-linen; }
 
+/* Results Map: light drifting along a path (direction = path direction) */
+.energy-flow { animation-name: energy-flow; animation-timing-function: linear; animation-iteration-count: infinite; }
+@keyframes energy-flow { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -60; } }
+.energy-flow-sm { animation-name: energy-flow-sm; animation-timing-function: linear; animation-iteration-count: infinite; }
+@keyframes energy-flow-sm { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -12; } }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

@@ -108,7 +108,7 @@ export const CHAPTERS: Chapter[] = [
     description:
       "Your life works as a whole. Each area influences the others through your choices, time, attention, relationships and energy.",
     reflectionCue: "Look at how the different areas of your life support or compete with one another.",
-    explores: [],
+    explores: ["alignment", "balance", "tradeoffs", "priorities", "energy flow", "agency"], // added by Jana, 2026-10-12
   },
 ];
 

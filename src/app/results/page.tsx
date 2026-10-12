@@ -2,12 +2,23 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { MapLegend, PersonalMap } from "@/components/PersonalMap";
+import { ORBIT_TINT } from "@/components/LifeSystem";
 import { readStored } from "@/lib/useInterview";
 import { computeLifeMap, type LifeMapResult } from "@/engine/compute";
 import { isComplete } from "@/engine/navigation";
 import type { AnswerValue } from "@/content/types";
 import { SUPPORT_COMPETE_OPTIONS } from "@/content/v10/scales";
 import { questionById } from "@/content/v10/question-bank";
+import { OPENING } from "@/content/v10/opening";
+
+const IMPORTANCE_SHORT = ["Not right now", "Slight", "Moderate", "Very important", "Highest priority"];
+const ENERGY_SHORT: Record<string, string> = {
+  "1": "Gives a lot",
+  "0.5": "Gives more than it takes",
+  "0": "Stable",
+  "-0.5": "Takes more than it gives",
+  "-1": "Drains a lot",
+};
 
 const ENERGY_WORDS: Record<string, string> = {
   "1": "gives you a lot of energy",
@@ -55,31 +66,55 @@ export default function Results() {
       )}
 
       {/* 1. Map */}
-      <section className="grid gap-10 pt-10 lg:grid-cols-[1.25fr_1fr] lg:items-center lg:pt-14" aria-labelledby="map-h">
-        <PersonalMap result={result} />
-        <div>
+      {/* The Map sits in its own block so it stands out on the page (Jana, 2026-10-12) */}
+      <section className="mt-8 rounded-[32px] border hairline bg-linen-deep/70 px-5 pb-10 pt-10 xl:-mx-20 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_24px_60px_-40px_rgba(84,15,38,0.25)] sm:px-10 lg:mt-10 lg:px-14 lg:pb-14 lg:pt-14" aria-labelledby="map-h">
+        {/* Title centred above the Map and legend (Jana, 2026-10-12) */}
+        <header className="mx-auto max-w-[600px] text-center">
           <p className="eyebrow">Your Current Life Map</p>
-          <h1 id="map-h" className="mt-4 font-serif text-[44px] font-light leading-[1.05] sm:text-[52px]">Your reality, as it is right now.</h1>
-          <p className="mt-5 max-w-[440px] text-[14px] leading-relaxed text-mahogany/75">
-            A small or distant Orbit is not a problem in itself. Some areas are quieter by choice in this season of life.
+          <h1 id="map-h" className="mt-3 font-serif text-[28px] font-light leading-[1.1] [text-wrap:balance] sm:text-[34px]">{OPENING.title}</h1>
+          {/* Intro copy supplied by Jana, 2026-10-12 */}
+          <p className="mx-auto mt-3 max-w-[540px] text-[13px] leading-relaxed text-mahogany/75 [text-wrap:pretty]">
+            This Map represents the reality you described: what matters most in this season, what feels supported and alive,
+            what is taking or giving energy, how connected each area feels to you, and where the parts of your life appear to
+            influence one another.
           </p>
-          <div className="mt-8 border-t hairline pt-6"><MapLegend /></div>
-          <details className="mt-6 text-[12.5px] text-mahogany/80">
-            <summary className="cursor-pointer text-taupe underline underline-offset-4">Read the Map as text</summary>
-            <table className="mt-4 w-full text-left">
-              <thead className="text-taupe"><tr><th className="py-1 font-normal">Orbit</th><th className="font-normal">Importance</th><th className="font-normal">Energy</th><th className="font-normal">Feelings you chose</th></tr></thead>
-              <tbody>
-                {result.orbits.map((o) => (
-                  <tr key={o.orbit} className="border-t hairline">
-                    <td className="py-1.5">{o.name}</td>
-                    <td>{o.statedImportance === null ? "—" : ["Not important right now", "Slightly", "Moderately", "Very", "Highest priority"][Math.round(o.statedImportance * 4)]}</td>
-                    <td>{o.energy === null ? "—" : ENERGY_WORDS[String(o.energy)]}</td>
-                    <td>{feelingsFor(o.orbit)}</td>
+        </header>
+        {/* Map with its legend underneath; Map interpretation table always open on the right (Jana, 2026-10-12) */}
+        <div className="mt-4 grid gap-12 lg:mt-2 lg:grid-cols-[1.7fr_1fr] lg:items-start lg:gap-14">
+          <div className="min-w-0">
+            <PersonalMap result={result} />
+            <div className="mt-8 border-t hairline pt-6"><MapLegend /></div>
+          </div>
+          <div className="min-w-0 lg:pt-10">
+            <h2 className="eyebrow">Map interpretation</h2>
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-left text-[12.5px] text-mahogany/85">
+                <thead className="text-[10.5px] uppercase tracking-[0.12em] text-taupe">
+                  <tr>
+                    <th scope="col" className="pb-3 pr-3 font-normal">Orbit</th>
+                    <th scope="col" className="pb-3 pr-3 font-normal">Importance</th>
+                    <th scope="col" className="pb-3 pr-3 font-normal">Energy</th>
+                    <th scope="col" className="pb-3 font-normal">Feelings</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </details>
+                </thead>
+                <tbody>
+                  {result.orbits.map((o) => (
+                    <tr key={o.orbit} className="border-t hairline align-top">
+                      <th scope="row" className="py-3 pr-3 font-normal">
+                        <span className="flex items-center gap-2 whitespace-nowrap font-serif text-[15px] text-mahogany">
+                          <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ background: ORBIT_TINT[o.orbit] }} />
+                          {o.name}
+                        </span>
+                      </th>
+                      <td className="py-3 pr-3">{o.statedImportance === null ? "—" : IMPORTANCE_SHORT[Math.round(o.statedImportance * 4)]}</td>
+                      <td className="py-3 pr-3">{o.energy === null ? "—" : ENERGY_SHORT[String(o.energy)]}</td>
+                      <td className="py-3 text-taupe">{feelingsFor(o.orbit)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -93,9 +128,6 @@ export default function Results() {
               <p className="eyebrow">{s.label}</p>
               <p className="mt-3 font-serif text-[30px] font-light">{s.orbit ? byId[s.orbit].name : "—"}</p>
               <p className="mt-3 text-[13px] leading-relaxed text-mahogany/75">{s.why}</p>
-              <p className="mt-4 text-[10.5px] uppercase tracking-[0.14em] text-taupe">
-                {s.basis === "reported" ? "What you reported" : s.basis === "calculated" ? "Calculated from your answers" : ""}
-              </p>
             </article>
           ))}
         </div>
@@ -154,7 +186,7 @@ export default function Results() {
                 <span className={`font-serif ${hi ? "text-[28px]" : "text-[22px]"} font-light`}>{o.name}</span>
                 <ul className="space-y-1.5 text-[13px] leading-relaxed text-mahogany/80">
                   {o.reasons.map((r) => (
-                    <li key={r.text}><span className="mr-2 text-[10px] uppercase tracking-[0.12em] text-taupe">{r.basis === "reported" ? "Reported" : "Calculated"}</span>{r.text}</li>
+                    <li key={r.text}>{r.text}</li>
                   ))}
                 </ul>
               </li>

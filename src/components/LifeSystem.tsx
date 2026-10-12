@@ -4,7 +4,7 @@ import { ORBIT_IDS, chapterById } from "@/content/v10/chapters";
 export const ORBIT_TINT: Record<OrbitId, string> = {
   mind: "#A88E9B",
   body: "#E3A39A", // brighter blush pink (Jana, 2026-10-12)
-  restoration: "#B7AC9B",
+  restoration: "#EBB88C", // soft peach (Jana, 2026-10-12)
   growth: "#E39651", // amber-orange, distinct from Sun gold (Jana, 2026-10-12)
   love: "#A4474B", // muted red (Jana, 2026-10-12)
   social: "#7F97AB", // dusty slate blue (Jana, 2026-10-12)
@@ -14,6 +14,12 @@ export const ORBIT_TINT: Record<OrbitId, string> = {
 
 /** Left-panel background (linen-deep at 60% over linen), used to mask lines behind planets */
 const PANEL_BG = "#F0E6D8";
+
+/** Deeper glow colour for light planets so their active state still stands out on linen (Jana, 2026-10-12) */
+const ORBIT_GLOW: Partial<Record<OrbitId, string>> = {
+  restoration: "#E39A7A", // coral-peach, kept apart from Growth amber
+};
+const glowOf = (id: OrbitId) => ORBIT_GLOW[id] ?? ORBIT_TINT[id];
 
 export const C = 280; // centre of the 560 viewBox
 export const RING = 196;
@@ -193,16 +199,16 @@ export function LifeSystem({
                   <defs>
                     <radialGradient id={`glow-${id}`}>
                       {/* eased falloff so the glow dissolves smoothly to 0% (Jana, 2026-10-12) */}
-                      <stop offset="0%" stopColor={ORBIT_TINT[id]} stopOpacity="0.5" />
-                      <stop offset="25%" stopColor={ORBIT_TINT[id]} stopOpacity="0.34" />
-                      <stop offset="50%" stopColor={ORBIT_TINT[id]} stopOpacity="0.16" />
-                      <stop offset="75%" stopColor={ORBIT_TINT[id]} stopOpacity="0.05" />
-                      <stop offset="100%" stopColor={ORBIT_TINT[id]} stopOpacity="0" />
+                      <stop offset="0%" stopColor={glowOf(id)} stopOpacity="0.5" />
+                      <stop offset="25%" stopColor={glowOf(id)} stopOpacity="0.34" />
+                      <stop offset="50%" stopColor={glowOf(id)} stopOpacity="0.16" />
+                      <stop offset="75%" stopColor={glowOf(id)} stopOpacity="0.05" />
+                      <stop offset="100%" stopColor={glowOf(id)} stopOpacity="0" />
                     </radialGradient>
                   </defs>
                   <circle cx={x} cy={y} r={82} fill={`url(#glow-${id})`} />
                   {ORBIT_RAYS.map((ray) => (
-                    <circle key={ray.r} cx={x} cy={y} r={ray.r} fill="none" stroke={ORBIT_TINT[id]}
+                    <circle key={ray.r} cx={x} cy={y} r={ray.r} fill="none" stroke={glowOf(id)}
                       strokeWidth={ray.w} opacity={ray.o} strokeDasharray={ray.dash} />
                   ))}
                 </>

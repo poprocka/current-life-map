@@ -112,8 +112,8 @@ function Interview() {
         <header>
           <div className="flex items-baseline justify-between text-[12px] text-taupe">
             <span aria-live="polite" className="eyebrow">
-              Chapter {chapterIndex + 1} of {CHAPTERS.length}
-              <span className="sr-only">, question {posInChapter} of {chapterQs.length} in this chapter</span>
+              Section {chapterIndex + 1} of {CHAPTERS.length}
+              <span className="sr-only">, question {posInChapter} of {chapterQs.length} in this section</span>
             </span>          </div>
           {/* One segment per chapter; each fills question by question (Jana, 2026-10-12) */}
           <div className="mt-3 flex gap-1.5" role="progressbar" aria-label="Overall progress"
@@ -133,7 +133,10 @@ function Interview() {
               className="max-w-[580px] font-serif text-[27px] font-light leading-[1.22] outline-none sm:text-[33px]">
               {q.prompt}
             </h1>
-            <div className="mt-9 max-w-[580px]">
+            {q.instruction && (
+              <p id="prompt-hint" className="mt-3 text-[13px] text-taupe">{q.instruction}</p>
+            )}
+            <div className={`${q.instruction ? "mt-7" : "mt-9"} max-w-[580px]`}>
               <ResponseControl q={q} value={value} labelledBy="prompt"
                 onChange={(v) => { setError(null); answer(q.id, v); }} />
             </div>

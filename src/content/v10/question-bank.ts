@@ -108,7 +108,8 @@ const INTERCONNECTIONS: Row[] = [
   ["If improving one Orbit could positively influence the rest of your life, which would you choose?", "System leverage", "Perceived positive spillover"],
   ["Which Orbit receives less care because another part of your life demands so much?", "Trade-offs", "Crowded-out Orbit"],
   ["What matters to you but gets less of your time and energy than you would like?", "Priority alignment", "Values versus time and energy"],
-  ["Which Orbit feels most shaped by habits or other people's expectations rather than your own choices?", "Agency", "Autopilot versus authorship"],
+  // Reworded by Jana, 2026-10-12. Was: "Which Orbit feels most shaped by habits or other people's expectations rather than your own choices?"
+  ["Which Orbit is most influenced by other people’s expectations or social standards?", "Agency", "Other-directed versus self-directed"],
   ["Do the different areas of your life mostly help each other, or do they compete for your time and energy?", "Interdependence", "Support versus competition"],
 ];
 
@@ -204,7 +205,8 @@ function build(): Question[] {
         version: CONTENT_VERSION,
         chapterId: chapter.id,
         order: n + 3,
-        prompt: `When you think about your ${chapter.name} Orbit as it is today, which feelings or inner states are most present? Choose up to 3.`,
+        prompt: `When you think about your ${chapter.name} Orbit as it is today, which feelings or inner states are most present?`,
+        instruction: "Choose up to 3.",
         responseType: "emotional_state",
         options: EMOTION_OPTIONS[chapter.id as OrbitId].map((label) => ({ value: label.toLowerCase().replace(/[^a-z]+/g, "-"), label })),
         maxSelections: 3,

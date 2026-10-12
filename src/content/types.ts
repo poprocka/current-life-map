@@ -50,6 +50,8 @@ export interface Question {
   /** 1-based order within its chapter as in V10 (importance/energy follow statements) */
   order: number;
   prompt: string;
+  /** Small helper line shown under the prompt, e.g. "Choose up to 3." */
+  instruction?: string;
   responseType: ResponseType;
   options: ResponseOption[];
   /** Explore category this item investigates (derived from cue construct; see audit C10) */
