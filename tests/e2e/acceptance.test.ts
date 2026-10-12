@@ -292,3 +292,17 @@ describe("optional reflections after the Map", () => {
     expect(ws.answers.find((a) => a.question_id === "postmap.02")?.value).toBe("My job looks right but isn't mine.");
   });
 });
+
+describe("optional reflections in the emailed PDF", () => {
+  it("includes the person's own reflections verbatim; the snapshot is unchanged", async () => {
+    const { id, token } = await completedAssessment();
+    await saveReflections(db, token, { "postmap.04": "Sleeping before midnight." });
+    const before = (await frozenResult(db, id))!.sha256;
+    expect(await requestPdfEmail(db, token, "r@example.com")).toEqual({ ok: true, state: "sent" });
+    const text = pdfText(email.sent.at(-1)!.attachments![0].content);
+    expect(text).toContain("Your reflections".toUpperCase());
+    expect(text).toContain("Sleeping before midnight.");
+    expect(text).toContain("That I keep postponing rest.");
+    expect((await frozenResult(db, id))!.sha256).toBe(before);
+  });
+});

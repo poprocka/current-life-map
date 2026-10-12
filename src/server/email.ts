@@ -2,7 +2,8 @@ import "server-only";
 import { PRIVACY_NOTICE_VERSION } from "@/content/privacy-version";
 import { buildClientPdf } from "@/lib/pdf/clientReport";
 import type { Db } from "./db";
-import { frozenResult, resolveToken } from "./assessments";
+import { frozenResult, loadAnswers, resolveToken } from "./assessments";
+import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
 import { audit } from "./audit";
 import { hmacB64, safeEqual } from "./crypto";
 
@@ -76,12 +77,16 @@ export async function requestPdfEmail(db: Db, token: string, email: string): Pro
     await sql.query(`insert into consents (subject_type, subject_id, consent_type, notice_version, status, source) values ('assessment', $1, 'pdf_delivery', $2, 'granted', 'results_page')`, [a.id, PRIVACY_NOTICE_VERSION]);
     const req = await sql.query<{ id: string }>(`insert into pdf_requests (assessment_id, email, provider) values ($1,$2,$3) returning id`, [a.id, normalized, provider.name]);
     await audit(sql, null, "pdf.requested", "assessment", a.id, { pdf_request: req.rows[0].id });
-    return { assessmentId: a.id, requestId: req.rows[0].id, frozen, email: normalized };
+    const stored = await loadAnswers(sql, a.id, { includeText: true });
+    const reflections = POST_MAP_REFLECTIONS.questions
+      .filter((q) => typeof stored[q.id] === "string" && (stored[q.id] as string).trim())
+      .map((q) => ({ prompt: q.prompt, text: stored[q.id] as string }));
+    return { assessmentId: a.id, requestId: req.rows[0].id, frozen, email: normalized, reflections };
   });
   if ("error" in prep) return { ok: false, error: prep.error! };
 
   try {
-    const pdf = await buildClientPdf(prep.frozen.snapshot, { generatedAt: prep.frozen.generatedAt });
+    const pdf = await buildClientPdf(prep.frozen.snapshot, { generatedAt: prep.frozen.generatedAt, reflections: prep.reflections });
     const sent = await provider.send({
       to: prep.email, subject: "Your Current Life Map", text: EMAIL_TEXT,
       attachments: [{ filename: "current-life-map.pdf", content: pdf }], idempotencyKey: `pdf-${prep.requestId}`,

@@ -39,7 +39,11 @@ function wrap(text: string, font: PDFFont, size: number, width: number): string[
   return out;
 }
 
-export interface PdfOptions { generatedAt?: Date }
+export interface PdfOptions {
+  generatedAt?: Date;
+  /** The person's own optional reflections, included verbatim when they wrote any. Never part of the snapshot. */
+  reflections?: { prompt: string; text: string }[];
+}
 
 export async function buildClientPdf(result: LifeMapResult, opts: PdfOptions = {}): Promise<Uint8Array> {
   const model = reportModel(result);
@@ -117,6 +121,15 @@ export async function buildClientPdf(result: LifeMapResult, opts: PdfOptions = {
   for (const l of model.reported) text(l, { size: 9.5 });
   y -= 6;
   for (const l of model.suggests) text(`- ${l}`, { size: 9.5, gap: 2 });
+
+  const refl = (opts.reflections ?? []).filter((r) => r.text.trim());
+  if (refl.length) {
+    eyebrow("Your reflections");
+    for (const r of refl) {
+      text(r.prompt, { font: sansBold, size: 8.5, color: MAHOGANY, gap: 2 });
+      text(r.text, { font: serif, size: 11, color: MAHOGANY, gap: 8 });
+    }
+  }
 
   eyebrow("About this report");
   for (const c of model.caveats) text(c, { size: 8.5, color: TAUPE, gap: 3 });

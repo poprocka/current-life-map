@@ -51,7 +51,7 @@ export function NextSteps({ result, token }: { result: LifeMapResult; token?: st
       const r = await fetch("/api/report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, token }),
+        body: JSON.stringify({ email, token, reflections: (() => { try { return JSON.parse(localStorage.getItem("clm:v10:postmap") ?? "{}"); } catch { return {}; } })() }),
       });
       if (r.ok) return setState({ kind: "sent" });
       if (r.status === 503 || r.status === 404 || r.status === 409)
