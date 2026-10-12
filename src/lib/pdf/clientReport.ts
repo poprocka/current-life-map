@@ -118,14 +118,6 @@ export async function buildClientPdf(result: LifeMapResult, opts: PdfOptions = {
   y -= 6;
   for (const l of model.suggests) text(`- ${l}`, { size: 9.5, gap: 2 });
 
-  eyebrow("Where attention may matter most");
-  text("Not ranked. Attention does not mean something is wrong.", { size: 8.5, color: TAUPE, gap: 4 });
-  for (const a of model.attention) {
-    text(a.name, { font: serif, size: 13 });
-    for (const r of a.reasons) text(`- ${r}`, { size: 9.5, gap: 2 });
-    y -= 4;
-  }
-
   eyebrow("About this report");
   for (const c of model.caveats) text(c, { size: 8.5, color: TAUPE, gap: 3 });
 

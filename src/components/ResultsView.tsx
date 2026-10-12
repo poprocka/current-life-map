@@ -111,38 +111,7 @@ export function ResultsView({ result, children, embedded }: { result: LifeMapRes
         </div>
       </section>
 
-      {/* 4. Attention — qualitative candidates only until the ranking method is approved (spec §5.6) */}
-      <section className="mt-24" aria-labelledby="att-h">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="eyebrow">Where Attention May Matter Most</p>
-            <h2 id="att-h" className="mt-3 font-serif text-[36px] font-light">Areas you may want to look at more closely</h2>
-          </div>
-          <details className="max-w-[420px] text-[12.5px] leading-relaxed text-mahogany/75">
-            <summary className="cursor-pointer text-taupe underline underline-offset-4">How these are chosen</summary>
-            <p className="mt-3">
-              These areas come from what you told us directly: the area you chose as a possible leverage point, areas you said
-              receive less care or get less time than you would like, areas that matter a great deal and take a lot of energy,
-              and areas where your answers suggest more or less support. They are not ranked. Attention does not mean
-              something is wrong.
-            </p>
-          </details>
-        </div>
-        <ul className="mt-10 border-t hairline">
-          {result.attention.candidates.map((c) => (
-            <li key={c.orbit} className="grid gap-4 border-b hairline py-6 sm:grid-cols-[240px_1fr]">
-              <span className="flex items-center gap-3 font-serif text-[26px] font-light">
-                <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: ORBIT_TINT[c.orbit] }} />
-                {c.name}
-              </span>
-              <ul className="space-y-1.5 text-[13px] leading-relaxed text-mahogany/80">
-                {c.reasons.map((r) => <li key={r.id}>{r.body}</li>)}
-              </ul>
-            </li>
-          ))}
-        </ul>
-      </section>
-
+      {/* "Where attention may matter most" removed from the client view (Jana, 2026-10-12); still in the Coach Report and script */}
       {children}
     </Root>
   );
