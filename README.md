@@ -1,6 +1,6 @@
 # The Current Life Map
 
-A guided Self-Interview built on the Life System methodology. Content version **V10**, engine config `v10-provisional-2026-10-08` (status: proposed).
+A guided Self-Interview built on the Life System methodology. Question bank `v10-oct12` (V10 + approved 12 Oct overrides), scoring `provisional-1`.
 
 Start with **`docs/03-scoring-and-open-flags.md`** (what scoring runs and what waits for approval), then `docs/02-question-registry-diff.md` and `docs/01-content-audit.md`.
 
@@ -10,7 +10,7 @@ Start with **`docs/03-scoring-and-open-flags.md`** (what scoring runs and what w
 npm install
 cp .env.example .env.local   # optional for now — see below
 npm run dev                  # http://localhost:3000
-npm test                     # 22 tests: question bank, scoring, ranking, navigation
+npm test                     # 45 tests: registry, scoring, missing data, insights, navigation
 ```
 
 Without Supabase credentials the app runs fully, autosaves on the device, and the interview header says "Saved on this device" (never "Saved").
@@ -36,7 +36,7 @@ Raw answers → `responses`; calculated values → `derived_metrics` (keyed by e
 |---|---|
 | 1 Source audit | Done — `docs/01-content-audit.md` |
 | 2 Architecture | Done — schema, question bank, engine interfaces |
-| 3 Introduction + Self-Interview | Done — 85 screens, autosave/resume, back, validation, NA on Love, keyboard + screen-reader semantics, mobile |
+| 3 Introduction + Self-Interview | Done — 94 screens, autosave/resume, back, validation, NA on Love, keyboard + screen-reader semantics, mobile |
 | 4 Results | Scoring `provisional-1` per the 12 Oct backend spec (see docs/03). Unapproved metrics stay inactive; open flags F1–F9 |
 | 5 PDF, email, booking | Next — optional reflections, server-rendered PDF, Resend delivery, Calendly webhook linkage, Deep Dive section |
 | 6 Coach Dashboard | Next — Supabase Auth, Map records, Coach Report, recognition/support marking, client history |
