@@ -36,6 +36,7 @@ export function NextSteps({ result, token }: { result: LifeMapResult; token?: st
 
   /** The server creates a one-time link token for this Map, then we open the scheduler. No answers leave this site. */
   async function book() {
+    if (!token) return setBooking({ kind: "error", message: "Booking isn't connected for this Map yet. Please try again later." });
     const win = window.open("", "_blank");
     setBooking({ kind: "working" });
     try {
@@ -121,11 +122,11 @@ export function NextSteps({ result, token }: { result: LifeMapResult; token?: st
           A private 60-minute session to look closely at your present reality: what your Map shows, how the areas of your
           life affect one another, and what it means for you right now.
         </p>
-        {BOOKING_ENABLED && token ? (
+        {BOOKING_ENABLED ? (
           <>
             <button type="button" onClick={book} disabled={booking.kind === "working"}
               className="mt-6 inline-block rounded-full bg-linen px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-white disabled:opacity-70">
-              {booking.kind === "working" ? "Opening…" : "Book a Deep Dive"}
+              {booking.kind === "working" ? "Opening…" : "Book Your Session"}
             </button>
             {booking.kind === "error" && <p role="status" className="mt-3 text-[12.5px] text-linen">{booking.message}</p>}
           </>
