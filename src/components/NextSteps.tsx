@@ -121,7 +121,6 @@ export function NextSteps({ result, token }: { result: LifeMapResult; token?: st
           A private 60-minute session to look closely at your present reality: what your Map shows, how the areas of your
           life affect one another, and what it means for you right now.
         </p>
-        <p className="mt-5 font-serif text-[22px]">$125 · 60 minutes</p>
         {BOOKING_ENABLED && token ? (
           <>
             <button type="button" onClick={book} disabled={booking.kind === "working"}
