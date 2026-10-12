@@ -36,6 +36,7 @@ async function completedAssessment() {
   expect(s.ok && s.complete).toBe(true);
   const c = await completeAssessment(db, token);
   expect(c.ok).toBe(true);
+  await saveReflections(db, token, { "postmap.01": "That I keep postponing rest." });
   return { id, token };
 }
 const webhook = (body: string, headers = calendlyHeaders(body)) => handleBookingWebhook(db, adapter, headers, body);
@@ -91,7 +92,7 @@ describe("§9 acceptance", () => {
     for (const r of m.table) { expect(text).toContain(r.name); expect(text).toContain(r.energy); }
     for (const s of m.snapshot) expect(text.replace(/\n/g, " ")).toContain(winAnsi(s.body).split(" ").slice(0, 6).join(" "));
     expect(text).toContain(frozen.sha256.slice(0, 12));
-    expect(text).not.toContain("That I keep postponing rest"); // free-text reflection is not in the PDF
+    expect(text).not.toContain("That I keep postponing rest"); // optional reflections are not in the PDF
   });
 
   it("3. emailed PDF: email stored and tracked; marketing consent stays false", async () => {

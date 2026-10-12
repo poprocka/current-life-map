@@ -285,8 +285,8 @@ function build(): Question[] {
     });
   });
 
-  // Optional closing reflection, shown last, before the Map (Jana, 2026-10-12).
-  // Free text: never scored; stored with the sensitive reflections, not with scored answers.
+  // Former optional closing reflection before the Map. Retired from the live flow (Decision Guide, 12 Oct 2026):
+  // replaced by the five optional reflections after the results. Kept in the registry so earlier records still display.
   out.push({
     id: "interconnections.reflection",
     version: CONTENT_VERSION,
@@ -304,7 +304,7 @@ function build(): Question[] {
     reverseKeyed: false,
     optional: true,
     allowNotApplicable: false,
-    enabled: true,
+    enabled: false,
   });
 
   return out;

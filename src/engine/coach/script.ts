@@ -58,6 +58,10 @@ export function generateDeepDiveScript(result: LifeMapResult, answers: Answers, 
   if (typeof answers["interconnections.reflection"] === "string" && answers["interconnections.reflection"].trim())
     welcome.push({ id: "welcome.reflection", basis: "direct", evidence: [{ questionId: "interconnections.reflection", answer: "(free text)", kind: "direct" }],
       text: "They answered the closing reflection (“What truth about your current life became harder to ignore…”). Invite them to say more about it, in their own words." });
+  const post = ["postmap.01", "postmap.02", "postmap.03", "postmap.04", "postmap.05"].filter((id) => typeof answers[id] === "string" && (answers[id] as string).trim());
+  if (post.length)
+    welcome.push({ id: "welcome.postmap", basis: "direct", evidence: post.map((id) => ({ questionId: id, answer: "(free text)", kind: "direct" as const })),
+      text: `They wrote ${post.length === 1 ? "an optional reflection" : `${post.length} optional reflections`} after seeing their Map (shown in the Coach Report). Invite them to say more, in their own words.` });
   intake.forEach((x, i) => welcome.push({ id: `welcome.intake.${i}`, basis: "direct", evidence: [{ questionId: `booking.intake.${i}`, answer: x.answer, kind: "direct" }],
     text: `Booking form — “${x.question}” ${endq(x.answer)} Check whether this is still what matters most today.` }));
 

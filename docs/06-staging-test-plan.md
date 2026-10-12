@@ -22,6 +22,6 @@ Automated equivalents run on every `npm test` (embedded Postgres, fake email, si
 | 12 | Retry | Temporarily break `DATABASE_URL` for the webhook route only (or pause the DB), book, restore | Calendly retries or the 15-minute cron processes the stored event; booking appears once |
 | 13 | Bundle | `npm run build && npm run check:bundle` | "Client bundle clean." |
 | 14 | Mobile | Results page + PDF download on iOS Safari and Android Chrome | Download works; booking opens in a new tab |
+| 15 | Inclusive QA | Respondents of different genders, relationship statuses and life circumstances complete and review results + PDF (docs/07) | Nothing reads as assumed; identical answers give identical results |
 
 Record each run (date, tester, pass/fail, notes) before switching production on.
-| 15 | Inclusive QA | Respondents of different genders, relationship statuses and life circumstances complete and review results + PDF (docs/07) | Nothing reads as assumed; identical answers give identical results |

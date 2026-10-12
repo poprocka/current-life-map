@@ -51,9 +51,10 @@ describe("registry (spec §11)", () => {
   it("truth statements have no approved signal tags yet (open item F1)", () => {
     expect(QUESTION_BANK.filter((q) => q.responseType === "truth").every((q) => q.signalTags.length === 0)).toBe(true);
   });
-  it("94 screens: statements, importance, energy, feelings, interconnections, closing reflection", () => {
-    expect(ACTIVE_QUESTIONS).toHaveLength(94);
-    expect(ACTIVE_QUESTIONS[ACTIVE_QUESTIONS.length - 1]).toMatchObject({ id: "interconnections.reflection", optional: true });
+  it("93 screens: the pre-Map reflection is retired (replaced by optional reflections after the results)", () => {
+    expect(ACTIVE_QUESTIONS).toHaveLength(93);
+    expect(ACTIVE_QUESTIONS.some((q) => q.id === "interconnections.reflection")).toBe(false);
+    expect(QUESTION_BANK.find((q) => q.id === "interconnections.reflection")).toMatchObject({ enabled: false }); // kept for earlier records
   });
   it("unique stable ids, no empty prompts", () => {
     expect(new Set(QUESTION_BANK.map((q) => q.id)).size).toBe(QUESTION_BANK.length);

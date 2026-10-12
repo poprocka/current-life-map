@@ -39,7 +39,6 @@ export function fullAnswers(): Record<string, string | string[]> {
   Object.assign(a, {
     "interconnections.01": "social", "interconnections.02": "joy", "interconnections.03": "restoration", "interconnections.04": "restoration",
     "interconnections.05": "growth", "interconnections.06": "resources", "interconnections.07": "somewhat_compete",
-    "interconnections.reflection": "That I keep postponing rest.",
   });
   return a;
 }
