@@ -2,7 +2,7 @@
 import type { LifeMapResult } from "@/engine/compute";
 import type { OrbitId } from "@/content/types";
 
-export const IMPORTANCE_SHORT = ["Not right now", "Slight", "Moderate", "Very important", "Highest priority"];
+export const IMPORTANCE_SHORT = ["Not important right now", "Slight", "Moderate", "Very important", "Highest priority"];
 export const ENERGY_SHORT: Record<number, string> = { 1: "Gives a lot", 2: "Gives more than it takes", 3: "Stable", 4: "Takes more than it gives", 5: "Drains a lot" };
 export const MAP_INTRO =
   "This Map represents the reality you described: what matters most in this season, what feels supported and alive, what is taking or giving energy, how connected each area feels to you, and where the parts of your life appear to influence one another.";
