@@ -24,3 +24,4 @@ Automated equivalents run on every `npm test` (embedded Postgres, fake email, si
 | 14 | Mobile | Results page + PDF download on iOS Safari and Android Chrome | Download works; booking opens in a new tab |
 
 Record each run (date, tester, pass/fail, notes) before switching production on.
+| 15 | Inclusive QA | Respondents of different genders, relationship statuses and life circumstances complete and review results + PDF (docs/07) | Nothing reads as assumed; identical answers give identical results |
