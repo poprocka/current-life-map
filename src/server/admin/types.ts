@@ -1,0 +1,45 @@
+/** Serializable view models shared by the admin pages, the client workspace and the preview demo. */
+import type { LifeMapResult } from "@/engine/compute";
+import type { CoachReport } from "@/engine/coach/report";
+import type { DeepDiveScript } from "@/engine/coach/script";
+
+export interface ListRow {
+  assessment_id: string; created_at: string; completed_at: string | null; status: string; sections_completed: number; assessment_version: string;
+  last_activity_at: string; client_name: string | null; client_email: string | null; contact_source: string | null; email_delivery_state: string | null;
+  booking_state: string | null; scheduled_start: string | null; timezone: string | null; payment_state: string | null; report_status: string | null;
+  coach_review_state: string | null; follow_up_status: string | null;
+}
+export interface ListFilters {
+  q?: string; booking?: string; completion?: "completed" | "in_progress"; report?: "ready" | "none"; from?: string; to?: string;
+  sort?: "created_at" | "completed_at" | "last_activity_at" | "scheduled_start"; dir?: "asc" | "desc"; page?: number;
+}
+export interface ReconRow { id: string; booked_name: string | null; booked_email: string | null; scheduled_start: string | null; booking_state: string; payment_state: string; reconciliation_reason: string | null; assessment_id: string | null; created_at: string }
+
+export interface AnswerRow { question_id: string; question_version: string; response_status: string; raw_ordinal: number | null; value: string | string[] | null; answered_at: string }
+export interface ScriptVersion { id: string; version: number; kind: "generated" | "coach_edited"; booking_id: string | null; content: DeepDiveScript; created_at: string }
+export interface BookingView {
+  id: string; provider: string; provider_event_id: string; provider_invitee_id: string; booking_state: string; scheduled_start: string | null; scheduled_end: string | null;
+  timezone: string | null; meeting_url: string | null; booked_name: string | null; booked_email: string | null; intake_answers: { question: string; answer: string }[] | null;
+  payment_reference: string | null; payment_state: string; rescheduled_from: string | null; needs_reconciliation: boolean; reconciliation_reason: string | null; created_at: string;
+  events: { event_type: string; received_at: string; processed_at: string | null; processing_error: string | null }[];
+}
+export interface NoteView {
+  id: string; booking_id: string | null; notes: string; validated_findings: Record<string, string> | null;
+  agreed_next_steps: { steps: string[]; coachingInquiry: boolean } | null; follow_up_status: string; updated_at: string;
+}
+export interface WorkspaceData {
+  assessment: { id: string; status: string; created_at: string; completed_at: string | null; sections_completed: number; assessment_version: string; question_bank_version: string; last_activity_at: string };
+  answers: AnswerRow[];
+  result: { snapshot: LifeMapResult; sha256: string; generated_at: string; scoring_version: string } | null;
+  coachReport: { id: string; content: CoachReport; review_state: string; template_version: string; created_at: string } | null;
+  scripts: ScriptVersion[];
+  clients: { id: string; name: string | null; email: string | null; phone: string | null; link_source: string; linked_at: string; verified_at: string | null }[];
+  bookings: BookingView[];
+  pdfRequests: { id: string; email: string; requested_at: string; delivery_state: string; provider_message_id: string | null; retry_count: number; marketing_consent: boolean; last_error: string | null }[];
+  consents: { consent_type: string; notice_version: string; status: string; source: string; created_at: string }[];
+  notes: NoteView[];
+  artifacts: { artifact_type: string; version: number; generation_status: string; checksum: string | null; created_at: string }[];
+  audit: { action: string; actor_id: string | null; target_type: string; created_at: string; metadata: Record<string, unknown> | null }[];
+  relatedAssessments: { id: string; created_at: string; status: string }[];
+  viewer: { userId: string; role: "coach" | "admin" };
+}

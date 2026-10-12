@@ -6,6 +6,7 @@ import InterviewPage from "@/app/interview/page";
 import Results from "@/app/results/page";
 import Privacy from "@/app/privacy/page";
 import { ACTIVE_QUESTIONS } from "@/content/v10/question-bank";
+import { AdminDemo } from "./admin-demo";
 
 // No server in the preview: storage routes answer "not configured", so the UI says "Saved on this device".
 const realFetch = window.fetch.bind(window);
@@ -41,13 +42,16 @@ function PreviewBar() {
         try { localStorage.setItem(KEY, JSON.stringify({ version: "v10", answers: sampleAnswers(), step: ACTIVE_QUESTIONS.length - 1, updatedAt: new Date().toISOString() })); } catch {}
         navigate("/results");
       }}>Sample results</button>
+      <button className={btn} onClick={() => navigate("/admin")}>Coach workspace (demo)</button>
     </div>
   );
 }
 
 function App() {
-  const p = usePath().split("?")[0];
+  const full = usePath();
+  const p = full.split("?")[0];
+  if (p.startsWith("/admin")) return <><AdminDemo path={p} /><PreviewBar /></>;
   const Page = p === "/interview" ? InterviewPage : p === "/results" ? Results : p === "/privacy" ? Privacy : Introduction;
-  return <><Page key={usePath()} /><PreviewBar /></>;
+  return <><Page key={full} /><PreviewBar /></>;
 }
 createRoot(document.getElementById("root")!).render(<App />);

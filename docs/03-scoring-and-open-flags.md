@@ -49,4 +49,4 @@ Math/data: ordinal and energy mappings · N/A excluded, Love denominator 4 · no
 
 Insights: every claim carries evidence · low-importance nourishing Orbit not a candidate · no diagnostic/absolute words · hypotheses carry caveats · empty input yields no filler.
 
-Not yet testable (later phases): PDF parity with the app, coach-report access control, booking/email confirmations.
+PDF parity, coach-material access control, booking/payment/email states: covered by `tests/e2e/acceptance.test.ts` (addendum §9).

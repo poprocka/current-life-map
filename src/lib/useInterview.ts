@@ -68,15 +68,16 @@ export function useInterview() {
     setSync("saving");
     try {
       if (!token.current) {
-        const r = await fetch("/api/maps", { method: "POST" });
+        const r = await fetch("/api/assessments", { method: "POST" });
         if (r.status === 503) { serverAvailable.current = false; return setSync("device"); }
         if (!r.ok) throw new Error();
         token.current = (await r.json()).token;
       }
-      const r = await fetch(`/api/maps/${token.current}/responses`, {
+      // The access token travels in the body, never in the URL.
+      const r = await fetch("/api/assessments/answers", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers: a }),
+        body: JSON.stringify({ token: token.current, answers: a }),
       });
       if (r.status === 503) { serverAvailable.current = false; return setSync("device"); }
       if (!r.ok) throw new Error();

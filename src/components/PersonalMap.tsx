@@ -1,29 +1,11 @@
 import { useEffect, useState } from "react";
 import type { LifeMapResult, OrbitResult } from "@/engine/compute";
 import { ORBIT_IDS } from "@/content/v10/chapters";
-import { C, ORBIT_TINT, SunGlyph, SystemDefs, orbitAngle } from "./LifeSystem";
+import { SunGlyph, SystemDefs } from "./LifeSystem";
+import { C, ORBIT_TINT, orbitAngle, orbitGeometry, SUN_R, ORBIT_MIN, ORBIT_MAX, R_MIN, R_MAX, R_NEUTRAL } from "./map-geometry";
 
 // The Sun always stays the largest body: the biggest possible Orbit is ~60% of the Sun's radius (Jana, 2026-10-12)
-const SUN_R = 50;
-const ORBIT_MIN = 9;
-const ORBIT_MAX = 30;
-const R_MIN = 128;
-const R_MAX = 300;
-
-/** Neutral orbit used while congruence (distance) is pending approval — spec §5.5 / flag F4. */
-const R_NEUTRAL = (R_MIN + R_MAX) / 2;
-
-export function orbitGeometry(o: OrbitResult) {
-  const i = ORBIT_IDS.indexOf(o.orbit);
-  const a = orbitAngle(i);
-  // Distance: personalised only when an approved congruence metric exists; otherwise fixed neutral placement.
-  const dist = o.congruence === null ? R_NEUTRAL : R_MIN + (1 - o.congruence) * (R_MAX - R_MIN);
-  // Size: direct stated importance; neutral size when unavailable.
-  const size = ORBIT_MIN + (o.importanceDirect ?? 0.5) * (ORBIT_MAX - ORBIT_MIN);
-  // Brightness: supportive-response proxy (labelled as such in the legend); muted when unavailable.
-  const bright = o.responseSupportIndex === null ? 0.35 : 0.3 + o.responseSupportIndex * 0.7;
-  return { a, dist, size, bright, x: C + dist * Math.cos(a), y: C + dist * Math.sin(a) };
-}
+export { orbitGeometry };
 
 const IN = "#E0C26A"; // inflow: muted yellow — energy coming in to you
 const OUT = "#A39D97"; // outflow: soft grey — energy going out of you

@@ -1,16 +1,8 @@
 import type { ChapterId, OrbitId } from "@/content/types";
 import { ORBIT_IDS, chapterById } from "@/content/v10/chapters";
+import { C, ORBIT_TINT, RING, orbitAngle } from "./map-geometry";
+export { C, ORBIT_TINT, RING, orbitAngle };
 
-export const ORBIT_TINT: Record<OrbitId, string> = {
-  mind: "#A88E9B",
-  body: "#E3A39A", // brighter blush pink (Jana, 2026-10-12)
-  restoration: "#EBB88C", // soft peach (Jana, 2026-10-12)
-  growth: "#E39651", // amber-orange, distinct from Sun gold (Jana, 2026-10-12)
-  love: "#A4474B", // muted red (Jana, 2026-10-12)
-  social: "#7F97AB", // dusty slate blue (Jana, 2026-10-12)
-  resources: "#8FA585", // muted sage green (Jana, 2026-10-12)
-  joy: "#DCCC7A", // muted lemon yellow, cooler than Sun gold (Jana, 2026-10-12)
-};
 
 /** Left-panel background (linen-deep at 60% over linen), used to mask lines behind planets */
 const PANEL_BG = "#F0E6D8";
@@ -21,12 +13,6 @@ const ORBIT_GLOW: Partial<Record<OrbitId, string>> = {
 };
 const glowOf = (id: OrbitId) => ORBIT_GLOW[id] ?? ORBIT_TINT[id];
 
-export const C = 280; // centre of the 560 viewBox
-export const RING = 196;
-
-export function orbitAngle(i: number) {
-  return (-90 + i * 45) * (Math.PI / 180);
-}
 
 const SUN_RAYS = [
   { r: 58, w: 1, o: 0.7, dash: undefined },

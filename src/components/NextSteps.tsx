@@ -2,9 +2,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import type { LifeMapResult } from "@/engine/compute";
+import { saveFile } from "@/lib/saveFile";
 
-/** Set NEXT_PUBLIC_BOOKING_URL (Calendly) to enable booking. Until then the button says so honestly. */
-const BOOKING_URL = process.env.NEXT_PUBLIC_BOOKING_URL ?? "";
+/** Set NEXT_PUBLIC_BOOKING_ENABLED=1 once Calendly is connected. Until then the button says so honestly. */
+const BOOKING_ENABLED = process.env.NEXT_PUBLIC_BOOKING_ENABLED === "1";
 
 type SendState = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind: "error"; message: string };
 
@@ -14,9 +15,46 @@ type SendState = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { k
  *  - book the 60-minute Life Map Deep Dive ($125)
  * Each links to the Privacy & Data Use Notice, which explains how the email or booking details are used.
  */
-export function NextSteps({ result }: { result: LifeMapResult }) {
+export function NextSteps({ result, token }: { result: LifeMapResult; token?: string }) {
   const [email, setEmail] = useState("");
   const [state, setState] = useState<SendState>({ kind: "idle" });
+  const [download, setDownload] = useState<"idle" | "working" | "error">("idle");
+  const [booking, setBooking] = useState<{ kind: "idle" | "working" } | { kind: "error"; message: string }>({ kind: "idle" });
+
+  /** Built in the browser from the same result shown on this page — no email needed, nothing sent anywhere. */
+  async function downloadPdf() {
+    setDownload("working");
+    try {
+      const { buildClientPdf } = await import("@/lib/pdf/clientReport");
+      const bytes = await buildClientPdf(result);
+      await saveFile("current-life-map.pdf", new Blob([bytes as BlobPart], { type: "application/pdf" }));
+      setDownload("idle");
+    } catch (e) {
+      // The viewer declining a save prompt is not an error.
+      setDownload((e as { code?: string })?.code === "declined" ? "idle" : "error");
+    }
+  }
+
+  /** The server creates a one-time link token for this Map, then we open the scheduler. No answers leave this site. */
+  async function book() {
+    const win = window.open("", "_blank");
+    setBooking({ kind: "working" });
+    try {
+      const r = await fetch("/api/booking/link", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) });
+      if (r.ok) {
+        const { url } = await r.json();
+        if (win) win.location.href = url; else window.location.href = url;
+        return setBooking({ kind: "idle" });
+      }
+      win?.close();
+      setBooking({ kind: "error", message: r.status === 503 || r.status === 404 || r.status === 409
+        ? "Booking isn't connected for this Map yet. Please try again later."
+        : "We couldn't open booking just now. Please try again in a moment." });
+    } catch {
+      win?.close();
+      setBooking({ kind: "error", message: "We couldn't reach the server. Check your connection and try again." });
+    }
+  }
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -29,10 +67,10 @@ export function NextSteps({ result }: { result: LifeMapResult }) {
       const r = await fetch("/api/report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, versions: result.versions }),
+        body: JSON.stringify({ email, token }),
       });
       if (r.ok) return setState({ kind: "sent" });
-      if (r.status === 503 || r.status === 404)
+      if (r.status === 503 || r.status === 404 || r.status === 409)
         return setState({ kind: "error", message: "Email delivery isn't connected yet, so nothing was sent. Your results stay on this page." });
       setState({ kind: "error", message: "We couldn't send your PDF just now. Please try again in a moment." });
     } catch {
@@ -50,7 +88,12 @@ export function NextSteps({ result }: { result: LifeMapResult }) {
       <div className="rounded-[28px] border hairline p-8 sm:p-10">
         <p className="eyebrow">Keep your Map</p>
         <h2 className="mt-3 font-serif text-[30px] font-light leading-tight">Receive your results as a PDF</h2>
-        <p className="mt-3 text-[13.5px] leading-relaxed text-mahogany/75">
+        <button type="button" onClick={downloadPdf} disabled={download === "working"}
+          className="mt-6 rounded-full border border-burgundy px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-burgundy hover:text-linen disabled:opacity-60">
+          {download === "working" ? "Preparing…" : "Download PDF"}
+        </button>
+        {download === "error" && <p role="status" className="mt-2 text-[12.5px] text-burgundy">We couldn't create the PDF in this browser. Please try again.</p>}
+        <p className="mt-6 text-[13.5px] leading-relaxed text-mahogany/75">
           We’ll email you a copy of your Current Life Map and interpretation. We use your email to deliver this report and to communicate about your request.
         </p>
         <form onSubmit={send} className="mt-6 flex flex-col gap-3 sm:flex-row" noValidate>
@@ -85,11 +128,14 @@ export function NextSteps({ result }: { result: LifeMapResult }) {
           life affect one another, and what it means for you right now.
         </p>
         <p className="mt-5 font-serif text-[22px]">$125 · 60 minutes</p>
-        {BOOKING_URL ? (
-          <a href={BOOKING_URL} target="_blank" rel="noopener noreferrer"
-            className="mt-6 inline-block rounded-full bg-linen px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-white">
-            Book a Deep Dive
-          </a>
+        {BOOKING_ENABLED && token ? (
+          <>
+            <button type="button" onClick={book} disabled={booking.kind === "working"}
+              className="mt-6 inline-block rounded-full bg-linen px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-white disabled:opacity-70">
+              {booking.kind === "working" ? "Opening…" : "Book a Deep Dive"}
+            </button>
+            {booking.kind === "error" && <p role="status" className="mt-3 text-[12.5px] text-linen">{booking.message}</p>}
+          </>
         ) : (
           <span aria-disabled="true" className="mt-6 inline-block cursor-not-allowed rounded-full bg-linen/30 px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen/80">
             Booking opens soon
