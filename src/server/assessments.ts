@@ -4,6 +4,7 @@ import { NOT_APPLICABLE } from "@/content/types";
 import { ACTIVE_QUESTIONS, ASSESSMENT_VERSION, QUESTION_BANK_VERSION, questionById } from "@/content/v10/question-bank";
 import { CHAPTERS } from "@/content/v10/chapters";
 import { generateNarrative } from "@/engine/narrative";
+import { attachInviteAssessment, clientForInvite } from "./clients";
 import { computeLifeMap, type LifeMapResult } from "@/engine/compute";
 import { isComplete, validate } from "@/engine/navigation";
 import { generateCoachReport, COACH_REPORT_TEMPLATE_VERSION } from "@/engine/coach/report";
@@ -16,13 +17,22 @@ import { audit } from "./audit";
 
 export type Answers = Record<string, AnswerValue>;
 
-export async function createAssessment(db: Db): Promise<{ id: string; token: string }> {
+/**
+ * Start an assessment. With a valid private client link (`invite`), the new Map is attached to that client's
+ * profile; an unknown or revoked invite is ignored silently (the person can still complete an anonymous Map).
+ */
+export async function createAssessment(db: Db, opts: { invite?: string | null } = {}): Promise<{ id: string; token: string; linkedToProfile: boolean }> {
   const token = randomToken();
-  const r = await db.query<{ id: string }>(
-    `insert into assessments (access_token_hash, assessment_version, question_bank_version) values ($1, $2, $3) returning id`,
-    [sha256(token), ASSESSMENT_VERSION, QUESTION_BANK_VERSION],
-  );
-  return { id: r.rows[0].id, token };
+  return db.tx(async (sql) => {
+    const r = await sql.query<{ id: string }>(
+      `insert into assessments (access_token_hash, assessment_version, question_bank_version) values ($1, $2, $3) returning id`,
+      [sha256(token), ASSESSMENT_VERSION, QUESTION_BANK_VERSION],
+    );
+    const id = r.rows[0].id;
+    const clientId = await clientForInvite(sql, opts.invite);
+    if (clientId) await attachInviteAssessment(sql, clientId, id);
+    return { id, token, linkedToProfile: !!clientId };
+  });
 }
 
 export async function resolveToken(sql: Sql, token: string) {

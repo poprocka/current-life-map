@@ -5,7 +5,7 @@
  */
 import type { OrbitId } from "@/content/types";
 import { ORBIT_IDS } from "@/content/v10/chapters";
-import { type Ctx, cap, list, pick } from "./context";
+import { type Ctx, COEXIST_LINES, cap, list, pick } from "./context";
 import { energyWords } from "./rules";
 import type { Destination, Evidence, InsightCard, InsightSection, NarrativeSection, Observation, OrbitNarrative, Para } from "./types";
 
@@ -268,8 +268,9 @@ export function composeCards(c: Ctx, A: Allocation, closingText: () => string): 
     // Cards draw from their own destination; a deeper card may fall back to an unused opening candidate of the same kind.
     let picks = A.free(dest, extra);
     if (key === "begin" && !picks.length) picks = A.free("card.tension", (o) => !!o.question);
-    // Keep the card proportionate: at most two observations about difficulty in a row, and no more than three in all.
-    picks = picks.slice(0, 3);
+    // Fewer, stronger observations (Jana, 13 Oct): up to three, and a third only when it is as strong as the rest.
+    picks = picks.filter((o, i) => i === 0 || o.relevance >= 0.4).slice(0, 3);
+    if (picks.length === 3 && picks[2].relevance < 0.5) picks = picks.slice(0, 2);
     for (const o of picks) A.take(o, dest);
     const sections: InsightSection[] = picks.map((o) => ({ id: o.id, observationId: o.id, heading: (HEADINGS[o.rule] ?? (() => cap(o.clause)))(o, c), text: o.text, evidence: o.evidence, claim: claimOf(o) }));
     const fallback = !picks.length;
@@ -326,9 +327,9 @@ export function composeOrbit(c: Ctx, o: OrbitId, A: Allocation): OrbitNarrative 
   const feel: string[] = [];
   if (r.importanceOrdinal) { feel.push(`You rated ${r.name} as "${c.impLabel(o)}"${r.energyRaw !== null ? `, and said it ${energyWords(r.energyRaw)}` : ""}.`); ev.push(c.ev(`${o}.importance`)); if (r.energyRaw !== null) ev.push(c.ev(`${o}.energy`)); }
   const emo = A.all.find((x) => x.areas[0] === o && x.rule.startsWith("emotion."));
-  const feelings = list(r.emotions.map((e) => e.label.toLowerCase()));
   if (r.emotions.length) {
-    feel.push(emo?.rule === "emotion.mixed" ? `Your feelings about it are mixed: ${feelings}.` : emo?.rule === "emotion.strained" ? `The feelings you chose were ${feelings}.` : `You chose ${feelings} to describe it.`);
+    // The card may already carry this Orbit's feelings in full; here they are named plainly.
+    feel.push(`You described it with ${c.feelings(o)}.${emo?.rule === "emotion.mixed" && !A.used.has(emo.id) ? ` ${pick(COEXIST_LINES, `${c.seed}#coexist.${o}`)}` : ""}`);
     ev.push(c.ev(`${o}.emotion`)); if (emo) A.ref([emo], "orbit");
   }
   if (feel.length) p.push(feel.join(" "));

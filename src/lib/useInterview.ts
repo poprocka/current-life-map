@@ -68,10 +68,14 @@ export function useInterview() {
     setSync("saving");
     try {
       if (!token.current) {
-        const r = await fetch("/api/assessments", { method: "POST" });
+        // A private client link's token (kept from the URL fragment) is sent in the body, never in a URL.
+        let invite: string | null = null;
+        try { invite = localStorage.getItem("clm:v10:invite"); } catch { /* private mode */ }
+        const r = await fetch("/api/assessments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(invite ? { invite } : {}) });
         if (r.status === 503) { serverAvailable.current = false; return setSync("device"); }
         if (!r.ok) throw new Error();
         token.current = (await r.json()).token;
+        try { localStorage.removeItem("clm:v10:invite"); } catch { /* private mode */ }
       }
       // The access token travels in the body, never in the URL.
       const r = await fetch("/api/assessments/answers", {

@@ -11,7 +11,7 @@
  */
 import type { OrbitId } from "@/content/types";
 import { ORBIT_IDS } from "@/content/v10/chapters";
-import { type Ctx, cap, isAre, list, pick } from "./context";
+import { type Ctx, COEXIST_LINES, cap, isAre, list, pick } from "./context";
 import type { Area, Destination, Evidence, Observation, Sufficiency, Valence, Wording } from "./types";
 
 export interface RuleDoc { id: string; family: string; evidence: string; reads: string; destinations: Destination[] }
@@ -293,21 +293,22 @@ export function buildObservations(c: Ctx): Observation[] {
     const names = c.by[o].emotions.map((e) => e.label);
     if (!names.length) continue;
     const evE = [c.ev(`${o}.emotion`)];
+    const desc = c.feelings(o);
     if (t.expansive.length && (t.strained.length || t.ambivalent.length))
       add({ rule: "emotion.mixed", family: "emotion", areas: [o], evidence: evE, sufficiency: "explicit", wording: "state", valence: "mixed", relevance: 0.36,
         destinations: ["orbit", "card.energy"],
-        text: `You chose ${list(names)} to describe ${N(o)}. These states can coexist, often when something matters and is also stretching you.`,
-        clause: `${N(o)} brings ${list(names.map((x) => x.toLowerCase()))} at the same time` });
+        text: `You described ${N(o)} with ${desc}. ${v(`coexist.${o}`, COEXIST_LINES)}`,
+        clause: `${N(o)} brings ${desc}` });
     else if (t.strained.length >= 2 && !t.expansive.length)
       add({ rule: "emotion.strained", family: "emotion", areas: [o], evidence: evE, sufficiency: "explicit", wording: "suggest", valence: "tension", relevance: 0.4,
         destinations: ["orbit", "card.energy"],
-        text: `The feelings you chose for ${N(o)} (${list(names.map((x) => x.toLowerCase()))}) suggest it is asking something of you right now.`,
-        clause: `${N(o)} brings ${list(names.map((x) => x.toLowerCase()))}` });
+        text: `You described ${N(o)} with ${desc}. It seems to be asking something of you right now.`,
+        clause: `${N(o)} brings ${desc}` });
     else if (t.expansive.length >= 2 && !t.strained.length)
       add({ rule: "emotion.alive", family: "emotion", areas: [o], evidence: evE, sufficiency: "explicit", wording: "suggest", valence: "strength", relevance: 0.36,
         destinations: ["orbit", "card.support"],
-        text: `You chose ${list(names.map((x) => x.toLowerCase()))} for ${N(o)}, which suggests it feels alive for you at the moment.`,
-        clause: `${N(o)} feels alive` });
+        text: `You described ${N(o)} with ${desc}. Something there seems to be feeding you.`,
+        clause: `${N(o)} brings ${desc}` });
   }
 
   // ── Life interconnections (≥2 responses or an explicit Interconnections answer) ──

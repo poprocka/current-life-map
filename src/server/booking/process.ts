@@ -1,4 +1,5 @@
 import "server-only";
+import { promoteToLead } from "../clients";
 import { PRIVACY_NOTICE_VERSION } from "@/content/privacy-version";
 import type { Db, Sql } from "../db";
 import { audit } from "../audit";
@@ -134,6 +135,7 @@ async function onCreated(sql: Sql, e: NormalizedBookingEvent): Promise<{ booking
       e.name, e.email, JSON.stringify(e.intake), paymentRef, paymentState, rescheduledFrom, !assessmentId || flags.length > 0, flags.join("; ") || null]);
   const bookingId = b.rows[0].id;
   await audit(sql, null, "booking.created", "booking", bookingId, { matched: !!assessmentId, rescheduled: !!rescheduledFrom });
+  if (assessmentId && e.active) await promoteToLead(sql, assessmentId);
 
   // Regenerate the personalised script with the booking intake; earlier and coach-edited versions are kept
   if (assessmentId && e.active) {
@@ -184,6 +186,7 @@ export async function reconcileBooking(sql: Sql, coachId: string, bookingId: str
   }
   await sql.query(`update bookings set assessment_id = $2, client_id = $3, needs_reconciliation = false, reconciliation_reason = null, updated_at = now() where id = $1`, [bookingId, assessmentId, clientId]);
   await audit(sql, coachId, "booking.reconciled", "booking", bookingId, { assessment: assessmentId });
+  await promoteToLead(sql, assessmentId, coachId);
   return { ok: true as const };
 }
 

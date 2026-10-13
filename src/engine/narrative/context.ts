@@ -32,6 +32,29 @@ export const EMOTION_TONE: Record<OrbitId, { expansive: string[]; ambivalent: st
   joy: { expansive: ["aliveness", "playfulness", "inspiration", "peace", "delight", "freedom"], ambivalent: [], strained: ["restlessness", "boredom", "guilt", "disconnection", "deprivation", "numbness"] },
 };
 
+/**
+ * Wording for each feeling (draft for Jana's review). Used to describe what the person chose in natural language.
+ * Never scored, never labelled positive or negative on the page; the tone list above only decides whether to add a
+ * line acknowledging that different feelings can be present at once.
+ */
+export const FEELING_PHRASES: Record<string, string> = {
+  clarity: "a sense of clarity", peace: "a sense of peace", curiosity: "curiosity", confidence: "confidence", openness: "openness",
+  neutrality: "a kind of neutrality", busyness: "a lot of busyness", unease: "some unease", rumination: "thoughts that keep circling",
+  pressure: "pressure", distraction: "distraction", fatigue: "fatigue",
+  strength: "strength", energy: "energy", capability: "a sense of capability", ease: "ease", connection: "connection",
+  "self-consciousness": "self-consciousness", frustration: "frustration", tension: "tension", depletion: "depletion", criticism: "criticism", disconnection: "disconnection",
+  restfulness: "restfulness", calm: "calm", softness: "softness", replenishment: "replenishment", care: "care", spaciousness: "spaciousness",
+  restlessness: "restlessness", rush: "a sense of rush", overload: "overload", guilt: "guilt", exhaustion: "exhaustion",
+  inspiration: "inspiration", excitement: "excitement", hope: "a sense of hope", momentum: "momentum", stretch: "a sense of stretch",
+  uncertainty: "uncertainty", impatience: "impatience", stagnation: "a sense of stagnation", intimidation: "intimidation", overwhelm: "moments of overwhelm",
+  safety: "safety", desire: "desire", tenderness: "tenderness", aliveness: "aliveness", longing: "longing", loneliness: "loneliness",
+  guardedness: "guardedness", resentment: "resentment",
+  support: "support", belonging: "belonging", recognition: "recognition", drain: "a sense of drain", displacement: "displacement",
+  security: "security", freedom: "freedom", groundedness: "groundedness", stability: "stability", constraint: "constraint", avoidance: "avoidance", fear: "fear",
+  playfulness: "playfulness", delight: "delight", boredom: "boredom", deprivation: "deprivation", numbness: "numbness",
+};
+export const COEXIST_LINES = ["Both can be present at once.", "Neither cancels the other out.", "That mix is common when something matters and also asks a lot."];
+
 export const list = (xs: string[]) => {
   if (xs.length <= 1) return xs.join("");
   const sep = xs.some((x) => x.includes(",")) ? "; " : ", ";
@@ -94,6 +117,7 @@ export function makeContext(result: LifeMapResult, answers: Answers) {
   const moreSupported = (o: OrbitId) => top.includes(o) || (by[o].supportConfidence === "sufficient" && (by[o].responseSupportIndex ?? 0) >= 0.75);
   const supportEv = (o: OrbitId): Evidence[] => statements(o).filter((i) => answered(i)).map(ev);
 
+  const feelings = (o: OrbitId) => list(by[o].emotions.map((e) => FEELING_PHRASES[e.id] ?? e.label.toLowerCase()));
   const tones = (o: OrbitId) => {
     const t = EMOTION_TONE[o];
     const ids = by[o].emotions.map((e) => e.id);
@@ -115,7 +139,7 @@ export function makeContext(result: LifeMapResult, answers: Answers) {
   return {
     result, answers, by, ic, label, ev, keyed, answered, high, low, statements, reverse, capOf, lowPhrase,
     imp, impLabel, energy, gives, takes, important, unimportant, sufficient, spread, top, bottom,
-    lessSupported, moreSupported, supportEv, tones, mostImportant, seed,
+    lessSupported, moreSupported, supportEv, tones, feelings, mostImportant, seed,
     name: (o: OrbitId) => NAMES[o],
   };
 }

@@ -51,8 +51,8 @@ describe("QA scenarios (brief §10)", () => {
   it("6 · mixed emotional states are not reduced to one category", () => {
     const a = persona({ feelings: { growth: ["Hope", "Overwhelm"] }, importance: { growth: 4 } });
     const n = run(a);
-    expect(n.observations.find((x) => x.rule === "emotion.mixed")!.text).toMatch(/can coexist/);
-    expect(n.orbits.find((x) => x.orbit === "growth")!.paragraphs.join(" ")).toMatch(/mixed: hope and overwhelm/);
+    expect(n.observations.find((x) => x.rule === "emotion.mixed")!.text).toMatch(/present at once|cancels the other|mix is common/);
+    expect(n.orbits.find((x) => x.orbit === "growth")!.paragraphs.join(" ")).toMatch(/a sense of hope and moments of overwhelm/);
   });
   it("7 · all Orbits well supported → no manufactured problem", () => {
     const n = run(EXAMPLE_WORKING);

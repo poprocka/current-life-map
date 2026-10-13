@@ -60,3 +60,23 @@ export function decrypt(blob: string): string {
   d.setAuthTag(Buffer.from(tag, "base64"));
   return Buffer.concat([d.update(Buffer.from(data, "base64")), d.final()]).toString("utf8");
 }
+
+/** Binary variant for attachments: "CLM1" | iv(12) | tag(16) | ciphertext. */
+export function encryptBytes(plain: Uint8Array): Uint8Array {
+  const k = key();
+  if (!k) throw new Error("encryption_not_configured");
+  const iv = randomBytes(12);
+  const c = createCipheriv("aes-256-gcm", k, iv);
+  const data = Buffer.concat([c.update(plain), c.final()]);
+  return new Uint8Array(Buffer.concat([Buffer.from("CLM1"), iv, c.getAuthTag(), data]));
+}
+
+export function decryptBytes(blob: Uint8Array): Uint8Array {
+  const k = key();
+  if (!k) throw new Error("encryption_not_configured");
+  const b = Buffer.from(blob);
+  if (b.subarray(0, 4).toString() !== "CLM1") throw new Error("unknown_ciphertext_version");
+  const d = createDecipheriv("aes-256-gcm", k, b.subarray(4, 16));
+  d.setAuthTag(b.subarray(16, 32));
+  return new Uint8Array(Buffer.concat([d.update(b.subarray(32)), d.final()]));
+}

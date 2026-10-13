@@ -79,17 +79,29 @@ create table clients (
   email text,
   phone text,
   privacy_status text not null default 'active' check (privacy_status in ('active', 'deletion_requested', 'deleted')),
-  coaching_enrolled boolean not null default false,     -- set by the coach: enrolled on 1:1 coaching
+  coaching_enrolled boolean not null default false,     -- set by the coach: enrolled on 1:1 coaching (kept in step with stage = 'client')
   coaching_enrolled_at date,
-  created_at timestamptz not null default now()
+  -- Client profile (Oct 13): Prospect (did the self-interview) → Lead (booked a Deep Dive) → Client (1:1 coaching)
+  stage text not null default 'prospect' check (stage in ('prospect', 'lead', 'client')),
+  stage_changed_at timestamptz,
+  -- Coach-confirmed merge only: a duplicate record (e.g. from a second PDF request) folded into a profile by Jana
+  merged_into_client_id uuid references clients(id) on delete set null,
+  -- Private self-interview link for Clients: Maps completed through it attach to this profile.
+  -- Lookup by hash; the token itself is stored encrypted so the coach can copy the link again.
+  invite_token_hash text unique,
+  invite_token_ciphertext text,
+  invite_created_at timestamptz,
+  created_at timestamptz not null default now(),
+  check (merged_into_client_id is null or merged_into_client_id <> id)
 );
 -- Deliberately NOT unique on email: contacts are never merged automatically.
 create index on clients (lower(email));
+create index on clients (stage) where merged_into_client_id is null;
 
 create table assessment_client_links (
   assessment_id uuid not null references assessments(id) on delete cascade,
   client_id uuid not null references clients(id) on delete cascade,
-  link_source text not null check (link_source in ('pdf_request', 'booking', 'coach_manual')),
+  link_source text not null check (link_source in ('pdf_request', 'booking', 'coach_manual', 'client_invite')),
   legal_basis text not null,
   linked_at timestamptz not null default now(),
   verified_at timestamptz,
@@ -236,6 +248,50 @@ create table consents (
   created_at timestamptz not null default now()
 );
 
+-- ── Client profiles: sessions, person notes, attachments (Oct 13) ────────────
+-- All free text is encrypted at the application layer (FIELD_ENCRYPTION_KEY), like session notes.
+create table coaching_sessions (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid not null references clients(id) on delete cascade,
+  coach_id uuid not null references auth.users(id),
+  session_date date,
+  title text,
+  kind text not null default 'coaching' check (kind in ('deep_dive', 'coaching', 'review', 'other')),
+  assessment_id uuid references assessments(id) on delete set null,   -- the Map discussed, if any
+  plan_ciphertext text,
+  notes_ciphertext text,
+  homework_ciphertext text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index on coaching_sessions (client_id, session_date desc);
+
+create table client_notes (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid not null references clients(id) on delete cascade,
+  coach_id uuid not null references auth.users(id),
+  body_ciphertext text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index on client_notes (client_id, created_at desc);
+
+-- Files are encrypted by the server before upload to a private storage bucket; this table holds metadata only.
+create table client_attachments (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid not null references clients(id) on delete cascade,
+  session_id uuid references coaching_sessions(id) on delete cascade,
+  note_id uuid references client_notes(id) on delete cascade,
+  purpose text not null check (purpose in ('profile', 'note', 'session_plan', 'session_notes', 'homework')),
+  filename text not null,
+  content_type text not null,
+  size_bytes integer not null check (size_bytes between 1 and 10485760),
+  storage_path text not null unique,
+  created_by uuid not null references auth.users(id),
+  created_at timestamptz not null default now()
+);
+create index on client_attachments (client_id, created_at desc);
+
 create table audit_events (
   id bigserial primary key,
   actor_id uuid,                                        -- null = system/webhook
@@ -250,7 +306,7 @@ create table audit_events (
 create view admin_assessment_list with (security_invoker = true) as
 select
   a.id as assessment_id, a.created_at, a.completed_at, a.status, a.sections_completed, a.assessment_version, a.last_activity_at,
-  c.name as client_name, c.email as client_email, coalesce(c.coaching_enrolled, false) as coaching_enrolled,
+  c.id as client_id, c.name as client_name, c.email as client_email, coalesce(c.coaching_enrolled, false) as coaching_enrolled, c.stage as client_stage,
   (select string_agg(distinct l.link_source, ',') from assessment_client_links l where l.assessment_id = a.id) as contact_source,
   (select p.delivery_state from pdf_requests p where p.assessment_id = a.id order by p.requested_at desc limit 1) as email_delivery_state,
   b.booking_state, b.scheduled_start, b.timezone, b.payment_state,
@@ -260,12 +316,26 @@ select
 from assessments a
 left join lateral (
   select cl.* from assessment_client_links l join clients cl on cl.id = l.client_id
-  where l.assessment_id = a.id order by l.linked_at desc limit 1
+  where l.assessment_id = a.id order by (cl.merged_into_client_id is null) desc, l.linked_at desc limit 1
 ) c on true
 left join lateral (
   select * from bookings bk where bk.assessment_id = a.id order by bk.created_at desc limit 1
 ) b on true
 where a.status <> 'deleted';
+
+-- Client profiles list: one row per profile (duplicates folded in by the coach are hidden)
+create view admin_client_list with (security_invoker = true) as
+select
+  c.id as client_id, c.name, c.email, c.stage, c.stage_changed_at, c.created_at,
+  (select count(distinct l.assessment_id)::int from assessment_client_links l join assessments a on a.id = l.assessment_id
+     where l.client_id = c.id and a.status <> 'deleted') as maps,
+  (select max(coalesce(a.completed_at, a.created_at)) from assessment_client_links l join assessments a on a.id = l.assessment_id
+     where l.client_id = c.id and a.status <> 'deleted') as last_map_at,
+  (select count(*)::int from coaching_sessions s where s.client_id = c.id) as sessions,
+  (select min(s.session_date) from coaching_sessions s where s.client_id = c.id and s.session_date >= current_date) as next_session,
+  (select max(s.session_date) from coaching_sessions s where s.client_id = c.id and s.session_date < current_date) as last_session
+from clients c
+where c.merged_into_client_id is null and c.privacy_status <> 'deleted';
 
 -- ── Row Level Security ──────────────────────────────────────────────────────
 create or replace function is_coach_mfa() returns boolean
@@ -286,7 +356,8 @@ declare t text;
 begin
   foreach t in array array['coach_users','assessments','assessment_answers','assessment_results','report_artifacts','clients',
     'assessment_client_links','pdf_requests','booking_link_tokens','bookings','booking_events','coach_reports','session_scripts',
-    'session_notes','consents','audit_events','interpretation_validations','understanding_documents']
+    'session_notes','consents','audit_events','interpretation_validations','understanding_documents',
+    'coaching_sessions','client_notes','client_attachments']
   loop
     execute format('alter table %I enable row level security', t);
     execute format('alter table %I force row level security', t);
@@ -299,7 +370,7 @@ declare t text;
 begin
   foreach t in array array['assessments','assessment_answers','assessment_results','report_artifacts','clients',
     'assessment_client_links','pdf_requests','bookings','booking_events','coach_reports','session_scripts','session_notes','consents','audit_events',
-    'interpretation_validations','understanding_documents']
+    'interpretation_validations','understanding_documents','coaching_sessions','client_notes','client_attachments']
   loop
     execute format('create policy coach_read on %I for select to authenticated using (is_coach_mfa())', t);
   end loop;
@@ -314,6 +385,15 @@ create policy coach_insert_clients on clients for insert to authenticated with c
 -- A coach may correct or add a display name (never email merging)
 create policy coach_update_clients on clients for update to authenticated using (is_coach_mfa()) with check (is_coach_mfa());
 create policy coach_insert_links on assessment_client_links for insert to authenticated with check (is_coach_mfa() and link_source = 'coach_manual');
+-- Client profiles: any coach (with MFA) maintains sessions, person notes and attachment records; authorship is enforced
+create policy coach_insert_sessions on coaching_sessions for insert to authenticated with check (is_coach_mfa() and coach_id = auth.uid());
+create policy coach_update_sessions on coaching_sessions for update to authenticated using (is_coach_mfa()) with check (is_coach_mfa());
+create policy coach_delete_sessions on coaching_sessions for delete to authenticated using (is_coach_mfa());
+create policy coach_insert_client_notes on client_notes for insert to authenticated with check (is_coach_mfa() and coach_id = auth.uid());
+create policy coach_update_client_notes on client_notes for update to authenticated using (is_coach_mfa()) with check (is_coach_mfa());
+create policy coach_delete_client_notes on client_notes for delete to authenticated using (is_coach_mfa());
+create policy coach_insert_attachments on client_attachments for insert to authenticated with check (is_coach_mfa() and created_by = auth.uid());
+create policy coach_delete_attachments on client_attachments for delete to authenticated using (is_coach_mfa());
 create policy coach_update_reviews on coach_reports for update to authenticated using (is_coach_mfa()) with check (is_coach_mfa());
 create policy coach_write_report_versions on coach_reports for insert to authenticated with check (is_coach_mfa() and kind = 'coach_edited' and created_by = auth.uid());
 create policy coach_write_validations on interpretation_validations for all to authenticated using (is_coach_mfa()) with check (is_coach_mfa() and coach_id = auth.uid());
@@ -333,12 +413,28 @@ begin
   insert into audit_events (actor_id, action, target_type, target_id) values (auth.uid(), 'assessment.delete', 'assessment', p_assessment::text);
   -- clients linked only to this assessment are removed too; clients linked to other assessments are kept
   create temp table _orphans on commit drop as
-    select l.client_id from assessment_client_links l where l.assessment_id = p_assessment
-    and not exists (select 1 from assessment_client_links o where o.client_id = l.client_id and o.assessment_id <> p_assessment);
+    select l.client_id from assessment_client_links l join clients c on c.id = l.client_id where l.assessment_id = p_assessment
+    and not exists (select 1 from assessment_client_links o where o.client_id = l.client_id and o.assessment_id <> p_assessment)
+    -- a profile Jana is working with (Lead/Client, sessions, notes, files) is never removed with one assessment
+    and c.stage = 'prospect'
+    and not exists (select 1 from coaching_sessions s where s.client_id = c.id)
+    and not exists (select 1 from client_notes n where n.client_id = c.id)
+    and not exists (select 1 from client_attachments f where f.client_id = c.id);
   delete from consents where subject_type = 'assessment' and subject_id = p_assessment;
   delete from booking_events where booking_id in (select id from bookings where assessment_id = p_assessment);
   delete from bookings where assessment_id = p_assessment;
   delete from assessments where id = p_assessment;   -- cascades to answers, results, artifacts, pdf requests, scripts, notes, links
   delete from consents where subject_type = 'client' and subject_id in (select client_id from _orphans);
   delete from clients where id in (select client_id from _orphans);
+end $$;
+
+-- Delete a whole client profile (admin, MFA). Assessments stay (they may be deleted separately); links, sessions,
+-- notes and attachment records cascade. The server removes the stored files first (see server/admin/clients.ts).
+create or replace function delete_client(p_client uuid) returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not is_admin_mfa() then raise exception 'not authorised'; end if;
+  insert into audit_events (actor_id, action, target_type, target_id) values (auth.uid(), 'client.delete', 'client', p_client::text);
+  update clients set merged_into_client_id = null where merged_into_client_id = p_client;
+  delete from consents where subject_type = 'client' and subject_id = p_client;
+  delete from clients where id = p_client;
 end $$;

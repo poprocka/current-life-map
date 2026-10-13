@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LifeSystem } from "@/components/LifeSystem";
 import { ResumeLink } from "@/components/ResumeLink";
+import { InviteCapture } from "@/components/InviteCapture";
 import { OPENING, PRIVACY_LINE } from "@/content/v10/opening";
 
 export default function Introduction() {
@@ -19,6 +20,7 @@ export default function Introduction() {
             {OPENING.paragraphs.map((p) => <p key={p}>{p}</p>)}
           </div>
           <p className="mt-8 font-serif text-[21px] italic leading-snug text-burgundy">{OPENING.closing}</p>
+          <InviteCapture />
 
           <p className="mt-10 text-[12px] uppercase tracking-[0.14em] text-taupe">{OPENING.estimatedTime}</p>
           <div className="mt-4 flex flex-wrap items-center gap-x-7 gap-y-4">

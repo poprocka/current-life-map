@@ -2,6 +2,7 @@ import "server-only";
 import type { Sql } from "../db";
 import { decrypt } from "../crypto";
 import { audit } from "../audit";
+import { profileForAssessment } from "./clients";
 import type { ListFilters, ListRow, ReconRow, WorkspaceData } from "./types";
 
 const PAGE = 25;
@@ -102,10 +103,11 @@ export async function loadWorkspace(sql: Sql, viewer: WorkspaceData["viewer"], i
      join assessment_client_links l2 on l2.client_id = l1.client_id and l2.assessment_id <> l1.assessment_id
      join assessments a2 on a2.id = l2.assessment_id where l1.assessment_id = $1 and a2.status <> 'deleted' order by a2.created_at`);
 
+  const { profile, possibleProfiles } = await profileForAssessment(sql, id);
   await audit(sql, viewer.userId, "assessment.viewed", "assessment", id);
   return {
     assessment: isoRow(a as never), answers: answers as never, result, coachReport: coachReport as never, coachReports, validations: validations as never, understandingDocs: understandingDocs as never, scripts, clients, bookings: bookings as never,
-    pdfRequests, consents, notes: notes as never, artifacts, audit: auditRows, relatedAssessments, viewer,
+    pdfRequests, consents, notes: notes as never, artifacts, audit: auditRows, relatedAssessments, profile, possibleProfiles, viewer,
   };
 }
 
