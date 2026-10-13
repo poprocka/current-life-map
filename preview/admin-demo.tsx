@@ -106,7 +106,9 @@ function profileData(c: DemoClient): ClientProfileData {
     .filter((m) => m.assessments.length) : [];
   return { client: { id: c.id, name: c.name, email: c.email, phone: null, stage: c.stage, stage_changed_at: c.changed, created_at: c.created, coaching_enrolled_at: c.since,
       invite: c.invite ? { token: c.invite, created_at: c.changed } : null },
-    maps, sessions: c.sessions, notes: c.notes, attachments: c.files.filter((f) => !f.session_id && !f.note_id), possibleMatches: matches, viewer: { userId: "demo-coach", role: "admin" } };
+    // Copies: the page keeps its own state; the demo store is updated separately by the actions.
+    maps, sessions: c.sessions.map((x) => ({ ...x, attachments: [...x.attachments] })), notes: c.notes.map((x) => ({ ...x, attachments: [...x.attachments] })),
+    attachments: c.files.filter((f) => !f.session_id && !f.note_id), possibleMatches: matches, viewer: { userId: "demo-coach", role: "admin" } };
 }
 function clientRows(): ClientListRow[] {
   const todayS = new Date().toISOString().slice(0, 10);
