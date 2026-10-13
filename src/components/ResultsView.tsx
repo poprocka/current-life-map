@@ -40,9 +40,9 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
 
       {/* B. Map — in its own block so it stands out (Jana, 2026-10-12) */}
       <section className="mt-12 rounded-[32px] border hairline bg-linen-deep/70 px-5 pb-10 pt-10 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_24px_60px_-40px_rgba(84,15,38,0.25)] sm:px-10 lg:px-14 lg:pb-14 lg:pt-12 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-labelledby="map-h">
-        <header className="mx-auto max-w-[600px] text-center">
+        <header className="mx-auto max-w-[640px] text-center">{/* ~33% wider lines (Jana, 2026-10-13) */}
           {!insights && <p className="eyebrow">Your Current Life Map</p>}
-          <h2 id="map-h" className="font-serif text-[22px] font-light leading-snug [text-wrap:balance] sm:text-[26px]">
+          <h2 id="map-h" className="font-serif text-[22px] font-light leading-snug [text-wrap:pretty] sm:text-[26px]">
             {insights?.mapIntro ?? "Here's how the different parts of your life look together, based on what you've shared."}
           </h2>
         </header>
