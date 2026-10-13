@@ -17,6 +17,9 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
   const byId = Object.fromEntries(result.orbits.map((o) => [o.orbit, o]));
   const snapshot = result.snapshot.filter((s) => s.available);
   const distancePending = result.orbits.every((o) => o.distanceBand == null);
+  // "Show Map interpretation" opens the written reading and the table together (Jana, 2026-10-13)
+  const [readingOpen, setReadingOpen] = useState(false);
+  const hasReading = !!insights && insights.mapReading.paragraphs.length > 0;
 
   return (
     <Root className="mx-auto max-w-[1180px] px-6 pb-24 sm:px-10">
@@ -56,12 +59,12 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
           <div className="min-w-0 lg:pt-[8px]">
             <MapLegend distancePending={distancePending} columns={1} />
             {insights && insights.mapReading.paragraphs.length > 0 && (
-              <div className="mt-8 border-t hairline pt-6"><MapReading paragraphs={insights.mapReading.paragraphs} /></div>
+              <div className="mt-8 border-t hairline pt-6"><MapReading paragraphs={insights.mapReading.paragraphs} open={readingOpen} onToggle={() => setReadingOpen((v) => !v)} /></div>
             )}
           </div>
         </div>
         {/* Visible title removed (Jana, 2026-10-12); the table keeps an accessible name */}
-        <div className="mt-10 border-t hairline pt-8"><MapTable result={result} wide /></div>
+        {(!hasReading || readingOpen) && <div id="map-table" className="mt-10 border-t hairline pt-8"><MapTable result={result} wide /></div>}
 
       </section>
 
@@ -161,12 +164,11 @@ export function MapTable({ result, wide = false }: { result: LifeMapResult; wide
   );
 }
 
-/** The Map interpretation, folded behind a button until the person asks for it (Jana, 2026-10-13). Always open in the PDF. */
-function MapReading({ paragraphs }: { paragraphs: { text: string }[] }) {
-  const [open, setOpen] = useState(false);
+/** The Map interpretation (text, and the table below the Map), folded behind a button until the person asks for it (Jana, 2026-10-13). Always open in the PDF. */
+function MapReading({ paragraphs, open, onToggle }: { paragraphs: { text: string }[]; open: boolean; onToggle: () => void }) {
   return (
-    <div className="mb-8">
-      <button type="button" aria-expanded={open} aria-controls="map-reading" onClick={() => setOpen((v) => !v)}
+    <div>
+      <button type="button" aria-expanded={open} aria-controls="map-reading map-table" onClick={onToggle}
         className="inline-flex items-center gap-2 py-1 text-[11.5px] uppercase tracking-[0.16em] text-burgundy transition hover:text-burgundy-soft">{/* label and + only, no outline (Jana, 2026-10-13) */}
         {open ? "Hide Map interpretation" : "Show Map interpretation"}
         <svg aria-hidden width="11" height="11" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={`transition ${open ? "rotate-45" : ""}`}><path d="M11 2v18M2 11h18" /></svg>
