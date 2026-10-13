@@ -101,7 +101,10 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
           const r = (1 - t) * (1 - t) * r0 + q * rm + t * t * r1;
           return { x: C + ux * r + px * q * bend, y: C + uy * r + py * q * bend };
         };
-        const arrowTs = mag === 1 ? [0.3, 0.52, 0.74] : [0.38, 0.66];
+        // Like a spine (Jana, 2026-10-13): evenly spaced arrowheads along the whole tube, ~16 map units apart
+        const SPACING = 16;
+        const nArrows = Math.max(3, Math.floor(((r1 - r0) * 0.8) / SPACING));
+        const arrowTs = Array.from({ length: nArrows }, (_, k) => 0.1 + (0.8 * (k + 0.5)) / nArrows);
         const rot = (g.a * 180) / Math.PI + (inward ? 180 : 0);
         const aScale = (0.85 + mag * 0.35) * (still ? 1.45 : 1); // larger in the PDF, where nothing moves
         return (
@@ -171,18 +174,18 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
               // Exactly the tube's centre line (same curve, reversed for energy in); arrowheads use its middle 84%
               const [ra, rb] = inward ? [r1, r0] : [r0, r1];
               const track = `M${P(ra)} Q${P(rm, bend)} ${P(rb)}`;
-              // Subtle (Jana, 2026-10-13): a small cluster of arrowheads, close together, drifting slowly along the tube
+              // Subtle (Jana, 2026-10-13): the whole spine drifts slowly along the tube
               const dur = inward ? (mag === 1 ? 7 : 8.5) : mag === 1 ? 9 : 11;
-              const trackLen = Math.abs(rb - ra), gap = 9; // ≈9 map units between arrowheads
+
               return (
                 <g>
                   {arrowTs.map((_, k) => {
-                    const begin = `${((k * gap * dur) / trackLen - i * 0.9).toFixed(2)}s`;
+                    const begin = `-${((k * dur) / arrowTs.length + i * 0.9).toFixed(2)}s`; // evenly spread: a continuous spine
                     return (
                       <path key={k} d="M-4.2 -2.2 L1.8 0 L-4.2 2.2" fill="none" stroke={inward ? IN_ARROW : OUT_ARROW} strokeWidth={1.2 / aScale}
                         strokeLinecap="round" strokeLinejoin="round" opacity={0} transform={`scale(${aScale.toFixed(2)})`}>
-                        <animateMotion path={track} dur={`${dur}s`} begin={begin} rotate="auto" repeatCount="indefinite" calcMode="linear" keyPoints="0.1;0.9" keyTimes="0;1" />
-                        <animate attributeName="opacity" values="0;0.45;0.45;0" keyTimes="0;0.2;0.8;1" dur={`${dur}s`} begin={begin} repeatCount="indefinite" />
+                        <animateMotion path={track} dur={`${dur}s`} begin={begin} rotate="auto" repeatCount="indefinite" calcMode="linear" keyPoints="0.08;0.92" keyTimes="0;1" />
+                        <animate attributeName="opacity" values="0;0.42;0.42;0" keyTimes="0;0.1;0.9;1" dur={`${dur}s`} begin={begin} repeatCount="indefinite" />
                       </path>
                     );
                   })}
