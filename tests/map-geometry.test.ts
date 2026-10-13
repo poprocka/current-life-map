@@ -43,15 +43,16 @@ describe("Map geometry with distance bands", () => {
       const vb = mapViewBox(m);
       for (const o of m) {
         const g = orbitGeometry(o), L = labelGeometry(o);
-        expect(g.x - g.size).toBeGreaterThanOrEqual(vb.x); expect(g.x + g.size).toBeLessThanOrEqual(vb.x + vb.size);
-        expect(L.box.x0).toBeGreaterThanOrEqual(vb.x); expect(L.box.x1).toBeLessThanOrEqual(vb.x + vb.size);
-        expect(L.box.y0).toBeGreaterThanOrEqual(vb.y); expect(L.box.y1).toBeLessThanOrEqual(vb.y + vb.size);
+        expect(g.x - g.size).toBeGreaterThanOrEqual(vb.x); expect(g.x + g.size).toBeLessThanOrEqual(vb.x + vb.width);
+        expect(g.y - g.size).toBeGreaterThanOrEqual(vb.y); expect(g.y + g.size).toBeLessThanOrEqual(vb.y + vb.height);
+        expect(L.box.x0).toBeGreaterThanOrEqual(vb.x); expect(L.box.x1).toBeLessThanOrEqual(vb.x + vb.width);
+        expect(L.box.y0).toBeGreaterThanOrEqual(vb.y); expect(L.box.y1).toBeLessThanOrEqual(vb.y + vb.height);
       }
     }
   });
-  it("the Sun stays centred and the Map is never squashed: frame is square around it", () => {
+  it("the Sun stays centred in the frame, which is fitted to the planets and labels", () => {
     const vb = mapViewBox(ORBIT_IDS.map((id) => orbit(id, "far", 1)));
-    expect(vb.x + vb.size / 2).toBe(C); expect(vb.y + vb.size / 2).toBe(C);
+    expect(vb.x + vb.width / 2).toBe(C); expect(vb.y + vb.height / 2).toBe(C);
     expect(vb.size).toBeLessThan(680); // even an all-far, full-size Map keeps the picture within ~6% of its usual scale
   });
   it("labels never collide with a neighbouring planet", () => {

@@ -53,10 +53,10 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
           {/* Left: the Map with its legend directly beneath, as one block, so it stays put when the interpretation opens (Jana, 2026-10-13) */}
           <div className="min-w-0 lg:col-start-1 lg:row-start-1 lg:self-start">
             <PersonalMap result={result} />
-            <div className="mt-8 border-t hairline pt-6"><MapLegend distancePending={distancePending} columns={2} /></div>
+            <div className="mt-3 border-t hairline pt-6"><MapLegend distancePending={distancePending} columns={2} /></div>
           </div>
           {/* The interpretation sits above the table, beside the Map (Jana, 2026-10-13) */}
-          <div className="min-w-0 lg:col-start-2 lg:row-start-1 lg:self-start lg:pt-[64px]">{/* offset matches the space above the Map's top label, so both start on one line (Jana, 2026-10-13) */}
+          <div className="min-w-0 lg:col-start-2 lg:row-start-1 lg:self-start lg:pt-[8px]">{/* offset matches the space above the Map's top label, so both start on one line (Jana, 2026-10-13) */}
             {insights && insights.mapReading.paragraphs.length > 0 && <MapReading paragraphs={insights.mapReading.paragraphs} />}
             {/* Visible title removed (Jana, 2026-10-12); the table keeps an accessible name */}
             <MapTable result={result} />

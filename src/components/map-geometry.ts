@@ -64,15 +64,17 @@ export function labelGeometry(o: OrbitResult, fontSize = 17) {
 }
 
 /**
- * Square viewBox centred on the Sun that fits every planet and label, so a far Orbit's name is never cut off on a
- * narrow screen and the Map scales as one picture. Never smaller than the original frame.
+ * ViewBox centred on the Sun that fits every planet and label, so a far Orbit's name is never cut off on a narrow screen
+ * and the Map scales as one picture. Width and height are fitted separately (still centred on the Sun), so there is no
+ * empty band above or below the Map and the legend can sit close beneath it (Jana, 2026-10-13).
  */
-export function mapViewBox(orbits: OrbitResult[], min = 320, pad = 12) {
-  let half = min;
+export function mapViewBox(orbits: OrbitResult[], min = 300, pad = 12) {
+  let hx = min, hy = 0;
   for (const o of orbits) {
     const g = orbitGeometry(o), L = labelGeometry(o);
-    half = Math.max(half, g.dist + g.size + pad, Math.abs(L.box.x0 - C) + pad, Math.abs(L.box.x1 - C) + pad, Math.abs(L.box.y0 - C) + pad, Math.abs(L.box.y1 - C) + pad);
+    hx = Math.max(hx, Math.abs(g.x - C) + g.size + pad, Math.abs(L.box.x0 - C) + pad, Math.abs(L.box.x1 - C) + pad);
+    hy = Math.max(hy, Math.abs(g.y - C) + g.size + pad, Math.abs(L.box.y0 - C) + pad, Math.abs(L.box.y1 - C) + pad);
   }
-  half = Math.ceil(half);
-  return { x: C - half, y: C - half, size: 2 * half, attr: `${C - half} ${C - half} ${2 * half} ${2 * half}` };
+  hx = Math.ceil(hx); hy = Math.ceil(Math.max(hy, SUN_R * 2.6));
+  return { x: C - hx, y: C - hy, width: 2 * hx, height: 2 * hy, size: 2 * hx, attr: `${C - hx} ${C - hy} ${2 * hx} ${2 * hy}` };
 }
