@@ -72,9 +72,9 @@ function InsightDialog({ insights, index, onIndex, onClose }: { insights: Result
   }, [onClose, index]);
   return (
     <div className="fixed inset-0 z-50 flex justify-center overflow-y-auto bg-mahogany/30 p-0 sm:p-8 lg:items-center lg:p-6 [@media(min-width:1024px)_and_(max-height:940px)]:p-3" onClick={onClose}>
-      {/* Wider on laptop/desktop so a whole insight fits above the fold; full screen on mobile (Jana, 2026-10-13) */}
+      {/* Wider on laptop/desktop so a whole insight fits above the fold; one fixed height for every tab, content top-aligned; full screen on mobile (Jana, 2026-10-13) */}
       <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="insight-title" onClick={(e) => e.stopPropagation()}
-        className="relative h-fit min-h-full w-full max-w-[680px] bg-[#F7F1EA] px-6 pb-10 pt-6 outline-none sm:min-h-0 sm:rounded-[24px] sm:px-12 lg:max-w-[1120px] lg:px-14 lg:pb-8 [@media(min-width:1024px)_and_(max-height:940px)]:pt-5 [@media(min-width:1024px)_and_(max-height:940px)]:pb-6">
+        className="relative h-fit min-h-full w-full max-w-[680px] bg-[#F7F1EA] px-6 pb-10 pt-6 outline-none sm:min-h-0 sm:rounded-[24px] sm:px-12 lg:h-[min(840px,calc(100vh-48px))] lg:max-w-[1120px] lg:overflow-y-auto lg:px-14 lg:pb-8 [@media(min-width:1024px)_and_(max-height:940px)]:h-[calc(100vh-24px)] [@media(min-width:1024px)_and_(max-height:940px)]:pt-5 [@media(min-width:1024px)_and_(max-height:940px)]:pb-6">
         <div className="flex items-center justify-between">
           {/* Left-aligned with the content, all caps like every eyebrow (Jana, 2026-10-13) */}
           <p className="eyebrow">Your personal insights · {index + 1} of {insights.cards.length}</p>
