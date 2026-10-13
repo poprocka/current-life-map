@@ -294,9 +294,9 @@ function LegacyReport({ report: c, answers }: { report: CoachReport; answers: An
       {c.provisional && (
         <div>
           <p className="mb-1 text-[10.5px] uppercase tracking-[0.12em] text-taupe">Congruence & attention · provisional (not shown to client)</p>
-          <table className="w-full"><thead className="text-[9.5px] uppercase tracking-[0.08em] text-taupe"><tr><th className="text-left font-normal">Orbit</th><th className="text-right font-normal">Congruence</th><th className="pl-3 text-left font-normal">Band</th><th className="text-right font-normal">Tier</th></tr></thead>
+          <table className="w-full"><thead className="text-[9.5px] uppercase tracking-[0.08em] text-taupe"><tr><th className="text-left font-normal">Orbit</th><th className="text-right font-normal">Statement</th><th className="text-right font-normal">Supporting</th><th className="text-right font-normal">Score</th><th className="pl-3 text-left font-normal">Band</th><th className="text-right font-normal">Tier</th></tr></thead>
             <tbody>{c.provisional.congruence.map((x) => { const t = c.provisional!.tiers.find((y) => y.orbit === x.orbit)!; return (
-              <tr key={x.orbit} className="border-t hairline"><td className="py-1">{x.name}</td><td className="text-right">{x.value === null ? "—" : x.value.toFixed(2)}</td><td className="pl-3">{x.band ?? "not enough information"}</td><td className="text-right">{t.tier ?? "—"}</td></tr>); })}</tbody></table>
+              <tr key={x.orbit} className="border-t hairline"><td className="py-1">{x.name}</td><td className="text-right">{x.direct === null ? "—" : x.direct.toFixed(2)}</td><td className="text-right">{x.supporting === null ? "—" : x.supporting.toFixed(2)}</td><td className="text-right">{x.value === null ? "—" : x.value.toFixed(2)}</td><td className="pl-3">{x.band ?? "not enough information"}{x.mixed && <span className="ml-1.5 text-burgundy">· mixed</span>}{x.nearBoundary && <span className="ml-1.5 text-taupe">· near boundary</span>}</td><td className="text-right">{t.tier ?? "—"}</td></tr>); })}</tbody></table>
         </div>
       )}
       <div>

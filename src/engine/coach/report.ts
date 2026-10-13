@@ -29,7 +29,7 @@ export interface CoachReport {
   intelligence?: CoachIntelligence;
   /** F4/F5 per the Design Pack — coach-only, awaiting sign-off, never shown to the client while FEATURES are off. */
   provisional?: {
-    congruence: { orbit: string; name: string; value: number | null; band: string | null; items: string[]; evidenceUnits: number }[];
+    congruence: { orbit: string; name: string; value: number | null; band: string | null; items: string[]; evidenceUnits: number; direct: number | null; supporting: number | null; mixed: boolean; nearBoundary: boolean }[];
     tiers: { orbit: string; name: string; tier: number | null; importance: number | null; supportGap: number | null; congruenceGap: number | null; leverage: number; modifiers: string[]; score: number | null }[];
   };
 }
@@ -168,7 +168,7 @@ export function generateCoachReport(result: LifeMapResult, answers: Answers): Co
       const c = f4(answers), p = f5(answers);
       const tierOf = (id: string) => { const i = p.tiersB.findIndex((t) => t.includes(id as never)); return i < 0 ? null : i + 1; };
       return {
-        congruence: c.map((x) => ({ orbit: x.orbit, name: name(x.orbit), value: x.congruence, band: x.band, items: x.usedItems, evidenceUnits: x.evidenceUnits })),
+        congruence: c.map((x) => ({ orbit: x.orbit, name: name(x.orbit), value: x.congruence, band: x.band, items: x.usedItems, evidenceUnits: x.evidenceUnits, direct: x.direct, supporting: x.supporting, mixed: x.mixed, nearBoundary: x.nearBoundary })),
         tiers: p.rows.map((r) => ({ orbit: r.orbit, name: name(r.orbit), tier: tierOf(r.orbit), importance: r.importance, supportGap: r.supportGap, congruenceGap: r.congruenceGap, leverage: r.leverage, modifiers: r.modifiers, score: r.scoreB })),
       };
     })(),
