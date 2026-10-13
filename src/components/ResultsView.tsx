@@ -49,7 +49,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
           </h2>
         </header>
         {/* Row 1 (Jana, 2026-10-13): the Map | the legend, then "Show Map interpretation" beneath it. Row 2: the table, full width. */}
-        <div className="mt-8 grid gap-10 lg:mt-4 lg:grid-cols-[1.35fr_1fr] lg:items-start lg:gap-x-16">
+        <div className="mt-11 grid gap-10 lg:mt-[46px] lg:grid-cols-[1.35fr_1fr] lg:items-start lg:gap-x-16">
           <div className="min-w-0">
             <PersonalMap result={result} />
           </div>
