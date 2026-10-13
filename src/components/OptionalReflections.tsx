@@ -39,7 +39,6 @@ export function OptionalReflections({ token, result }: { token?: string; result?
   const layer = useMemo(() => (result && saved ? generateReflectionLayer(result, values) : null), [result, saved, values]);
   const alongside = (id: string) => layer?.items.find((i) => i.questionId === id)?.alongside;
   const visible = showAll ? R.questions : R.questions.slice(0, 1);
-  const hiddenCount = R.questions.length - 1;
 
   const save = async () => {
     writeLocal(values);
@@ -75,7 +74,8 @@ export function OptionalReflections({ token, result }: { token?: string; result?
       <div className="mt-6 flex flex-wrap items-center gap-4">
         <button type="button" aria-expanded={showAll} aria-controls="reflections-list" onClick={() => setShowAll((s) => !s)}
           className="rounded-full border border-linen-line px-6 py-2.5 text-[11.5px] uppercase tracking-[0.16em] text-mahogany transition hover:border-burgundy hover:text-burgundy">
-          {showAll ? "Show fewer" : `Show all (${hiddenCount} more)`}
+          {/* "Show more" without the count (Jana, 2026-10-13) */}
+          {showAll ? "Show less" : "Show more"}
         </button>
         {(hasEntries || saved) && (
           <button type="button" onClick={save} disabled={status === "saving" || saved}
