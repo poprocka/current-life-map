@@ -165,7 +165,7 @@ function MapReading({ paragraphs }: { paragraphs: { text: string }[] }) {
   return (
     <div className="mb-8">
       <button type="button" aria-expanded={open} aria-controls="map-reading" onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-2 rounded-full border border-linen-line px-6 py-2.5 text-[11.5px] uppercase tracking-[0.16em] text-burgundy transition hover:border-burgundy">
+        className="inline-flex items-center gap-2 py-1 text-[11.5px] uppercase tracking-[0.16em] text-burgundy transition hover:text-burgundy-soft">{/* label and + only, no outline (Jana, 2026-10-13) */}
         {open ? "Hide Map interpretation" : "Show Map interpretation"}
         <svg aria-hidden width="11" height="11" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={`transition ${open ? "rotate-45" : ""}`}><path d="M11 2v18M2 11h18" /></svg>
       </button>
