@@ -18,7 +18,7 @@ export const F6_TOLERANCE = 0.1;
 export const NAMES: Record<OrbitId, string> = { mind: "Mind", body: "Body", restoration: "Restoration", growth: "Growth", love: "Love", social: "Social World", resources: "Resources", joy: "Joy" };
 
 /**
- * PROPOSED (needs Jana's approval) — tone of each feeling, used ONLY to choose wording ("these states can
+ * Approved in principle by Jana (13 Oct 2026) — tone of each feeling, used ONLY to choose wording ("these states can
  * coexist" vs. "this area feels alive"). Never scored, never shown as a label, never changes the Map.
  */
 export const EMOTION_TONE: Record<OrbitId, { expansive: string[]; ambivalent: string[]; strained: string[] }> = {
@@ -33,7 +33,7 @@ export const EMOTION_TONE: Record<OrbitId, { expansive: string[]; ambivalent: st
 };
 
 /**
- * Wording for each feeling (draft for Jana's review). Used to describe what the person chose in natural language.
+ * Wording for each feeling (approved by Jana, 13 Oct 2026). Used to describe what the person chose in natural language.
  * Never scored, never labelled positive or negative on the page; the tone list above only decides whether to add a
  * line acknowledging that different feelings can be present at once.
  */
