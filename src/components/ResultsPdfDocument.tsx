@@ -115,7 +115,7 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
           <div className="mt-6 space-y-5">
             {insights.cards.map((c, i) => (
               <article key={c.key} className="pdf-keep rounded-[22px] border hairline bg-[#F7F1EA] px-10 pb-8 pt-6">
-                <p className="text-[12px] text-taupe">Insight {i + 1} of {insights.cards.length}</p>
+                <p className="eyebrow">Your personal insights · {i + 1} of {insights.cards.length}</p>
                 <h3 className="mt-1 font-serif text-[28px] font-light leading-tight">{c.title}</h3>
                 <p className="mt-2 text-[14.5px] leading-relaxed text-mahogany/70">{c.lead}</p>
                 <div aria-hidden className="my-5 h-px w-full bg-[#D9C3A8]/70" />

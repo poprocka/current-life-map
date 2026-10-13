@@ -76,8 +76,8 @@ function InsightDialog({ insights, index, onIndex, onClose }: { insights: Result
       <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="insight-title" onClick={(e) => e.stopPropagation()}
         className="relative h-fit min-h-full w-full max-w-[680px] bg-[#F7F1EA] px-6 pb-10 pt-6 outline-none sm:min-h-0 sm:rounded-[24px] sm:px-12 lg:max-w-[1120px] lg:px-14 lg:pb-8 [@media(min-width:1024px)_and_(max-height:940px)]:pt-5 [@media(min-width:1024px)_and_(max-height:940px)]:pb-6">
         <div className="flex items-center justify-between">
-          {/* Left-aligned with the content (Jana, 2026-10-13) */}
-          <p className="text-[14px] text-mahogany">Your personal insights <span className="text-taupe">· {index + 1} of {insights.cards.length}</span></p>
+          {/* Left-aligned with the content, all caps like every eyebrow (Jana, 2026-10-13) */}
+          <p className="eyebrow">Your personal insights · {index + 1} of {insights.cards.length}</p>
           <button onClick={onClose} aria-label="Close" className="text-[22px] leading-none text-mahogany hover:text-burgundy">×</button>
         </div>
         <h2 id="insight-title" className="mt-4 font-serif text-[34px] font-light leading-tight lg:text-[36px] [@media(min-width:1024px)_and_(max-height:940px)]:mt-2 [@media(min-width:1024px)_and_(max-height:940px)]:text-[30px]">{c.title}</h2>
