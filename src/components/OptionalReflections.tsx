@@ -54,7 +54,7 @@ export function OptionalReflections({ token, result }: { token?: string; result?
   };
 
   return (
-    <section className="mt-24 rounded-[28px] border hairline p-8 sm:p-10" aria-labelledby="reflect-h">
+    <section id="reflections" className="scroll-mt-24 mt-24 rounded-[28px] border hairline p-8 sm:p-10" aria-labelledby="reflect-h">
       <p className="eyebrow">{R.eyebrow}</p>
       <h2 id="reflect-h" className="mt-3 font-serif text-[30px] font-light leading-tight">{R.title}</h2>
       <p className="mt-3 max-w-[760px] text-[13.5px] leading-relaxed text-mahogany/75">{R.intro}</p>

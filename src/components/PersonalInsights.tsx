@@ -13,7 +13,7 @@ export function PersonalInsights({ insights }: { insights: ResultInsights }) {
   const [open, setOpen] = useState<number | null>(null);
   const cards = insights.cards;
   return (
-    <section className="mt-24" aria-labelledby="insights-h">
+    <section id="personal-insights" className="scroll-mt-24 mt-24" aria-labelledby="insights-h">
       <p className="eyebrow">Personal insights</p>
       <h2 id="insights-h" className="mt-3 font-serif text-[36px] font-light">A closer look at your reality</h2>
       <p className="mt-3 max-w-[640px] text-[13.5px] leading-relaxed text-mahogany/75">
@@ -31,7 +31,7 @@ export function PersonalInsights({ insights }: { insights: ResultInsights }) {
         ))}
       </div>
 
-      <div className="mt-16">
+      <div id="your-orbits" className="scroll-mt-24 mt-16">
         <p className="eyebrow">Your Orbits, one by one</p>
         <ul className="mt-5 border-t hairline">
           {insights.orbits.map((o) => (
