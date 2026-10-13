@@ -32,7 +32,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
             {insights.opening.paragraphs.slice(0, 2).map((p, i) => <p key={i}>{p.text}</p>)}
           </div>
           {insights.opening.paragraphs.slice(2).map((p, i) => (
-            <p key={i} className="mt-8 text-center font-serif text-[19px] italic leading-relaxed text-burgundy [text-wrap:balance] lg:-mx-24 lg:[text-wrap:wrap]" /* one line on desktop (Jana, 2026-10-13) */>{p.text}</p>
+            <p key={i} className="mt-8 text-center font-serif text-[19px] italic leading-relaxed text-burgundy [text-wrap:balance] lg:[text-wrap:wrap]" /* one line where it fits, never wider than the two paragraphs (Jana, 2026-10-13) */>{p.text}</p>
           ))}
           {/* "What this is based on" removed from the page (Jana, 2026-10-13); the answers behind the theme stay in the stored record. */}
         </section>
