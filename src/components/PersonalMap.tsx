@@ -7,8 +7,8 @@ import { C, ORBIT_TINT, labelGeometry, mapViewBox, orbitAngle, orbitGeometry, SU
 // The Sun always stays the largest body: the biggest possible Orbit is ~60% of the Sun's radius (Jana, 2026-10-12)
 export { orbitGeometry };
 
-const IN = "#7FC7A6"; // inflow: light mint green — this Orbit gives you energy (Jana, 2026-10-13)
-const OUT = "#E2B84E"; // outflow: sun yellow — this Orbit draws energy from the Sun (Jana, 2026-10-13)
+const IN = "#FFD445"; // inflow: bright, luminous yellow — this Orbit gives you energy (Jana, 2026-10-13)
+const OUT = "#D29E36"; // outflow: deeper sun yellow — this Orbit draws energy from the Sun (Jana, 2026-10-13)
 const STEADY = "#E6CE86"; // stable: a fine, still thread of soft yellow (Jana, 2026-10-13)
 
 /**
@@ -60,8 +60,8 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
       {/* Trade-off path removed from the Map (Jana, 2026-10-12); still described in Energy Architecture */}
       {/* Energy flows for every Orbit (Jana, 2026-10-12): calm, minimal, like a breathing exercise.
           A slim ribbon of light on a gentle arc between the Sun and each planet. The arc softly sways,
-          and one soft glow travels along it: mint toward the Sun (gives energy), sun-yellow out toward the
-          planet (takes energy). Stronger answers mean a slightly wider ribbon and a quicker glow. A stable answer
+          and one soft glow travels along it: bright yellow toward the Sun (gives energy), deeper yellow out
+          toward the planet (takes energy). Energy given gathers as a glow around the Sun. Stronger answers mean a slightly wider ribbon and a quicker glow. A stable answer
           is a fine, still thread that only breathes. Each Orbit has its own phase, so nothing pulses in sync.
           All motion is off under reduced motion. */}
       {ORBIT_IDS.map((id, i) => {
@@ -121,6 +121,28 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
         );
       })}
 
+      {/* Energy given gathers around the Sun as a soft circle of light: wider and brighter the more your Orbits give
+          (Jana, 2026-10-13). It breathes slowly; still under reduced motion and in the PDF. */}
+      {(() => {
+        const given = result.orbits.reduce((t, o) => t + Math.max(0, o.energySigned ?? 0), 0);
+        if (!given) return null;
+        const r = SUN_R * (2.1 + 0.32 * Math.min(given, 5));
+        const a = Math.min(0.75, 0.4 + 0.07 * given);
+        return (
+          <g aria-hidden>
+            <defs>
+              <radialGradient id="sunGathered">
+                <stop offset="0%" stopColor={IN} stopOpacity={a} />
+                <stop offset="45%" stopColor={IN} stopOpacity={a * 0.45} />
+                <stop offset="100%" stopColor={IN} stopOpacity={0} />
+              </radialGradient>
+            </defs>
+            <circle cx={C} cy={C} r={r} fill="url(#sunGathered)">
+              {!reduceMotion && <animate attributeName="r" values={`${r * 0.94};${r};${r * 0.94}`} dur="9s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.55 1;0.45 0 0.55 1" />}
+            </circle>
+          </g>
+        );
+      })()}
       <SunGlyph r={SUN_R} />
       {/* Just "You" on the Sun (Jana, 2026-10-12) */}
       <text x={C} y={C + 9} textAnchor="middle" fill="#1F1411" className="font-serif" fontSize={28}>You</text>
@@ -154,7 +176,7 @@ export function MapLegend({ distancePending = true, columns = 3 }: { distancePen
   return (
     <div className={`grid gap-x-8 gap-y-4 text-[12.5px] leading-snug text-mahogany/80 ${columns === 1 ? "" : "sm:grid-cols-2"} ${columns === 3 ? "lg:grid-cols-3" : ""}`}>
       <div className={item}><Swatch><FlowSwatch color={IN} inward /></Swatch>
-        <span><b className="font-normal text-mahogany">Energy in</b> — This Orbit gives you energy.</span></div>
+        <span><b className="font-normal text-mahogany">Energy in</b> — This Orbit gives you energy. It gathers as a glow around the Sun.</span></div>
       <div className={item}><Swatch><FlowSwatch color={OUT} /></Swatch>
         <span><b className="font-normal text-mahogany">Energy out</b> — This Orbit requires your energy.</span></div>
       <div className={item}><Swatch><line x1="2" y1="9" x2="28" y2="9" stroke={STEADY} strokeWidth="1.4" strokeLinecap="round" /></Swatch>
