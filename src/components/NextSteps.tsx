@@ -37,7 +37,7 @@ export function DeepDiveCard({ token }: { token?: string }) {
   }
 
   return (
-    <section id="deep-dive" className="mt-8 scroll-mt-8" aria-label="Life Map Deep Dive">
+    <section id="deep-dive" className="mt-8 scroll-mt-8 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-label="Life Map Deep Dive">
       {/* Deep Dive */}
       <div className="grid gap-6 rounded-[28px] bg-burgundy p-8 text-linen sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-16">
         <div>
