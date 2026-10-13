@@ -6,8 +6,8 @@ import { CONTACT_EMAIL } from "@/content/contact";
 import { renderResultsHtml } from "./document.generated.cjs";
 
 /**
- * The emailed PDF = the results page printed by headless Chromium (Jana, 2026-10-13: "visually the same as on the web
- * page, all text visible"). The page is laid out at laptop width (1180 CSS px) and scaled onto A4.
+ * The emailed PDF = the results page printed by headless Chromium (Jana, 2026-10-13: same look as the page, all text visible,
+ * laid out for the PDF format, no calls to action). It has its own A4 layout (components/ResultsPdfDocument), with no calls to action.
  *
  * Privacy: the HTML is built on the server from the frozen snapshot; Chromium gets it via setContent with every network
  * request blocked, so nothing about the person leaves the server and no URL ever carries their data.
@@ -22,7 +22,7 @@ export interface PdfOptions {
   insights?: ResultInsights;
 }
 
-const LAYOUT_WIDTH = 1180; // CSS px: the lg (≥1024) layout, as on a laptop; wide enough that the Map card fits one A4 page
+const LAYOUT_WIDTH = 900; // CSS px: the PDF has its own A4 layout (ResultsPdfDocument); ≈9 pt body text
 const A4_WIDTH = 794; // CSS px at 96 dpi
 const SCALE = Math.round((A4_WIDTH / LAYOUT_WIDTH) * 100) / 100;
 
@@ -52,8 +52,8 @@ export async function buildResultsPdf(result: LifeMapResult, opts: PdfOptions = 
       margin: { top: "12mm", bottom: "16mm", left: "0", right: "0" },
       displayHeaderFooter: true,
       // Header and footer bands painted linen so the page margins match the page (Chromium leaves them white otherwise)
-      headerTemplate: `<style>html,body{margin:0;padding:0;-webkit-print-color-adjust:exact}</style><div style="position:absolute;top:0;left:0;right:0;height:12mm;background:#F5EDE2"></div>`,
-      footerTemplate: `<style>html,body{margin:0;padding:0;-webkit-print-color-adjust:exact}</style><div style="position:absolute;bottom:0;left:0;right:0;height:16mm;background:#F5EDE2"></div><div style="position:relative;width:100%;font-family:Helvetica,Arial,sans-serif;font-size:7.5px;color:#9C8A7A;display:flex;justify-content:space-between;padding:0 14mm 4mm">
+      headerTemplate: `<style>html,body{margin:0;padding:0;-webkit-print-color-adjust:exact}</style><div style="position:absolute;top:-1mm;left:0;right:0;height:14mm;background:#F5EDE2"></div>`,
+      footerTemplate: `<style>html,body{margin:0;padding:0;-webkit-print-color-adjust:exact}</style><div style="position:absolute;bottom:-1mm;left:0;right:0;height:18mm;background:#F5EDE2"></div><div style="position:relative;width:100%;font-family:Helvetica,Arial,sans-serif;font-size:7.5px;color:#9C8A7A;display:flex;justify-content:space-between;padding:0 14mm 4mm">
         <span>Questions or feedback? ${CONTACT_EMAIL}</span>
         <span>The Current Life Map · page <span class="pageNumber"></span> of <span class="totalPages"></span> · reference ${ref}</span></div>`,
     });

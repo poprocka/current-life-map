@@ -8,47 +8,9 @@ import { ORBIT_TINT } from "@/components/map-geometry";
  * Personal insights (brief §4F–G): five evidence-led cards that open one at a time — each with a personalised
  * opening, up to three observations, why it may matter and one question — then the eight Orbits one by one.
  */
-export function PersonalInsights({ insights, print = false }: { insights: ResultInsights; print?: boolean }) {
+export function PersonalInsights({ insights }: { insights: ResultInsights }) {
   const [open, setOpen] = useState<number | null>(null);
   const cards = insights.cards;
-  // PDF: every insight printed open, in the same two-column layout as its popup; every Orbit expanded (Jana, 2026-10-13)
-  if (print) return (
-    <section className="mt-24" aria-labelledby="insights-h">
-      <p className="eyebrow">Personal insights</p>
-      <h2 id="insights-h" className="mt-3 font-serif text-[36px] font-light">A closer look at your reality</h2>
-      <p className="mt-3 max-w-[640px] text-[13.5px] leading-relaxed text-mahogany/75">
-        Interpretations of the answers you gave, including the places that support you and the patterns that may deserve attention.
-      </p>
-      <p className="mt-2 max-w-[640px] text-[11.5px] leading-relaxed text-taupe">{INSIGHT_DISCLAIMER}</p>
-      <div className="mt-8 space-y-6">
-        {cards.map((c, i) => (
-          <article key={c.key} className="pdf-keep rounded-[24px] border hairline bg-[#F7F1EA] px-14 pb-10 pt-8">
-            <p className="text-[14px] text-mahogany">Your personal insights <span className="text-taupe">· {i + 1} of {cards.length}</span></p>
-            <h3 className="mt-3 font-serif text-[34px] font-light leading-tight">{c.title}</h3>
-            <p className="mt-3 max-w-[820px] text-[15.5px] leading-relaxed text-mahogany/70">{c.lead}</p>
-            <div aria-hidden className="my-7 h-px w-full bg-[#D9C3A8]/70" />
-            <InsightBody c={c} />
-          </article>
-        ))}
-      </div>
-      <div className="mt-16">
-        <p className="eyebrow pdf-with-next">Your Orbits, one by one</p>
-        <ul className="mt-5 border-t hairline">
-          {insights.orbits.map((o) => (
-            <li key={o.orbit} className="pdf-keep border-b hairline py-4">
-              <p className="flex items-center gap-3 font-serif text-[22px] font-light">
-                <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: ORBIT_TINT[o.orbit] }} />{o.name}
-              </p>
-              <div className="mt-3 max-w-[760px] space-y-2 pl-5 text-[13.5px] leading-relaxed text-mahogany/85">
-                {o.paragraphs.map((p, k) => <p key={k}>{p}</p>)}
-                <p className="pt-2 font-serif text-[19px] italic leading-relaxed text-burgundy">{o.question}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  );
   return (
     <section className="mt-24" aria-labelledby="insights-h">
       <p className="eyebrow">Personal insights</p>
@@ -138,7 +100,7 @@ function InsightDialog({ insights, index, onIndex, onClose }: { insights: Result
 }
 
 /** The two columns of one insight — shared by the popup and the PDF, so both read the same. */
-function InsightBody({ c }: { c: ResultInsights["cards"][number] }) {
+export function InsightBody({ c }: { c: ResultInsights["cards"][number] }) {
   return (
     <div className="grid gap-8 lg:grid-cols-2 lg:gap-14">
       {/* Left: the card's main insight, in five steps (approved 13 Oct) */}

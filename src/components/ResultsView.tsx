@@ -10,7 +10,7 @@ import { ENERGY_SHORT, IMPORTANCE_SHORT } from "@/lib/pdf/model";
  * Exactly what the respondent sees (results page) — also rendered read-only in the coach workspace
  * from the frozen snapshot, so "Client's Map" is the same component and the same data.
  */
-export function ResultsView({ result, insights, children, embedded, afterMap, print = false, deepDiveHref = "#deep-dive" }: { result: LifeMapResult; insights?: ResultInsights; children?: React.ReactNode; embedded?: boolean; afterMap?: React.ReactNode; print?: boolean; deepDiveHref?: string }) {
+export function ResultsView({ result, insights, children, embedded, afterMap }: { result: LifeMapResult; insights?: ResultInsights; children?: React.ReactNode; embedded?: boolean; afterMap?: React.ReactNode }) {
   const Root = embedded ? "div" : "main";
   const byId = Object.fromEntries(result.orbits.map((o) => [o.orbit, o]));
   const snapshot = result.snapshot.filter((s) => s.available);
@@ -39,7 +39,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap, pr
       )}
 
       {/* B. Map — in its own block so it stands out (Jana, 2026-10-12) */}
-      <section className="pdf-keep mt-12 rounded-[32px] border hairline bg-linen-deep/70 px-5 pb-10 pt-10 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_24px_60px_-40px_rgba(84,15,38,0.25)] sm:px-10 lg:px-14 lg:pb-14 lg:pt-12 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-labelledby="map-h">
+      <section className="mt-12 rounded-[32px] border hairline bg-linen-deep/70 px-5 pb-10 pt-10 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_24px_60px_-40px_rgba(84,15,38,0.25)] sm:px-10 lg:px-14 lg:pb-14 lg:pt-12 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-labelledby="map-h">
         <header className="mx-auto max-w-[640px] text-center">{/* ~33% wider lines (Jana, 2026-10-13) */}
           {!insights && <p className="eyebrow">Your Current Life Map</p>}
           <h2 id="map-h" className="font-serif text-[22px] font-light leading-snug [text-wrap:pretty] sm:text-[26px]">
@@ -49,7 +49,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap, pr
         {/* Map and the right column (interpretation + table) are top-aligned (Jana, 2026-10-13); the legend sits under the Map */}
         <div className="mt-8 grid gap-12 lg:mt-4 lg:grid-cols-[1.45fr_1fr] lg:items-start lg:gap-x-16 lg:gap-y-8">
           <div className="min-w-0 lg:col-start-1 lg:row-start-1">
-            <PersonalMap result={result} still={print} />
+            <PersonalMap result={result} />
           </div>
           {/* Second row, top-aligned (Jana, 2026-10-13): the legend as a 2 × 3 grid under the Map, the interpretation beside it */}
           <div className="min-w-0 border-t hairline pt-6 lg:col-start-1 lg:row-start-2 lg:self-start"><MapLegend distancePending={distancePending} columns={2} /></div>
@@ -61,33 +61,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap, pr
               </div>
             )}
             {/* Visible title removed (Jana, 2026-10-12); the table keeps an accessible name */}
-            <div className="overflow-x-auto">
-              <table aria-label="Map interpretation" className="w-full text-left text-[12.5px] text-mahogany/85">
-                <thead className="text-[10.5px] uppercase tracking-[0.12em] text-taupe">
-                  <tr>
-                    <th scope="col" className="pb-3 pr-3 font-normal">Orbit</th>
-                    <th scope="col" className="pb-3 pr-3 font-normal">Importance</th>
-                    <th scope="col" className="pb-3 pr-3 font-normal">Energy</th>
-                    <th scope="col" className="pb-3 font-normal">Feelings</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.orbits.map((o) => (
-                    <tr key={o.orbit} className="border-t hairline align-top">
-                      <th scope="row" className="py-3 pr-3 font-normal">
-                        <span className="flex items-center gap-2 whitespace-nowrap font-serif text-[15px] text-mahogany">
-                          <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ background: ORBIT_TINT[o.orbit] }} />
-                          {o.name}
-                        </span>
-                      </th>
-                      <td className="py-3 pr-3">{o.importanceOrdinal === null ? "—" : IMPORTANCE_SHORT[o.importanceOrdinal - 1]}</td>
-                      <td className="py-3 pr-3">{o.energyRaw === null ? "—" : ENERGY_SHORT[o.energyRaw]}</td>
-                      <td className="py-3 text-taupe">{o.emotions.length ? o.emotions.map((e) => e.label).join(", ") : "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <MapTable result={result} />
           </div>
         </div>
 
@@ -101,7 +75,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap, pr
         <p className="eyebrow">Reality Snapshot</p>
         <h2 id="snap-h" className="mt-3 font-serif text-[36px] font-light">{insights?.standsOut.title ?? "Where your life stands today"}</h2>
         {insights && <div className="mt-5 max-w-[820px] space-y-3 text-[14.5px] leading-[1.8] text-mahogany/85">{insights.standsOut.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>}
-        <div className="pdf-keep mt-10 grid border-l border-t hairline sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid border-l border-t hairline sm:grid-cols-2 lg:grid-cols-3">
           {snapshot.map((s) => (
             <article key={s.key} className="border-b border-r hairline p-7">
               <p className="eyebrow">{s.label}</p>
@@ -115,14 +89,14 @@ export function ResultsView({ result, insights, children, embedded, afterMap, pr
       {insights && (
         <div className="mt-24 grid gap-14 lg:grid-cols-2 lg:gap-16">
           {/* D. The Sun */}
-          <section className="pdf-keep" aria-labelledby="self-h">
+          <section aria-labelledby="self-h">
             <p className="eyebrow">The Sun</p>
             <h2 id="self-h" className="mt-3 font-serif text-[32px] font-light leading-tight">{insights.self.title}</h2>
             <div className="mt-5 space-y-4 text-[14.5px] leading-[1.8] text-mahogany/85">{insights.self.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
             {insights.self.question && <p className="mt-5 font-serif text-[19px] italic leading-relaxed text-burgundy">{insights.self.question}</p>}
           </section>
           {/* E. Life Interconnections */}
-          <section className="pdf-keep" aria-labelledby="links-h">
+          <section aria-labelledby="links-h">
             <p className="eyebrow">Life Interconnections</p>
             <h2 id="links-h" className="mt-3 font-serif text-[32px] font-light leading-tight">{insights.connections.title}</h2>
             <div className="mt-5 space-y-4 text-[14.5px] leading-[1.8] text-mahogany/85">{insights.connections.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
@@ -131,18 +105,18 @@ export function ResultsView({ result, insights, children, embedded, afterMap, pr
       )}
 
       {/* F + G. Five insight cards and the eight Orbits */}
-      {insights && <PersonalInsights insights={insights} print={print} />}
+      {insights && <PersonalInsights insights={insights} />}
 
       {/* H. A question worth taking with you */}
       {insights && (
-        <section className="pdf-keep mx-auto mt-24 max-w-[760px] text-center" aria-labelledby="closing-h">
+        <section className="mx-auto mt-24 max-w-[760px] text-center" aria-labelledby="closing-h">
           <p id="closing-h" className="eyebrow">A question worth taking with you</p>
           <p className="mt-5 font-serif text-[28px] font-light italic leading-snug text-burgundy [text-wrap:balance] sm:text-[32px]">{insights.closingQuestion.text}</p>
           {!embedded && afterMap && (
             <>
               <p className="mx-auto mt-6 max-w-[600px] text-[13.5px] leading-relaxed text-mahogany/70">{insights.deepDiveBridge}</p>
               {/* Primary CTA under the bridge text (Jana, 2026-10-13) */}
-              <a href={deepDiveHref} className="mt-6 inline-block rounded-full bg-burgundy px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany">Explore your Map with Jana</a>
+              <a href="#deep-dive" className="mt-6 inline-block rounded-full bg-burgundy px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany">Explore your Map with Jana</a>
             </>
           )}
         </section>
@@ -151,5 +125,38 @@ export function ResultsView({ result, insights, children, embedded, afterMap, pr
       {/* "Where attention may matter most" removed from the client view (Jana, 2026-10-12); still in the Coach Report and script */}
       {children}
     </Root>
+  );
+}
+
+/** Orbit · Importance · Energy · Feelings — on the page beside the Map, and in the PDF. */
+export function MapTable({ result }: { result: LifeMapResult }) {
+  return (
+    <div className="overflow-x-auto">
+      <table aria-label="Map interpretation" className="w-full text-left text-[12.5px] text-mahogany/85">
+        <thead className="text-[10.5px] uppercase tracking-[0.12em] text-taupe">
+          <tr>
+            <th scope="col" className="pb-3 pr-3 font-normal">Orbit</th>
+            <th scope="col" className="pb-3 pr-3 font-normal">Importance</th>
+            <th scope="col" className="pb-3 pr-3 font-normal">Energy</th>
+            <th scope="col" className="pb-3 font-normal">Feelings</th>
+          </tr>
+        </thead>
+        <tbody>
+          {result.orbits.map((o) => (
+            <tr key={o.orbit} className="border-t hairline align-top">
+              <th scope="row" className="py-3 pr-3 font-normal">
+                <span className="flex items-center gap-2 whitespace-nowrap font-serif text-[15px] text-mahogany">
+                  <span aria-hidden className="h-2 w-2 shrink-0 rounded-full" style={{ background: ORBIT_TINT[o.orbit] }} />
+                  {o.name}
+                </span>
+              </th>
+              <td className="py-3 pr-3">{o.importanceOrdinal === null ? "—" : IMPORTANCE_SHORT[o.importanceOrdinal - 1]}</td>
+              <td className="py-3 pr-3">{o.energyRaw === null ? "—" : ENERGY_SHORT[o.energyRaw]}</td>
+              <td className="py-3 text-taupe">{o.emotions.length ? o.emotions.map((e) => e.label).join(", ") : "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

@@ -23,6 +23,7 @@ const print = `
 @page{size:A4;margin:12mm 0 16mm}
 html,body{background:#F5EDE2;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .pdf-keep{break-inside:avoid;page-break-inside:avoid}
+.pdf-break-before{break-before:page;page-break-before:always}
 section,article,li{orphans:3;widows:3}
 h1,h2,h3,.pdf-with-next{break-after:avoid;page-break-after:avoid}
 a{text-decoration-skip-ink:auto}

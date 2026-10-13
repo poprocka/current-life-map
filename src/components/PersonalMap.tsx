@@ -7,9 +7,9 @@ import { C, ORBIT_TINT, labelGeometry, mapViewBox, orbitAngle, orbitGeometry, SU
 // The Sun always stays the largest body: the biggest possible Orbit is ~60% of the Sun's radius (Jana, 2026-10-12)
 export { orbitGeometry };
 
-const IN = "#E0C26A"; // inflow: muted gold — energy coming in to you
-const OUT = "#9DB8CC"; // outflow: soft light blue (Jana, 2026-10-12)
-const STEADY = "#CDBDA9"; // stable: a quiet thread in light taupe
+const IN = "#7FC7A6"; // inflow: light mint green — this Orbit gives you energy (Jana, 2026-10-13)
+const OUT = "#E2B84E"; // outflow: sun yellow — this Orbit draws energy from the Sun (Jana, 2026-10-13)
+const STEADY = "#E6CE86"; // stable: a fine, still thread of soft yellow (Jana, 2026-10-13)
 
 /**
  * Personalised Current Life Map.
@@ -60,8 +60,8 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
       {/* Trade-off path removed from the Map (Jana, 2026-10-12); still described in Energy Architecture */}
       {/* Energy flows for every Orbit (Jana, 2026-10-12): calm, minimal, like a breathing exercise.
           A slim ribbon of light on a gentle arc between the Sun and each planet. The arc softly sways,
-          and one soft glow travels along it: gold toward the Sun (gives energy), beige toward the planet
-          (takes energy). Stronger answers mean a slightly wider ribbon and a quicker glow. A stable answer
+          and one soft glow travels along it: mint toward the Sun (gives energy), sun-yellow out toward the
+          planet (takes energy). Stronger answers mean a slightly wider ribbon and a quicker glow. A stable answer
           is a fine, still thread that only breathes. Each Orbit has its own phase, so nothing pulses in sync.
           All motion is off under reduced motion. */}
       {ORBIT_IDS.map((id, i) => {
@@ -147,12 +147,12 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
  * Legend distinguishes active, proxy and pending indicators (spec §7.1).
  * distancePending: no Orbit has a distance (an earlier scoring version, or no congruence answers), so all sit on one ring.
  */
-export function MapLegend({ distancePending = true, columns = 3 }: { distancePending?: boolean; columns?: 2 | 3 }) {
+export function MapLegend({ distancePending = true, columns = 3 }: { distancePending?: boolean; columns?: 1 | 2 | 3 }) {
   const item = "flex items-start gap-3";
   // Wording by Jana (2026-10-12). Full width of the Map card: three columns, two rows (2026-10-13):
   // energy in | energy out | steady  /  brightness | distance | size.
   return (
-    <div className={`grid gap-x-8 gap-y-4 text-[12.5px] leading-snug text-mahogany/80 sm:grid-cols-2 ${columns === 3 ? "lg:grid-cols-3" : ""}`}>
+    <div className={`grid gap-x-8 gap-y-4 text-[12.5px] leading-snug text-mahogany/80 ${columns === 1 ? "" : "sm:grid-cols-2"} ${columns === 3 ? "lg:grid-cols-3" : ""}`}>
       <div className={item}><Swatch><FlowSwatch color={IN} inward /></Swatch>
         <span><b className="font-normal text-mahogany">Energy in</b> — This Orbit gives you energy.</span></div>
       <div className={item}><Swatch><FlowSwatch color={OUT} /></Swatch>
