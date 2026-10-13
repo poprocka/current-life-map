@@ -171,7 +171,9 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
               const P = (r: number, k = 0) => `${(C + ux * r + px * k).toFixed(1)},${(C + uy * r + py * k).toFixed(1)}`;
               const [ra, rb] = inward ? [r1 - 4, r0 + 8] : [r0 + 8, r1 - 4];
               const track = `M${P(ra)} Q${P(rm, bend)} ${P(rb)}`;
-              const dur = inward ? (mag === 1 ? 2.9 : 3.8) : mag === 1 ? 4.6 : 6.4; // energy in moves livelier
+              // Subtle (Jana, 2026-10-13): a small cluster of arrowheads, close together, drifting slowly along the tube
+              const dur = inward ? (mag === 1 ? 7 : 8.5) : mag === 1 ? 9 : 11;
+              const trackLen = Math.abs(rb - ra), gap = 9; // ≈9 map units between arrowheads
               const m = centre(0.5, sway), m0 = centre(0.5, bend);
               return (
                 <g>
@@ -179,12 +181,12 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
                   <animateTransform attributeName="transform" type="translate" values={`0 0;${((m.x - m0.x) * 0.5).toFixed(2)} ${((m.y - m0.y) * 0.5).toFixed(2)};0 0`}
                     keyTimes="0;0.5;1" dur="8s" begin={phase} calcMode="spline" keySplines={ease} repeatCount="indefinite" />
                   {arrowTs.map((_, k) => {
-                    const begin = `-${((k * dur) / arrowTs.length + i * 0.7).toFixed(2)}s`;
+                    const begin = `${((k * gap * dur) / trackLen - i * 0.9).toFixed(2)}s`;
                     return (
                       <path key={k} d="M-4.2 -2.2 L1.8 0 L-4.2 2.2" fill="none" stroke={inward ? IN_ARROW : OUT_ARROW} strokeWidth={1.2 / aScale}
                         strokeLinecap="round" strokeLinejoin="round" opacity={0} transform={`scale(${aScale.toFixed(2)})`}>
                         <animateMotion path={track} dur={`${dur}s`} begin={begin} rotate="auto" repeatCount="indefinite" calcMode="linear" />
-                        <animate attributeName="opacity" values="0;0.6;0.6;0" keyTimes="0;0.18;0.8;1" dur={`${dur}s`} begin={begin} repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0;0.45;0.45;0" keyTimes="0;0.2;0.8;1" dur={`${dur}s`} begin={begin} repeatCount="indefinite" />
                       </path>
                     );
                   })}

@@ -41,7 +41,7 @@ export function PersonalInsights({ insights }: { insights: ResultInsights }) {
                   <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: ORBIT_TINT[o.orbit] }} />
                   {o.name}
                   {/* A + (no outline, 16.5px) shows the row expands; it turns into × when open (Jana, 2026-10-13) */}
-                  <span aria-hidden className="ml-auto flex h-9 w-9 items-center justify-center text-burgundy transition group-hover:text-mahogany group-open:rotate-45">
+                  <span aria-hidden className="ml-auto flex h-9 w-9 items-center justify-center text-burgundy transition group-hover:text-burgundy-soft group-open:rotate-45">
                     <svg width="16.5" height="16.5" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M11 2v18M2 11h18" /></svg>
                   </span>
                 </summary>
@@ -78,7 +78,7 @@ function InsightDialog({ insights, index, onIndex, onClose }: { insights: Result
         <div className="flex items-center justify-between">
           {/* Left-aligned with the content, all caps like every eyebrow (Jana, 2026-10-13) */}
           <p className="eyebrow">Your personal insights · {index + 1} of {insights.cards.length}</p>
-          <button onClick={onClose} aria-label="Close" className="text-[22px] leading-none text-mahogany hover:text-burgundy">×</button>
+          <button onClick={onClose} aria-label="Close" className="text-[22px] leading-none text-burgundy hover:text-burgundy-soft">×</button>
         </div>
         {/* All five insights as tabs, so any can be opened from here (Jana, 2026-10-13); replaces "Next insight" */}
         <div role="tablist" aria-label="Your personal insights" className="sticky top-0 z-10 -mx-1 mt-4 flex gap-1 overflow-x-auto border-b hairline bg-[#F7F1EA] pb-px lg:static">
