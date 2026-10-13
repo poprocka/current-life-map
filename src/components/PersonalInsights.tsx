@@ -77,7 +77,7 @@ function InsightDialog({ insights, index, onIndex, onClose }: { insights: Result
         className="relative h-fit min-h-full w-full max-w-[680px] bg-[#F7F1EA] px-6 pb-10 pt-6 outline-none sm:min-h-0 sm:rounded-[24px] sm:px-12 lg:h-[min(840px,calc(100vh-48px))] lg:max-w-[1120px] lg:overflow-y-auto lg:px-14 lg:pb-8 [@media(min-width:1024px)_and_(max-height:940px)]:h-[calc(100vh-24px)] [@media(min-width:1024px)_and_(max-height:940px)]:pt-5 [@media(min-width:1024px)_and_(max-height:940px)]:pb-6">
         <div className="flex items-center justify-between">
           {/* Left-aligned with the content, all caps like every eyebrow (Jana, 2026-10-13) */}
-          <p className="eyebrow">Your personal insights · {index + 1} of {insights.cards.length}</p>
+          <p className="eyebrow">Your personal insights</p>
           <button onClick={onClose} aria-label="Close" className="text-[22px] leading-none text-burgundy hover:text-burgundy-soft">×</button>
         </div>
         {/* All five insights as tabs, so any can be opened from here (Jana, 2026-10-13); replaces "Next insight" */}
