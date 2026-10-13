@@ -71,51 +71,62 @@ function InsightDialog({ insights, index, onIndex, onClose }: { insights: Result
     return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
   }, [onClose, index]);
   return (
-    <div className="fixed inset-0 z-50 flex justify-center overflow-y-auto bg-mahogany/30 p-0 sm:p-8" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex justify-center overflow-y-auto bg-mahogany/30 p-0 sm:p-8 lg:items-center lg:p-6 [@media(min-width:1024px)_and_(max-height:940px)]:p-3" onClick={onClose}>
+      {/* Wider on laptop/desktop so a whole insight fits above the fold; full screen on mobile (Jana, 2026-10-13) */}
       <div ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="insight-title" onClick={(e) => e.stopPropagation()}
-        className="relative h-fit min-h-full w-full max-w-[680px] bg-[#F7F1EA] px-6 pb-10 pt-6 outline-none sm:min-h-0 sm:rounded-[24px] sm:px-12">
+        className="relative h-fit min-h-full w-full max-w-[680px] bg-[#F7F1EA] px-6 pb-10 pt-6 outline-none sm:min-h-0 sm:rounded-[24px] sm:px-12 lg:max-w-[1120px] lg:px-14 lg:pb-8 [@media(min-width:1024px)_and_(max-height:940px)]:pt-5 [@media(min-width:1024px)_and_(max-height:940px)]:pb-6">
         <div className="flex items-center justify-between">
-          <span />
-          <p className="text-[14px] text-mahogany">Your personal insights</p>
+          <p className="text-[10.5px] uppercase tracking-[0.18em] text-taupe">The Current Life Map · Insight {index + 1} of {insights.cards.length}</p>
           <button onClick={onClose} aria-label="Close" className="text-[22px] leading-none text-mahogany hover:text-burgundy">×</button>
         </div>
-        <p className="mt-6 text-[10.5px] uppercase tracking-[0.18em] text-taupe">The Current Life Map · Insight {index + 1} of {insights.cards.length}</p>
-        <h2 id="insight-title" className="mt-5 font-serif text-[38px] font-light leading-tight">{c.title}</h2>
-        <p className="mt-4 text-[16px] leading-relaxed text-mahogany/70">{c.lead}</p>
-        <div aria-hidden className="mx-auto my-10 h-px w-36 bg-[#D9C3A8]" />
-        <div className="space-y-8">
-          {c.sections.map((s, i) => (
-            <section key={s.id}>
-              <h3 className="font-serif text-[22px] font-normal">{s.heading}</h3>
-              {i === 0 && c.major ? (
-                // The card's main insight, in five steps (approved 13 Oct)
-                <div className="mt-3 space-y-4 text-[14.5px] leading-[1.8] text-mahogany/85">
-                  <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">What you shared</p>
-                    <ul className="mt-1 space-y-1 text-[13px] text-mahogany/75">{c.major.shared.map((x, k) => <li key={k}>{x}</li>)}</ul></div>
-                  <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">What stands out</p><p className="mt-1">{c.major.pattern}</p></div>
-                  {c.major.meaning && <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">What it might mean</p><p className="mt-1">{c.major.meaning}</p></div>}
-                  {c.major.alternative && <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">It could also be</p><p className="mt-1">{c.major.alternative}</p></div>}
-                </div>
-              ) : <p className="mt-3 text-[14.5px] leading-[1.8] text-mahogany/85">{s.text}</p>}
+        <h2 id="insight-title" className="mt-4 font-serif text-[34px] font-light leading-tight lg:text-[36px] [@media(min-width:1024px)_and_(max-height:940px)]:mt-2 [@media(min-width:1024px)_and_(max-height:940px)]:text-[30px]">{c.title}</h2>
+        <p className="mt-3 max-w-[820px] text-[15.5px] leading-relaxed text-mahogany/70 [@media(min-width:1024px)_and_(max-height:940px)]:mt-2 [@media(min-width:1024px)_and_(max-height:940px)]:text-[14.5px]">{c.lead}</p>
+        <div aria-hidden className="my-8 h-px w-full bg-[#D9C3A8]/70 lg:my-7 [@media(min-width:1024px)_and_(max-height:940px)]:my-5" />
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-14">
+          {/* Left: the card's main insight, in five steps (approved 13 Oct) */}
+          <div className="space-y-8">
+            {c.sections.slice(0, 1).map((s) => <InsightBlock key={s.id} s={s} major={c.major} />)}
+          </div>
+          {/* Right: the other observations, why it may matter, and the question */}
+          <div className="space-y-7 [@media(min-width:1024px)_and_(max-height:940px)]:space-y-5">
+            {c.sections.slice(1).map((s) => <InsightBlock key={s.id} s={s} />)}
+            <section>
+              <h3 className="font-serif text-[21px] font-normal">Why it may matter</h3>
+              <p className="mt-2 text-[14.5px] leading-[1.75] text-mahogany/85 [@media(min-width:1024px)_and_(max-height:940px)]:text-[14px] [@media(min-width:1024px)_and_(max-height:940px)]:leading-[1.65]">{c.why}</p>
             </section>
-          ))}
-          <section>
-            <h3 className="font-serif text-[22px] font-normal">Why it may matter</h3>
-            <p className="mt-3 text-[14.5px] leading-[1.8] text-mahogany/85">{c.why}</p>
-          </section>
-          <section>
-            <h3 className="font-serif text-[22px] font-normal">A question to consider</h3>
-            <p className="mt-3 font-serif text-[19px] italic leading-relaxed text-burgundy">{c.question}</p>
-          </section>
+            <section>
+              <h3 className="font-serif text-[21px] font-normal">A question to consider</h3>
+              <p className="mt-2 font-serif text-[19px] italic leading-relaxed text-burgundy">{c.question}</p>
+            </section>
+          </div>
         </div>
-        <p className="mt-10 text-[11.5px] leading-relaxed text-taupe">{INSIGHT_DISCLAIMER}</p>
-        <button onClick={() => (next ? onIndex(index + 1) : onClose())}
-          className="mt-8 flex w-full items-center justify-between rounded-[16px] border hairline bg-white px-6 py-4 text-left transition hover:border-burgundy/40">
-          <span><span className="block text-[11px] text-taupe">{next ? "Next insight" : "Return to"}</span>
-            <span className="font-serif text-[20px]">{next ? next.title : "Your Map"}</span></span>
-          <span aria-hidden className="text-[18px]">›</span>
-        </button>
+        <div className="mt-10 grid gap-6 lg:mt-8 [@media(min-width:1024px)_and_(max-height:940px)]:mt-5 lg:grid-cols-2 lg:items-center lg:gap-14">
+          <p className="text-[11.5px] leading-relaxed text-taupe">{INSIGHT_DISCLAIMER}</p>
+          <button onClick={() => (next ? onIndex(index + 1) : onClose())}
+            className="flex w-full items-center justify-between rounded-[16px] border hairline bg-white px-6 py-4 [@media(min-width:1024px)_and_(max-height:940px)]:py-3 text-left transition hover:border-burgundy/40">
+            <span><span className="block text-[11px] text-taupe">{next ? "Next insight" : "Return to"}</span>
+              <span className="font-serif text-[20px]">{next ? next.title : "Your Map"}</span></span>
+            <span aria-hidden className="text-[18px]">›</span>
+          </button>
+        </div>
       </div>
     </div>
+  );
+}
+
+function InsightBlock({ s, major }: { s: ResultInsights["cards"][number]["sections"][number]; major?: ResultInsights["cards"][number]["major"] }) {
+  return (
+    <section>
+      <h3 className="font-serif text-[21px] font-normal">{s.heading}</h3>
+      {major ? (
+        <div className="mt-3 space-y-4 text-[14.5px] leading-[1.75] text-mahogany/85 [@media(min-width:1024px)_and_(max-height:940px)]:space-y-3 [@media(min-width:1024px)_and_(max-height:940px)]:text-[14px] [@media(min-width:1024px)_and_(max-height:940px)]:leading-[1.65]">
+          <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">What you shared</p>
+            <ul className="mt-1 space-y-1 text-[13px] text-mahogany/75">{major.shared.map((x, k) => <li key={k}>{x}</li>)}</ul></div>
+          <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">What stands out</p><p className="mt-1">{major.pattern}</p></div>
+          {major.meaning && <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">What it might mean</p><p className="mt-1">{major.meaning}</p></div>}
+          {major.alternative && <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">It could also be</p><p className="mt-1">{major.alternative}</p></div>}
+        </div>
+      ) : <p className="mt-2 text-[14.5px] leading-[1.75] text-mahogany/85 [@media(min-width:1024px)_and_(max-height:940px)]:text-[14px] [@media(min-width:1024px)_and_(max-height:940px)]:leading-[1.65]">{s.text}</p>}
+    </section>
   );
 }
