@@ -81,14 +81,17 @@ describe("N/A and missing data (spec §5.7)", () => {
 
 describe("unapproved metrics stay inactive (spec §5.3–5.6)", () => {
   const r = computeLifeMap(fill("3"));
-  it("vitality and congruence are null with pending status", () => {
+  it("vitality stays pending; distance is a provisional congruence band (provisional-2)", () => {
     for (const o of r.orbits) {
       expect(o.vitality).toBeNull();
-      expect(o.congruence).toBeNull();
       expect(o.metricStatuses.vitality).toBe("pending_mapping");
-      expect(o.metricStatuses.distance).toBe("pending_mapping");
       expect(o.metricStatuses.brightness).toBe("proxy");
+      if (o.congruence === null) { expect(o.distanceBand).toBeNull(); expect(o.metricStatuses.distance).toBe("unavailable"); }
+      else { expect(["close", "middle", "far"]).toContain(o.distanceBand); expect(o.metricStatuses.distance).toBe("proxy"); }
     }
+  });
+  it("earlier scoring version keeps every Orbit on the neutral ring", () => {
+    for (const o of computeLifeMap(fill("3"), PROVISIONAL_1).orbits) { expect(o.congruence).toBeNull(); expect(o.distanceBand).toBeNull(); expect(o.metricStatuses.distance).toBe("pending_mapping"); }
   });
   it("size uses direct importance only", () => {
     expect(PROVISIONAL_1.active.importance).toBe("direct_only");
@@ -162,7 +165,7 @@ describe("emotions, reflections, determinism", () => {
   });
   it("results carry version identifiers", () => {
     expect(computeLifeMap(fill("3")).versions).toEqual({
-      assessment: "v10-with-approved-oct12-overrides", questionBank: "v10-oct12.2", scoring: "provisional-1", templates: "1", mapRender: "1",
+      assessment: "v10-with-approved-oct12-overrides", questionBank: "v10-oct12.2", scoring: "provisional-2", templates: "1", mapRender: "1",
     });
   });
 });

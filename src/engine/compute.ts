@@ -1,5 +1,5 @@
 /**
- * Current Life Map — scoring & interpretation engine, scoring version "provisional-1".
+ * Current Life Map — scoring & interpretation engine, scoring versions "provisional-1" and "provisional-2" (distance from congruence).
  * Implements the 12 Oct 2026 backend spec. Pure and deterministic.
  *
  *  raw answers ──► normalized (keyed) evidence ──► coverage ──► ACTIVE metrics only
@@ -13,7 +13,8 @@ import { NOT_APPLICABLE } from "@/content/types";
 import { QUESTION_BANK, QUESTION_BANK_VERSION, ASSESSMENT_VERSION, questionById } from "@/content/v10/question-bank";
 import { ORBIT_IDS, chapterById } from "@/content/v10/chapters";
 import { SUPPORT_COMPETE_OPTIONS } from "@/content/v10/scales";
-import { MAP_RENDER_VERSION, OPEN_FLAGS, PROVISIONAL_1, TEMPLATE_VERSION, type ScoringConfig } from "./config/scoring";
+import { CURRENT_SCORING, MAP_RENDER_VERSION, OPEN_FLAGS, TEMPLATE_VERSION, type ScoringConfig } from "./config/scoring";
+import { f4, type F4Band } from "./congruence";
 
 export type Answers = Record<string, AnswerValue | undefined>;
 export type Confidence = "sufficient" | "limited" | "insufficient";
@@ -69,7 +70,12 @@ export interface OrbitResult {
   supportConfidence: Confidence;
   /** INACTIVE until mappings are approved */
   vitality: null;
-  congruence: null;
+  /** F4 congruence score (0..1) — only when the scoring version positions by congruence and the statement was answered. */
+  congruence: number | null;
+  /** Three-band distance from the Sun; null → neutral ring ("not enough information"). */
+  distanceBand: F4Band | null;
+  /** The congruence statement and the supporting statements point in different directions (gap ≥ 0.5). */
+  congruenceMixed: boolean;
   emotions: { id: string; label: string }[];
   coverage: Coverage;
   items: ItemEvidence[];
@@ -161,7 +167,7 @@ function coverageOf(items: ItemEvidence[]): Coverage {
 }
 
 /** Spec §5.7 proposed gate (unapproved, flag F6): max(3, ceil(60% of eligible)). */
-export function confidenceOf(c: Coverage, cfg: ScoringConfig = PROVISIONAL_1): Confidence {
+export function confidenceOf(c: Coverage, cfg: ScoringConfig = CURRENT_SCORING): Confidence {
   if (c.valid === 0) return "insufficient";
   const need = Math.max(cfg.coverage.minValid, Math.ceil(cfg.coverage.minShare * c.eligible));
   if (c.valid >= need) return "sufficient";
@@ -186,7 +192,7 @@ const ENERGY_PHRASE: Record<number, string> = {
 };
 const IMPORTANCE_PHRASE = ["not important right now", "slightly important", "moderately important", "very important", "one of your highest priorities"];
 
-export function computeLifeMap(answers: Answers, cfg: ScoringConfig = PROVISIONAL_1): LifeMapResult {
+export function computeLifeMap(answers: Answers, cfg: ScoringConfig = CURRENT_SCORING): LifeMapResult {
   const pick = (id: string) => {
     const v = single(answers[id]);
     return v && (ORBIT_IDS as string[]).includes(v) ? (v as OrbitId) : null;
@@ -206,7 +212,9 @@ export function computeLifeMap(answers: Answers, cfg: ScoringConfig = PROVISIONA
   };
 
   // ── Orbits ──────────────────────────────────────────────────────────────
+  const byCongruence = cfg.active.distance === "congruence" ? Object.fromEntries(f4(answers).map((x) => [x.orbit, x])) : null;
   const orbits: OrbitResult[] = ORBIT_IDS.map((orbit) => {
+    const cg = byCongruence?.[orbit] ?? null;
     const statements = QUESTION_BANK.filter((q) => q.chapterId === orbit && q.responseType === "truth" && q.enabled && q.measure !== "congruence");
     const items = statements.map((q) => itemEvidence(q.id, answers[q.id]));
     const coverage = coverageOf(items);
@@ -250,7 +258,9 @@ export function computeLifeMap(answers: Answers, cfg: ScoringConfig = PROVISIONA
       responseSupportIndex,
       supportConfidence: confidence,
       vitality: null,
-      congruence: null,
+      congruence: cg?.congruence ?? null,
+      distanceBand: cg?.band ?? null,
+      congruenceMixed: cg?.mixed ?? false,
       emotions,
       coverage,
       items,
@@ -258,8 +268,8 @@ export function computeLifeMap(answers: Answers, cfg: ScoringConfig = PROVISIONA
         size: importanceDirect === null ? "unavailable" : "active",
         brightness: responseSupportIndex === null ? "unavailable" : "proxy",
         vitality: "pending_mapping",
-        congruence: "pending_mapping",
-        distance: "pending_mapping",
+        congruence: !byCongruence ? "pending_mapping" : cg?.band ? "proxy" : "unavailable",
+        distance: !byCongruence ? "pending_mapping" : cg?.band ? "proxy" : "unavailable",
       },
       selections: {
         largestDemand: inter.largestDemand === orbit,
@@ -423,7 +433,7 @@ export function computeLifeMap(answers: Answers, cfg: ScoringConfig = PROVISIONA
 
   const requiredMissing = QUESTION_BANK.some((q) => q.enabled && !q.optional && answers[q.id] === undefined);
   const warnings = [
-    "Provisional scoring (provisional-1): brightness is a supportive-response proxy, distance is not personalised, attention is qualitative.",
+    `Provisional scoring (${cfg.scoringVersion}): brightness is a supportive-response proxy, ${cfg.active.distance === "congruence" ? "distance uses three provisional congruence bands" : "distance is not personalised"}, attention is qualitative.`,
     ...orbits.filter((o) => o.supportConfidence !== "sufficient").map((o) => `${o.name}: ${o.supportConfidence} evidence (${o.coverage.valid}/${o.coverage.eligible}).`),
   ];
 

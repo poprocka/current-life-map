@@ -169,8 +169,12 @@ describe("unsupported claims", () => {
     for (const t of texts) expect(t, t).not.toMatch(BANNED);
     expect(n.validationIssues).toEqual([]);
   });
-  it("distance/congruence metrics are never interpreted (pending approval)", () => {
-    for (const [, a] of FIXTURES) expect(all(a)).not.toMatch(/distance from the Sun|closer to the Sun|further from the Sun|congruence/i);
+  it("distance is described only in the approved, non-judgmental words; never ranked or called a problem", () => {
+    for (const [, a] of FIXTURES) {
+      const t = all(a);
+      expect(t).not.toMatch(/congruence|distant from (your|yourself)|disconnected from yourself|authentic self is|living (it )?(wrong|incorrectly)|out of alignment/i);
+      expect(t).not.toMatch(/(further|far) from the Sun[^.]*\b(problem|issue|wrong)\b/i);
+    }
   });
   it("the engine is pure: generating the narrative never changes the computed Map", () => {
     const a = EXAMPLE_STRAIN; const r = computeLifeMap(a); const before = structuredClone(r);
@@ -252,5 +256,34 @@ describe("PDF and results stay consistent", () => {
     expect(t).toContain(n.closingQuestion.text.slice(0, 40));
     expect(t).toContain("Looks right, isn't mine.");
     expect(t).toContain("Earlier, you named Social World");
+  });
+});
+
+describe("distance from the Sun (F4, approved 13 Oct)", () => {
+  const mapText = (a: Raw) => run(a).mapReading.paragraphs.map((p) => p.text).join(" ");
+  const orbitText = (a: Raw, o: string) => run(a).orbits.find((x) => x.orbit === o)!.paragraphs.join(" ");
+  it("uses the approved band statements and ties them to the person's answers", () => {
+    const a: Raw = { ...EXAMPLE_WORKING, "joy.congruence": "4", "joy.05": "4", "joy.02": "4", "growth.congruence": "0", "growth.06": "4" };
+    expect(mapText(a)).toMatch(/Joy sits? close to the Sun: th(is area of your life appears|ese areas of your life appear) to reflect what matters to you\./);
+    expect(mapText(a)).toMatch(/Growth[^.]* further out: the way you're currently living in this area may not fully reflect what matters to you\./);
+    expect(orbitText(a, "joy")).toContain("This area of your life appears to reflect what matters to you.");
+    expect(run(a).mapReading.paragraphs.some((p) => p.evidence.some((e) => e.questionId === "growth.congruence"))).toBe(true);
+  });
+  it("a large Orbit far from the Sun keeps both signals and isn't framed as a problem", () => {
+    const a: Raw = { ...EXAMPLE_WORKING, "love.importance": "4", "love.congruence": "0", "love.01": "0", "love.05": "0", "love.02": "0" };
+    const t = mapText(a);
+    expect(t).toMatch(/Love is also one of your largest Orbits[^.]*\. That pairing can be worth noticing\. It may reflect a conscious trade-off, practical circumstances or a time of change\./);
+    expect(t).not.toMatch(/problem|wrong|fix/i);
+  });
+  it("contradictory answers are named, not averaged away", () => {
+    const a: Raw = { ...EXAMPLE_WORKING, "joy.congruence": "4", "joy.05": "0", "joy.02": "0" };
+    expect(mapText(a)).toMatch(/In Joy, your answers point in different directions/);
+    expect(orbitText(a, "joy")).toMatch(/point in a different direction/);
+  });
+  it("a skipped congruence statement gets the 'not enough information' line and the middle ring", () => {
+    const a: Raw = { ...EXAMPLE_WORKING }; delete a["mind.congruence"];
+    const r = computeLifeMap(a).orbits.find((o) => o.orbit === "mind")!;
+    expect(r.distanceBand).toBeNull();
+    expect(orbitText(a, "mind")).toContain("We don't have enough information to understand how closely this area reflects what matters to you.");
   });
 });

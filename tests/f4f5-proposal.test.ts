@@ -22,12 +22,12 @@ const base = () => {
 };
 
 describe("F4/F5 proposal prototype", () => {
-  it("stays off the client's Map until sign-off: distance neutral, no ranking", () => {
-    expect(FEATURES).toEqual({ personalisedDistance: false, attentionTiers: false });
+  it("distance is on (F4 approved 13 Oct); attention ranking stays off", () => {
+    expect(FEATURES).toEqual({ personalisedDistance: true, attentionTiers: false });
     const r = computeLifeMap(base());
-    expect(r.orbits.every((o) => o.congruence === null)).toBe(true);
+    expect(r.orbits.every((o) => o.distanceBand === "middle" && o.congruence === 0.5)).toBe(true);
     expect(r.attention.rankedOrbits).toEqual([]);
-    // the client-facing UI never imports the F4/F5 module
+    // the client-facing UI reads the band from the computed result; it never imports the F4/F5 module (no ranking)
     for (const f of ["components/ResultsView.tsx", "components/PersonalMap.tsx", "lib/pdf/clientReport.ts", "lib/pdf/model.ts"])
       expect(fs.readFileSync(path.join(__dirname, "../src", f), "utf8")).not.toContain("engine/congruence");
   });
@@ -99,8 +99,8 @@ describe("F4 approved rules (13 Oct)", () => {
     expect(r[3]).toBe(r[1]);
     expect(r[0]).toBeLessThan(r[1]); expect(r[1]).toBeLessThan(r[2]);
   });
-  it("mapping is marked proposed and uses only enabled truth statements from the same Orbit, never satisfaction proxies", () => {
-    expect(CONGRUENCE_MAPPING_STATUS).toBe("proposed");
+  it("mapping is approved and uses only enabled truth statements from the same Orbit, never satisfaction proxies", () => {
+    expect(CONGRUENCE_MAPPING_STATUS).toBe("approved");
     for (const [o, items] of Object.entries(CONGRUENCE_ITEMS)) for (const it of items) {
       const q = questionById(it.id)!;
       expect(q.chapterId).toBe(o); expect(q.responseType).toBe("truth"); expect(q.enabled).toBe(true);

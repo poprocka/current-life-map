@@ -3,7 +3,7 @@
  * Option A (8 parallel congruence statements) approved by Jana, 12 Oct 2026.
  * Calculation, bands, Formula B and tiers are computed for the private Coach Report only, labelled provisional.
  * F4 rules approved 13 Oct 2026 (required congruence statement, 50/50 with supporting statements, three bands);
- * the question-level mapping below is still under review.
+ * question-level mapping approved for the prototype the same day.
  * They reach the client's Map only when FEATURES flags are switched on after sign-off (see config/scoring.ts).
  */
 import type { OrbitId } from "@/content/types";
@@ -11,11 +11,11 @@ import { ORBIT_IDS } from "@/content/v10/chapters";
 import { computeLifeMap, itemEvidence, type Answers } from "@/engine/compute";
 
 /**
- * Supporting statements per Orbit — PROPOSED, awaiting Jana's question-level review (doc "F4 Congruence — Question Mapping
- * for Review", 13 Oct). Each was checked word by word against the four approved criteria: living by personal values;
+ * Supporting statements per Orbit — APPROVED by Jana for the prototype, 13 Oct (doc "F4 Congruence — Question Mapping
+ * for Review"). Each was checked word by word against the four approved criteria: living by personal values;
  * honoring one's own needs and priorities; authentic choices rather than outside expectations; agency.
  * Satisfaction, achievement, healthy habits, energy and wellbeing are never proxies. Mind has none: congruence statement only.
- * Nothing here reaches the client's Map while FEATURES.personalisedDistance is false.
+ * Used for the Map from scoring version provisional-2.
  */
 export const CONGRUENCE_ITEMS: Record<OrbitId, { id: string; strength: "direct" | "partial" }[]> = {
   mind: [],
@@ -27,7 +27,7 @@ export const CONGRUENCE_ITEMS: Record<OrbitId, { id: string; strength: "direct" 
   resources: [{ id: "resources.04", strength: "direct" }, { id: "resources.02", strength: "partial" }],
   joy: [{ id: "joy.05", strength: "direct" }, { id: "joy.02", strength: "partial" }],
 };
-export const CONGRUENCE_MAPPING_STATUS: "proposed" | "approved" = "proposed";
+export const CONGRUENCE_MAPPING_STATUS: "proposed" | "approved" = "approved"; // Jana, 13 Oct: "all accepted for this initial version of the prototype"
 /** The parallel congruence statement per Orbit (Option A), in the question bank as `[orbit].congruence`. */
 export const ANCHOR_ID = (o: OrbitId) => `${o}.congruence`;
 

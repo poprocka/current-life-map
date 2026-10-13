@@ -21,7 +21,7 @@ import { reportModel } from "@/lib/pdf/model";
 import { snapshotFingerprint } from "@/lib/stable";
 import { winAnsi } from "@/lib/pdf/clientReport";
 import { NOT_APPLICABLE } from "@/content/types";
-import { PROVISIONAL_1 } from "@/engine/config/scoring";
+import { CURRENT_SCORING, PROVISIONAL_1 } from "@/engine/config/scoring";
 
 const JANA = "11111111-1111-1111-1111-111111111111";
 const STRANGER = "33333333-3333-3333-3333-333333333333";
@@ -129,7 +129,7 @@ describe("§9 acceptance", () => {
 
     const ws = (await asJana((sql) => loadWorkspace(sql, { userId: JANA, role: "admin" }, id)))!;
     expect(ws.answers.length).toBeGreaterThan(90);
-    expect(ws.result?.snapshot.versions.scoring).toBe(PROVISIONAL_1.scoringVersion);
+    expect(ws.result?.snapshot.versions.scoring).toBe(CURRENT_SCORING.scoringVersion);
     expect(ws.coachReport?.content.sections.length).toBeGreaterThan(3);
     expect(ws.scripts.length).toBe(2); // generated at completion + regenerated with booking intake
     expect(ws.scripts[0].content.blocks.map((b) => [b.startMin, b.endMin])).toEqual([[0, 10], [10, 20], [20, 35], [35, 45], [45, 55], [55, 60]]);

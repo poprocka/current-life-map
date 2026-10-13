@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { LifeMapResult, OrbitResult } from "@/engine/compute";
 import { ORBIT_IDS } from "@/content/v10/chapters";
 import { SunGlyph, SystemDefs } from "./LifeSystem";
-import { C, ORBIT_TINT, orbitAngle, orbitGeometry, SUN_R, ORBIT_MIN, ORBIT_MAX, R_MIN, R_MAX, R_NEUTRAL } from "./map-geometry";
+import { C, ORBIT_TINT, labelGeometry, mapViewBox, orbitAngle, orbitGeometry, SUN_R, ORBIT_MIN, ORBIT_MAX, R_NEUTRAL, R_CLOSE, R_FAR } from "./map-geometry";
 
 // The Sun always stays the largest body: the biggest possible Orbit is ~60% of the Sun's radius (Jana, 2026-10-12)
 export { orbitGeometry };
@@ -14,7 +14,7 @@ const STEADY = "#CDBDA9"; // stable: a quiet thread in light taupe
 /**
  * Personalised Current Life Map.
  * size = direct importance · brightness = supportive-response proxy (vitality pending) ·
- * distance = congruence when approved, otherwise neutral fixed placement
+ * distance = congruence band (close / middle / far, F4 approved 13 Oct); neutral ring when unavailable
  * arrows = energy (toward the Sun = gives you energy; away = takes energy). (Trade-off is described in text, not drawn.)
  */
 function usePrefersReducedMotion() {
@@ -36,7 +36,7 @@ export function PersonalMap({ result }: { result: LifeMapResult }) {
   const reduceMotion = usePrefersReducedMotion();
 
   return (
-    <svg viewBox="-40 -40 640 640" overflow="visible" className="w-full" role="img"
+    <svg viewBox={mapViewBox(result.orbits).attr} overflow="visible" className="w-full" role="img"
       aria-label="Your Current Life Map. A text version follows below the legend.">
       <SystemDefs />
       <defs>
@@ -46,12 +46,13 @@ export function PersonalMap({ result }: { result: LifeMapResult }) {
       </defs>
 
       {/* distance axes */}
-      {/* While distance is pending, one neutral orbit ring; distance axes return when congruence is approved */}
-      {result.orbits.every((o) => o.congruence === null) ? (
+      {/* One neutral ring when no Orbit has a distance; otherwise the close / middle / far rings */}
+      {result.orbits.every((o) => o.distanceBand === null) ? (
         <circle cx={C} cy={C} r={R_NEUTRAL} fill="none" stroke="#C2B3A3" strokeWidth={0.6} strokeDasharray="2 6" />
       ) : (
-        [R_MIN, (R_MIN + R_MAX) / 2, R_MAX].map((r, i) => (
-          <circle key={r} cx={C} cy={C} r={r} fill="none" stroke="#C2B3A3" strokeWidth={0.6} strokeDasharray={i === 0 ? "1 4" : "2 6"} />
+        // Three faint rings: close, middle, far (F4, approved 13 Oct)
+        [R_CLOSE, R_NEUTRAL, R_FAR].map((r) => (
+          <circle key={r} cx={C} cy={C} r={r} fill="none" stroke="#C2B3A3" strokeWidth={0.6} strokeDasharray="2 6" />
         ))
       )}
 
@@ -126,15 +127,13 @@ export function PersonalMap({ result }: { result: LifeMapResult }) {
       {ORBIT_IDS.map((id) => {
         const o = by[id];
         const g = orbitGeometry(o);
-        const lx = C + (g.dist + g.size + 14) * Math.cos(g.a);
-        const ly = C + (g.dist + g.size + 14) * Math.sin(g.a);
-        const anchor = Math.abs(Math.cos(g.a)) < 0.2 ? "middle" : Math.cos(g.a) > 0 ? "start" : "end";
+        const { lx, ly, dy, anchor } = labelGeometry(o);
         return (
           <g key={id}>
             {/* No outlines around Orbits (Jana, 2026-10-12) */}
             <circle cx={g.x} cy={g.y} r={g.size} fill={ORBIT_TINT[id]} opacity={g.bright} />
             <circle cx={g.x} cy={g.y} r={g.size} fill="url(#planetShade)" opacity={g.bright} />
-            <text x={lx} y={ly + (Math.sin(g.a) > 0.5 ? 10 : Math.sin(g.a) < -0.5 ? -2 : 4)}
+            <text x={lx} y={ly + dy}
               textAnchor={anchor} className="font-serif" fontSize={17} fill="#1F1411">{o.name}</text>
           </g>
         );
@@ -145,7 +144,7 @@ export function PersonalMap({ result }: { result: LifeMapResult }) {
 
 /**
  * Legend distinguishes active, proxy and pending indicators (spec §7.1).
- * distancePending: congruence is not yet approved, so every Orbit sits at the same distance.
+ * distancePending: no Orbit has a distance (an earlier scoring version, or no congruence answers), so all sit on one ring.
  */
 export function MapLegend({ distancePending = true, columns = 3 }: { distancePending?: boolean; columns?: 2 | 3 }) {
   const item = "flex items-start gap-3";
@@ -162,8 +161,8 @@ export function MapLegend({ distancePending = true, columns = 3 }: { distancePen
       <div className={item}><Swatch><circle cx="9" cy="9" r="6" fill="#B7AC9B" opacity=".3" /><circle cx="22" cy="9" r="6" fill="#B7AC9B" /></Swatch>
         <span><b className="font-normal text-mahogany">Brightness</b> — How supported and fulfilling this Orbit feels in your current life, based on your answers.</span></div>
       <div className={item}><Swatch><circle cx="4" cy="9" r="3" fill="#D9B26A" /><circle cx="26" cy="9" r="4" fill="#B7AC9B" /><line x1="8" y1="9" x2="21" y2="9" stroke="#C2B3A3" strokeDasharray="2 2" /></Swatch>
-        <span><b className="font-normal text-mahogany">Distance from the Sun</b> — How closely this Orbit reflects who you are and what matters to you.
-          {distancePending && <span className="text-taupe"> Not shown yet: every Orbit sits at the same distance while this measure is being finalised.</span>}</span></div>
+        <span><b className="font-normal text-mahogany">Distance from the Sun</b> — How closely the way you live in this Orbit reflects what genuinely matters to you.
+          {distancePending && <span className="text-taupe"> Not shown on this Map: every Orbit sits at the same distance.</span>}</span></div>
       <div className={item}><Swatch><circle cx="9" cy="9" r="4" fill="#B7AC9B" /><circle cx="22" cy="9" r="8" fill="#B7AC9B" /></Swatch>
         <span><b className="font-normal text-mahogany">Size</b> — How important this Orbit is to you at this stage of your life.</span></div>
     </div>

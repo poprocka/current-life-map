@@ -3,6 +3,8 @@
  * The opening synthesises; the sections and cards deepen; the Orbit paragraphs give detail.
  * An observation's text is used verbatim in one place only.
  */
+import { questionById } from "@/content/v10/question-bank";
+import { CONGRUENCE_ITEMS } from "@/engine/congruence";
 import type { OrbitId } from "@/content/types";
 import { ORBIT_IDS } from "@/content/v10/chapters";
 import { type Ctx, COEXIST_LINES, cap, list, pick } from "./context";
@@ -227,10 +229,51 @@ export function composeMapReading(c: Ctx, A: Allocation): NarrativeSection {
     else if (c.sufficient.length >= 2)
       P.push(para("Brightness is fairly even across your Map: your answers describe a similar level of support in most areas.", [], c.sufficient.flatMap((o) => c.supportEv(o.orbit).slice(0, 1))));
   }
+  const dist = composeDistance(c);
+  if (dist) P.push(dist);
   const giving = (ORBIT_IDS as OrbitId[]).filter(c.gives), taking = (ORBIT_IDS as OrbitId[]).filter(c.takes);
   if (giving.length || taking.length)
     P.push(para(`${giving.length ? `Energy flows in from ${list(giving.map(c.name))}` : "None of your Orbits is marked as giving more energy than it takes"}${taking.length ? `${giving.length ? ", and out toward" : "; energy flows out toward"} ${list(taking.map(c.name))}.` : `${giving.length ? ", and none is marked as taking more than it gives." : "."}`}`, [], [...giving, ...taking].map((o) => c.ev(`${o}.energy`))));
-  return { key: "map", title: "What stands out on your Map", paragraphs: P.slice(0, 3), fallback: !P.length };
+  return { key: "map", title: "What stands out on your Map", paragraphs: P.slice(0, 4), fallback: !P.length };
+}
+
+/**
+ * Distance from the Sun (F4, approved 13 Oct). Starts from Jana's approved band statements and personalises around them
+ * with the person's own answers. Describes alignment without judgment: never "distant from yourself", never a problem by
+ * default. A large Orbit placed far out keeps both signals. Mixed answers are named, not averaged away.
+ */
+export const DISTANCE_LINES = {
+  close: "This area of your life appears to reflect what matters to you.",
+  middle: "This area reflects some of what matters to you, while other parts may still be finding their place.",
+  far: "The way you're currently living in this area may not fully reflect what matters to you.",
+  insufficient: "We don't have enough information to understand how closely this area reflects what matters to you.",
+} as const;
+function composeDistance(c: Ctx): Para | null {
+  const orbits = ORBIT_IDS as OrbitId[];
+  if (orbits.every((o) => c.by[o].distanceBand == null) && !orbits.some((o) => c.answered(`${o}.congruence`))) return null;
+  const band = (b: "close" | "middle" | "far") => orbits.filter((o) => c.by[o].distanceBand === b);
+  const close = band("close"), middle = band("middle"), far = band("far");
+  const none = orbits.filter((o) => c.by[o].distanceBand == null);
+  const parts: string[] = [];
+  const ev: Evidence[] = [];
+  const are = (xs: OrbitId[]) => (xs.length > 1 ? "sit" : "sits");
+  if (close.length) { parts.push(`${list(close.map(c.name))} ${are(close)} close to the Sun: ${close.length > 1 ? "these areas of your life appear" : "this area of your life appears"} to reflect what matters to you.`); ev.push(...close.map((o) => c.ev(`${o}.congruence`))); }
+  if (far.length) { parts.push(`${list(far.map(c.name))} ${are(far)} further out: the way you're currently living in ${far.length > 1 ? "these areas" : "this area"} may not fully reflect what matters to you.`); ev.push(...far.map((o) => c.ev(`${o}.congruence`))); }
+  if (!close.length && !far.length && middle.length) { parts.push(`${middle.length === orbits.length ? "All of your Orbits sit" : `${list(middle.map(c.name))} ${are(middle)}`} at a middle distance: ${middle.length > 1 ? "they reflect" : "it reflects"} some of what matters to you, while other parts may still be finding their place.`); ev.push(...middle.map((o) => c.ev(`${o}.congruence`))); }
+  // A large, important Orbit far from the Sun: both signals kept, never framed as a problem.
+  const bigFar = far.filter((o) => c.important(o));
+  if (bigFar.length) parts.push(`${bigFar.length > 1 ? `${list(bigFar.map(c.name))} are also among your largest Orbits` : `${c.name(bigFar[0])} is also one of your largest Orbits`}: ${bigFar.length > 1 ? "they matter" : "it matters"} a great deal to you. That pairing can be worth noticing. It may reflect a conscious trade-off, practical circumstances or a time of change.`);
+  // Mixed: the congruence statement and the supporting answers point in different directions.
+  const mixed = orbits.filter((o) => c.by[o].congruenceMixed);
+  for (const o of mixed.slice(0, 1)) {
+    const sup = CONGRUENCE_ITEMS[o].map((it) => it.id).filter((id) => c.answered(id))
+      .sort((a, b) => Math.abs((c.keyed(b) ?? 0.5) - (c.keyed(`${o}.congruence`) ?? 0.5)) - Math.abs((c.keyed(a) ?? 0.5) - (c.keyed(`${o}.congruence`) ?? 0.5)))[0];
+    if (!sup) continue;
+    parts.push(`In ${c.name(o)}, your answers point in different directions: asked whether the way you live it reflects what genuinely matters to you, you answered "${c.label(`${o}.congruence`)}", while to "${questionById(sup)?.prompt.replace(/\.$/, "")}" you answered "${c.label(sup)}".`);
+    ev.push(c.ev(`${o}.congruence`), c.ev(sup));
+  }
+  if (none.length && none.length < orbits.length) parts.push(`We don't have enough information to understand how closely ${list(none.map(c.name))} ${none.length > 1 ? "reflect" : "reflects"} what matters to you, so ${none.length > 1 ? "they sit" : "it sits"} on the middle ring.`);
+  return parts.length ? para(parts.join(" "), [], ev) : null;
 }
 
 // ── C · What stands out (connected Reality Snapshot) ─────────────────────────
@@ -439,6 +482,10 @@ export function composeOrbit(c: Ctx, o: OrbitId, A: Allocation, themeAreas: stri
     feel.push(`You described it with ${c.feelings(o)}.${emo?.rule === "emotion.mixed" && !A.used.has(emo.id) ? ` ${pick(COEXIST_LINES, `${c.seed}#coexist.${o}`)}` : ""}`);
     ev.push(c.ev(`${o}.emotion`)); if (emo) A.ref([emo], "orbit");
   }
+  // Distance from the Sun, in Jana's approved words (F4, 13 Oct)
+  const band = r.distanceBand;
+  if (band) { feel.push(`On your Map it sits ${band === "close" ? "close to the Sun" : band === "far" ? "further from the Sun" : "at a middle distance from the Sun"}. ${DISTANCE_LINES[band]}${r.congruenceMixed ? " Some of your other answers here point in a different direction, so this is worth holding lightly." : ""}`); ev.push(c.ev(`${o}.congruence`)); }
+  else if (c.by[o].metricStatuses?.distance === "unavailable") feel.push(DISTANCE_LINES.insufficient);
   if (feel.length) p.push(feel.join(" "));
   // 2. What's working / what may deserve attention
   if (r.supportConfidence === "insufficient") p.push("There aren't enough answers here to say more about how supported it feels.");

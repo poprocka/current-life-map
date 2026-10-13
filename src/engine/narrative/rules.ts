@@ -4,8 +4,8 @@
  * Each rule reads only direct answers, Life Interconnections selections, or approved calculations (stated
  * importance, the response-support proxy compared with the F6 tolerance, the energy rating). It produces a
  * candidate Observation with its supporting answers, alternative readings, wording strength and the places on
- * the page where it may appear. Nothing here uses distance/congruence metrics, which are not yet approved;
- * the parallel congruence statement is only ever quoted as the person's own answer.
+ * the page where it may appear. Rules quote the parallel congruence statement as the person's own answer; the approved
+ * distance bands (F4) are described in compose.ts (Map interpretation and Orbits), never used to rank.
  *
  * Copy is DRAFT for Jana's approval. Tone: warm, observant, direct, never a verdict.
  */
