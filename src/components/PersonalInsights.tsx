@@ -21,9 +21,10 @@ export function PersonalInsights({ insights }: { insights: ResultInsights }) {
       <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {cards.map((c, i) => (
           <button key={c.key} onClick={() => setOpen(i)}
-            className="group flex min-h-[112px] items-start justify-between gap-3 rounded-[20px] border hairline bg-white/40 p-5 text-left transition hover:border-burgundy/40 hover:bg-white/70">
+            className="group flex min-h-[124px] flex-col justify-between gap-4 rounded-[20px] border hairline bg-white/40 p-5 text-left transition hover:border-burgundy/40 hover:bg-white/70">
             <span className="font-serif text-[19px] leading-snug text-mahogany">{c.title}</span>
-            <span aria-hidden className="mt-1 text-taupe transition group-hover:translate-x-0.5 group-hover:text-burgundy">›</span>
+            {/* "View ›" makes it obvious each card opens (Jana, 2026-10-13) */}
+            <span className="text-[11px] uppercase tracking-[0.16em] text-burgundy">View <span aria-hidden className="inline-block transition group-hover:translate-x-0.5">›</span></span>
           </button>
         ))}
       </div>
