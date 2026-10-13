@@ -53,12 +53,13 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
           </div>
           {/* Second row, top-aligned (Jana, 2026-10-13): the legend as a 2 × 3 grid under the Map, the interpretation beside it */}
           <div className="min-w-0 border-t hairline pt-6 lg:col-start-1 lg:row-start-2 lg:self-start"><MapLegend distancePending={distancePending} columns={2} /></div>
-          {insights && insights.mapReading.paragraphs.length > 0 && (
-            <div className="min-w-0 space-y-3 border-t hairline pt-6 text-[14px] leading-[1.75] text-mahogany/85 lg:col-start-2 lg:row-start-2 lg:self-start">
-              {insights.mapReading.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}
-            </div>
-          )}
-          <div className="min-w-0 lg:col-start-2 lg:row-start-1">
+          {/* The interpretation sits above the table, beside the Map (Jana, 2026-10-13) */}
+          <div className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
+            {insights && insights.mapReading.paragraphs.length > 0 && (
+              <div className="mb-8 space-y-3 text-[14px] leading-[1.75] text-mahogany/85">
+                {insights.mapReading.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}
+              </div>
+            )}
             {/* Visible title removed (Jana, 2026-10-12); the table keeps an accessible name */}
             <div className="overflow-x-auto">
               <table aria-label="Map interpretation" className="w-full text-left text-[12.5px] text-mahogany/85">
