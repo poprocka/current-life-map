@@ -48,20 +48,20 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
             {insights?.mapIntro ?? "Here's how the different parts of your life look together, based on what you've shared."}
           </h2>
         </header>
-        {/* Map and the right column (interpretation + table) are top-aligned (Jana, 2026-10-13); the legend sits under the Map */}
-        <div className="mt-8 grid gap-12 lg:mt-4 lg:grid-cols-[1.45fr_1fr] lg:items-start lg:gap-x-16 lg:gap-y-8">
-          {/* Left: the Map with its legend directly beneath, as one block, so it stays put when the interpretation opens (Jana, 2026-10-13) */}
-          <div className="min-w-0 lg:col-start-1 lg:row-start-1 lg:self-start">
+        {/* Row 1 (Jana, 2026-10-13): the Map | the legend, then "Show Map interpretation" beneath it. Row 2: the table, full width. */}
+        <div className="mt-8 grid gap-10 lg:mt-4 lg:grid-cols-[1.35fr_1fr] lg:items-start lg:gap-x-16">
+          <div className="min-w-0">
             <PersonalMap result={result} />
-            <div className="mt-3 border-t hairline pt-6"><MapLegend distancePending={distancePending} columns={2} /></div>
           </div>
-          {/* The interpretation sits above the table, beside the Map (Jana, 2026-10-13) */}
-          <div className="min-w-0 lg:col-start-2 lg:row-start-1 lg:self-start lg:pt-[8px]">{/* offset matches the space above the Map's top label, so both start on one line (Jana, 2026-10-13) */}
-            {insights && insights.mapReading.paragraphs.length > 0 && <MapReading paragraphs={insights.mapReading.paragraphs} />}
-            {/* Visible title removed (Jana, 2026-10-12); the table keeps an accessible name */}
-            <MapTable result={result} />
+          <div className="min-w-0 lg:pt-[8px]">
+            <MapLegend distancePending={distancePending} columns={1} />
+            {insights && insights.mapReading.paragraphs.length > 0 && (
+              <div className="mt-8 border-t hairline pt-6"><MapReading paragraphs={insights.mapReading.paragraphs} /></div>
+            )}
           </div>
         </div>
+        {/* Visible title removed (Jana, 2026-10-12); the table keeps an accessible name */}
+        <div className="mt-10 border-t hairline pt-8"><MapTable result={result} wide /></div>
 
       </section>
 
@@ -127,10 +127,12 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
 }
 
 /** Orbit · Importance · Energy · Feelings — on the page beside the Map, and in the PDF. */
-export function MapTable({ result }: { result: LifeMapResult }) {
+export function MapTable({ result, wide = false }: { result: LifeMapResult; wide?: boolean }) {
   return (
     <div className="overflow-x-auto">
-      <table aria-label="Map interpretation" className="w-full text-left text-[12.5px] text-mahogany/85">
+      <table aria-label="Map interpretation" className={`w-full text-left text-mahogany/85 ${wide ? "min-w-[640px] table-fixed text-[13.5px]" : "text-[12.5px]"}`}>
+        {/* Full card width: columns spread across the grid (Jana, 2026-10-13) */}
+        {wide && <colgroup><col className="w-[22%]" /><col className="w-[22%]" /><col className="w-[24%]" /><col className="w-[32%]" /></colgroup>}
         <thead className="text-[10.5px] uppercase tracking-[0.12em] text-taupe">
           <tr>
             <th scope="col" className="pb-3 pr-3 font-normal">Orbit</th>
