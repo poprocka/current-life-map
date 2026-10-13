@@ -133,3 +133,25 @@ export async function handleResendEvent(db: Db, evt: { type: string; data?: { em
   const r = await db.query(`update pdf_requests set delivery_state = $2 where provider_message_id = $1 and delivery_state <> 'bounced' returning id`, [evt.data.email_id, state]);
   return { updated: r.rows.length };
 }
+
+/**
+ * "Download results" (Jana, 2026-10-13): the same PDF as the email, returned straight to the person's browser.
+ * The token travels in the POST body only (never a URL). Nothing is stored about the download beyond an audit entry.
+ */
+export async function downloadPdf(db: Db, token: string): Promise<{ ok: true; pdf: Uint8Array } | { ok: false; error: "not_found" | "not_completed" }> {
+  const prep = await db.tx(async (sql) => {
+    const a = await resolveToken(sql, token);
+    if (!a) return { error: "not_found" as const };
+    const frozen = await frozenResult(sql, a.id);
+    if (!frozen) return { error: "not_completed" as const };
+    const stored = await loadAnswers(sql, a.id, { includeText: true });
+    const reflections = POST_MAP_REFLECTIONS.questions
+      .filter((q) => typeof stored[q.id] === "string" && (stored[q.id] as string).trim())
+      .map((q) => ({ prompt: q.prompt, text: stored[q.id] as string }));
+    await audit(sql, null, "pdf.downloaded", "assessment", a.id, {});
+    return { frozen, reflections, insights: generateResultInsights(frozen.snapshot, stored) };
+  });
+  if ("error" in prep) return { ok: false, error: prep.error! };
+  const pdf = await buildClientPdf(prep.frozen.snapshot, { generatedAt: prep.frozen.generatedAt, reflections: prep.reflections, insights: prep.insights });
+  return { ok: true, pdf };
+}

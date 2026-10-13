@@ -3,7 +3,7 @@ import { MapLegend, PersonalMap } from "@/components/PersonalMap";
 import { ORBIT_TINT } from "@/components/LifeSystem";
 import type { LifeMapResult } from "@/engine/compute";
 import type { ResultInsights } from "@/engine/insights";
-import { PersonalInsights } from "@/components/PersonalInsights";
+import { OrbitList, PersonalInsights } from "@/components/PersonalInsights";
 import { QuestionBlock } from "@/components/QuestionBlock";
 import { SectionTabs } from "@/components/SectionTabs";
 import { ENERGY_SHORT, IMPORTANCE_SHORT } from "@/lib/pdf/model";
@@ -13,7 +13,7 @@ import { useState } from "react";
  * Exactly what the respondent sees (results page) — also rendered read-only in the coach workspace
  * from the frozen snapshot, so "Client's Map" is the same component and the same data.
  */
-export function ResultsView({ result, insights, children, embedded, afterMap }: { result: LifeMapResult; insights?: ResultInsights; children?: React.ReactNode; embedded?: boolean; afterMap?: React.ReactNode }) {
+export function ResultsView({ result, insights, children, embedded, afterMap, token }: { result: LifeMapResult; insights?: ResultInsights; children?: React.ReactNode; embedded?: boolean; afterMap?: React.ReactNode; token?: string }) {
   const Root = embedded ? "div" : "main";
   const byId = Object.fromEntries(result.orbits.map((o) => [o.orbit, o]));
   const snapshot = result.snapshot.filter((s) => s.available);
@@ -45,7 +45,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
       )}
 
       {/* Section tabs: anchor links to every section below (Jana, 2026-10-13); not in the coach view */}
-      {!embedded && <SectionTabs />}
+      {!embedded && <SectionTabs token={token} />}
 
       {/* B. Map — in its own block so it stands out (Jana, 2026-10-12) */}
       <section id="your-map" className="scroll-mt-24 mt-12 rounded-[32px] border hairline bg-linen-deep/70 px-5 pb-10 pt-10 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_24px_60px_-40px_rgba(84,15,38,0.25)] sm:px-10 lg:px-14 lg:pb-14 lg:pt-12 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-labelledby="map-h">
@@ -92,25 +92,32 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
         </div>
       </section>
 
+      {/* Your Life System (Jana, 2026-10-13): the Sun, Life Interconnections and the eight Orbits, grouped under one title */}
       {insights && (
-        <div className="mt-24 grid gap-14 lg:grid-cols-2 lg:gap-16">
-          {/* D. The Sun */}
-          <section id="the-sun" className="scroll-mt-24" aria-labelledby="self-h">
-            <p className="eyebrow">The Sun</p>
-            <h2 id="self-h" className="mt-3 font-serif text-[32px] font-light leading-tight">{insights.self.title}</h2>
-            <div className="mt-5 space-y-4 text-[14.5px] leading-[1.8] text-mahogany/85">{insights.self.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
-            {insights.self.question && <QuestionBlock className="mt-5">{insights.self.question}</QuestionBlock>}
-          </section>
-          {/* E. Life Interconnections */}
-          <section id="life-interconnections" className="scroll-mt-24" aria-labelledby="links-h">
-            <p className="eyebrow">Life Interconnections</p>
-            <h2 id="links-h" className="mt-3 font-serif text-[32px] font-light leading-tight">{insights.connections.title}</h2>
-            <div className="mt-5 space-y-4 text-[14.5px] leading-[1.8] text-mahogany/85">{insights.connections.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
-          </section>
-        </div>
+        <section id="life-system" className="scroll-mt-24 mt-24" aria-labelledby="system-h">
+          <p className="eyebrow">Your Life System</p>
+          <h2 id="system-h" className="mt-3 font-serif text-[36px] font-light">How the parts of your life connect</h2>
+          <div className="mt-10 grid gap-14 lg:grid-cols-2 lg:gap-16">
+            {/* D. The Sun */}
+            <section id="the-sun" aria-labelledby="self-h">
+              <p className="eyebrow">The Sun</p>
+              <h3 id="self-h" className="mt-3 font-serif text-[28px] font-light leading-tight">{insights.self.title}</h3>
+              <div className="mt-5 space-y-4 text-[14.5px] leading-[1.8] text-mahogany/85">{insights.self.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
+              {insights.self.question && <QuestionBlock className="mt-5">{insights.self.question}</QuestionBlock>}
+            </section>
+            {/* E. Life Interconnections */}
+            <section id="life-interconnections" aria-labelledby="links-h">
+              <p className="eyebrow">Life Interconnections</p>
+              <h3 id="links-h" className="mt-3 font-serif text-[28px] font-light leading-tight">{insights.connections.title}</h3>
+              <div className="mt-5 space-y-4 text-[14.5px] leading-[1.8] text-mahogany/85">{insights.connections.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
+            </section>
+          </div>
+          {/* G. The eight Orbits */}
+          <OrbitList insights={insights} />
+        </section>
       )}
 
-      {/* F + G. Five insight cards and the eight Orbits */}
+      {/* F. Five insight cards */}
       {insights && <PersonalInsights insights={insights} />}
 
       {/* H. A question worth taking with you */}

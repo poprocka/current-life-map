@@ -89,8 +89,12 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
         </div>
       </section>
 
+      {/* ── Your Life System: the Sun, Life Interconnections and the eight Orbits, grouped as on the page ── */}
       {insights && (
-        <div className="mt-12 grid grid-cols-2 gap-10">
+        <section className="mt-12">
+          <p className="eyebrow pdf-with-next">Your Life System</p>
+          <h2 className={h2}>How the parts of your life connect</h2>
+          <div className="mt-6 grid grid-cols-2 gap-10">
           <section className="pdf-keep">
             <p className="eyebrow">The Sun</p>
             <h2 className={h2}>{insights.self.title}</h2>
@@ -103,6 +107,24 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
             <div className={`mt-4 space-y-3 ${body}`}>{insights.connections.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
           </section>
         </div>
+          <div className="mt-10">
+          <p className="eyebrow pdf-with-next">Your Orbits, one by one</p>
+          <ul className="mt-4 border-t hairline">
+            {insights.orbits.map((o) => (
+              <li key={o.orbit} className="pdf-keep border-b hairline py-4">
+                <p className="flex items-center gap-3 font-serif text-[21px] font-light">
+                  <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: ORBIT_TINT[o.orbit] }} />{o.name}
+                </p>
+                <div className="mt-2 space-y-1.5 pl-5 text-[13.5px] leading-relaxed text-mahogany/85">
+                  {o.paragraphs.map((p, k) => <p key={k}>{p}</p>)}
+                  <QuestionBlock size="sm" className="!mt-3">{o.question}</QuestionBlock>
+                </div>
+              </li>
+            ))}
+          </ul>
+          </div>
+
+        </section>
       )}
 
       {/* ── Personal insights: each printed open ── */}
@@ -125,26 +147,6 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
               </article>
             ))}
           </div>
-        </section>
-      )}
-
-      {/* ── The eight Orbits ── */}
-      {insights && (
-        <section className="mt-12">
-          <p className="eyebrow pdf-with-next">Your Orbits, one by one</p>
-          <ul className="mt-4 border-t hairline">
-            {insights.orbits.map((o) => (
-              <li key={o.orbit} className="pdf-keep border-b hairline py-4">
-                <p className="flex items-center gap-3 font-serif text-[21px] font-light">
-                  <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: ORBIT_TINT[o.orbit] }} />{o.name}
-                </p>
-                <div className="mt-2 space-y-1.5 pl-5 text-[13.5px] leading-relaxed text-mahogany/85">
-                  {o.paragraphs.map((p, k) => <p key={k}>{p}</p>)}
-                  <QuestionBlock size="sm" className="!mt-3">{o.question}</QuestionBlock>
-                </div>
-              </li>
-            ))}
-          </ul>
         </section>
       )}
 

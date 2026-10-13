@@ -31,30 +31,6 @@ export function PersonalInsights({ insights }: { insights: ResultInsights }) {
         ))}
       </div>
 
-      <div id="your-orbits" className="scroll-mt-24 mt-16">
-        <p className="eyebrow">Your Orbits, one by one</p>
-        <ul className="mt-5 border-t hairline">
-          {insights.orbits.map((o) => (
-            <li key={o.orbit} className="border-b hairline">
-              <details className="group py-4">
-                <summary className="flex cursor-pointer list-none items-center gap-3 font-serif text-[22px] font-light">
-                  <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: ORBIT_TINT[o.orbit] }} />
-                  {o.name}
-                  {/* A + (no outline, 16.5px) shows the row expands; it turns into × when open (Jana, 2026-10-13) */}
-                  <span aria-hidden className="ml-auto flex h-9 w-9 items-center justify-center text-burgundy transition group-hover:text-burgundy-soft group-open:rotate-45">
-                    <svg width="16.5" height="16.5" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M11 2v18M2 11h18" /></svg>
-                  </span>
-                </summary>
-                <div className="mt-3 max-w-[760px] space-y-2 pl-5 text-[13.5px] leading-relaxed text-mahogany/85">
-                  {o.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
-                  <QuestionBlock className="!mt-4">{o.question}</QuestionBlock>
-                </div>
-              </details>
-            </li>
-          ))}
-        </ul>
-      </div>
-
       {open !== null && <InsightDialog insights={insights} index={open} onIndex={setOpen} onClose={() => setOpen(null)} />}
     </section>
   );
@@ -146,5 +122,34 @@ function InsightBlock({ s, major }: { s: ResultInsights["cards"][number]["sectio
         </div>
       ) : <p className="mt-2 text-[14.5px] leading-[1.75] text-mahogany/85 [@media(min-width:1024px)_and_(max-height:1100px)]:text-[14px] [@media(min-width:1024px)_and_(max-height:1100px)]:leading-[1.65]">{s.text}</p>}
     </section>
+  );
+}
+
+/** The eight Orbits, one by one — part of "Your Life System" with the Sun and Life Interconnections (Jana, 2026-10-13). */
+export function OrbitList({ insights }: { insights: ResultInsights }) {
+  return (
+    <div id="your-orbits" className="scroll-mt-24 mt-16">
+      <p className="eyebrow">Your Orbits, one by one</p>
+      <ul className="mt-5 border-t hairline">
+        {insights.orbits.map((o) => (
+          <li key={o.orbit} className="border-b hairline">
+            <details className="group py-4">
+              <summary className="flex cursor-pointer list-none items-center gap-3 font-serif text-[22px] font-light">
+                <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: ORBIT_TINT[o.orbit] }} />
+                {o.name}
+                {/* A + (no outline, 16.5px) shows the row expands; it turns into × when open (Jana, 2026-10-13) */}
+                <span aria-hidden className="ml-auto flex h-9 w-9 items-center justify-center text-burgundy transition group-hover:text-burgundy-soft group-open:rotate-45">
+                  <svg width="16.5" height="16.5" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M11 2v18M2 11h18" /></svg>
+                </span>
+              </summary>
+              <div className="mt-3 max-w-[760px] space-y-2 pl-5 text-[13.5px] leading-relaxed text-mahogany/85">
+                {o.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
+                <QuestionBlock className="!mt-4">{o.question}</QuestionBlock>
+              </div>
+            </details>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
