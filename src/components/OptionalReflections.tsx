@@ -1,64 +1,88 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { POST_MAP_REFLECTIONS as R } from "@/content/v10/reflections";
 
 const KEY = "clm:v10:postmap";
-type Status = "idle" | "saving" | "saved" | "device" | "error";
+type Status = "idle" | "dirty" | "saving" | "saved" | "device" | "error";
 
 function readLocal(): Record<string, string> {
   try { return JSON.parse(localStorage.getItem(KEY) ?? "{}"); } catch { return {}; }
 }
+function writeLocal(v: Record<string, string>) {
+  try { localStorage.setItem(KEY, JSON.stringify(v)); } catch { /* private mode */ }
+}
 
 /**
- * Optional reflections after the Map (below the PDF and Deep Dive cards). They never change the Map or
- * the PDF. Saved on the device immediately; when server storage is connected, saved encrypted against
- * this assessment so Jana can read them before a Deep Dive.
+ * Optional reflections, directly above the PDF and Deep Dive cards (Jana, 2026-10-12).
+ * Collapsed by default; a Save button appears once anything is written. Saving stores the replies
+ * encrypted against this assessment (CMS) so they appear in the Coach Report and the emailed PDF.
+ * Drafts are kept on the device as the person types so nothing is lost before they press Save.
+ * Reflections never change the Map or its scores.
  */
 export function OptionalReflections({ token }: { token?: string }) {
+  const [open, setOpen] = useState(false);
   const [values, setValues] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<Status>("idle");
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const server = useRef(true);
+  const panel = useId();
 
-  useEffect(() => setValues(readLocal()), []);
+  useEffect(() => {
+    const v = readLocal();
+    setValues(v);
+    if (Object.values(v).some((s) => s?.trim())) setOpen(true);
+  }, []);
 
-  const persist = (next: Record<string, string>) => {
-    try { localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* private mode */ }
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(async () => {
-      if (!token || !server.current) return setStatus("device");
-      setStatus("saving");
-      try {
-        const r = await fetch("/api/assessments/reflections", {
-          method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, reflections: next }),
-        });
-        if (r.status === 503 || r.status === 404) { server.current = false; return setStatus("device"); }
-        setStatus(r.ok ? "saved" : "error");
-      } catch { setStatus("error"); }
-    }, 900);
+  const hasEntries = Object.values(values).some((s) => s?.trim());
+
+  const save = async () => {
+    writeLocal(values);
+    if (!token) return setStatus("device");
+    setStatus("saving");
+    try {
+      const r = await fetch("/api/assessments/reflections", {
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, reflections: values }),
+      });
+      if (r.status === 503 || r.status === 404) return setStatus("device");
+      setStatus(r.ok ? "saved" : "error");
+    } catch { setStatus("error"); }
   };
 
   return (
-    <section className="mt-16 rounded-[28px] border hairline p-8 sm:p-10" aria-labelledby="reflect-h">
-      <p className="eyebrow">{R.eyebrow}</p>
-      <h2 id="reflect-h" className="mt-3 font-serif text-[30px] font-light leading-tight">{R.title}</h2>
-      <p className="mt-3 max-w-[760px] text-[13.5px] leading-relaxed text-mahogany/75">{R.intro}</p>
-      <div className="mt-8 space-y-7">
-        {R.questions.map((q) => (
-          <div key={q.id}>
-            <label htmlFor={q.id} className="block text-[14px] leading-snug text-mahogany">{q.prompt}</label>
-            <textarea id={q.id} rows={3} maxLength={R.maxLength} placeholder={R.placeholder} value={values[q.id] ?? ""}
-              onChange={(e) => { const next = { ...values, [q.id]: e.target.value }; setValues(next); persist(next); }}
-              className="mt-3 w-full resize-y rounded-[16px] border border-linen-line bg-linen/60 px-4 py-3 text-[14px] leading-relaxed placeholder:text-taupe/70 focus:border-burgundy focus:outline-none" />
+    <section className="mt-20 rounded-[28px] border hairline" aria-labelledby="reflect-h">
+      <button type="button" aria-expanded={open} aria-controls={panel} onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-start justify-between gap-6 p-8 text-left sm:p-10">
+        <span>
+          <span className="eyebrow block">{R.eyebrow}</span>
+          <span id="reflect-h" className="mt-3 block font-serif text-[30px] font-light leading-tight">{R.title}</span>
+          <span className="mt-3 block max-w-[760px] text-[13.5px] leading-relaxed text-mahogany/75">{R.intro}</span>
+        </span>
+        <span aria-hidden className={`mt-2 shrink-0 text-[22px] leading-none text-taupe transition ${open ? "rotate-90" : ""}`}>›</span>
+      </button>
+
+      <div id={panel} hidden={!open} className="px-8 pb-8 sm:px-10 sm:pb-10">
+        <div className="space-y-7">
+          {R.questions.map((q) => (
+            <div key={q.id}>
+              <label htmlFor={q.id} className="block text-[14px] leading-snug text-mahogany">{q.prompt}</label>
+              <textarea id={q.id} rows={3} maxLength={R.maxLength} placeholder={R.placeholder} value={values[q.id] ?? ""}
+                onChange={(e) => { const next = { ...values, [q.id]: e.target.value }; setValues(next); writeLocal(next); setStatus("dirty"); }}
+                className="mt-3 w-full resize-y rounded-[16px] border border-linen-line bg-linen/60 px-4 py-3 text-[14px] leading-relaxed placeholder:text-taupe/70 focus:border-burgundy focus:outline-none" />
+            </div>
+          ))}
+        </div>
+        {(hasEntries || status === "saved") && (
+          <div className="mt-6 flex flex-wrap items-center gap-4">
+            <button type="button" onClick={save} disabled={status === "saving" || status === "saved"}
+              className="rounded-full bg-burgundy px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen transition hover:bg-burgundy/90 disabled:opacity-60">
+              {status === "saving" ? "Saving…" : status === "saved" ? "Saved" : "Save my reflections"}
+            </button>
+            <p role="status" className="text-[12px] text-taupe">
+              {status === "saved" && "Saved. They'll be included in your PDF."}
+              {status === "device" && "Saved on this device. They'll be included when you send your PDF."}
+              {status === "error" && "We couldn't save just now. Your words are kept on this device — please try again."}
+            </p>
           </div>
-        ))}
+        )}
       </div>
-      <p role="status" className="mt-4 min-h-[18px] text-[12px] text-taupe">
-        {status === "saving" && "Saving…"}
-        {status === "saved" && "Saved."}
-        {status === "device" && "Saved on this device."}
-        {status === "error" && "We couldn't save just now. Your words are kept on this device."}
-      </p>
     </section>
   );
 }

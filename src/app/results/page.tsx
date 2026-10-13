@@ -36,10 +36,10 @@ export default function Results() {
 
   return (
     <ResultsView result={result} insights={generateResultInsights(result, answers)}>
-      {/* 5. Next steps — download, PDF by email and Life Map Deep Dive, each with the privacy notice link */}
-      <NextSteps result={result} token={token} />
-      {/* Optional reflections below the PDF and Deep Dive cards (Jana, 2026-10-12) */}
+      {/* Optional reflections, expandable, directly above the PDF and Deep Dive cards (Jana, 2026-10-12) */}
       <OptionalReflections token={token} />
+      {/* Next steps — PDF by email and Life Map Deep Dive */}
+      <NextSteps result={result} token={token} />
     </ResultsView>
   );
 }

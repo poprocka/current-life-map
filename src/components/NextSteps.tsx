@@ -63,7 +63,7 @@ export function NextSteps({ result, token }: { result: LifeMapResult; token?: st
   }
 
   return (
-    <section className="mt-24 grid gap-6 lg:grid-cols-2" aria-label="Next steps">
+    <section className="mt-6 grid gap-6 lg:grid-cols-2" aria-label="Next steps">
       {/* PDF by email */}
       <div className="rounded-[28px] border hairline p-8 sm:p-10">
         <p className="eyebrow">Keep your Map</p>
