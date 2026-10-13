@@ -57,11 +57,9 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
       </section>
 
       <section className="pdf-keep mt-7 rounded-[28px] border hairline bg-linen-deep/70 px-10 pb-8 pt-7">
-        <h2 className="text-center font-serif text-[22px] font-light leading-snug [text-wrap:balance]">
-          {insights?.mapIntro ?? "Here's how the different parts of your life look together, based on what you've shared."}
-        </h2>
+
         {/* Bigger Map, smaller legend (Jana, 2026-10-13) */}
-        <div className="mt-2 grid grid-cols-[2fr_1fr] items-center gap-6">
+        <div className="grid grid-cols-[2fr_1fr] items-center gap-6">
           <PersonalMap result={result} still />
           <MapLegend distancePending={distancePending} columns={1} compact />
         </div>

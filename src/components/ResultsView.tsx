@@ -54,15 +54,15 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
 
       {/* B. Map — in its own block so it stands out (Jana, 2026-10-12) */}
       <section id="your-map" className="scroll-mt-24 mt-[18px] rounded-[32px] border hairline bg-linen-deep/70 px-5 pb-10 pt-10 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_24px_60px_-40px_rgba(84,15,38,0.25)] sm:px-10 lg:px-14 lg:pb-14 lg:pt-12 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-labelledby="map-h">
-        <header className="mx-auto max-w-[640px] text-center">{/* ~33% wider lines (Jana, 2026-10-13) */}
-          {!insights && <p className="eyebrow">Your Current Life Map</p>}
-          <h2 id="map-h" className="font-serif text-[22px] font-light leading-snug [text-wrap:pretty] sm:text-[26px]">
+        {/* Visible headline removed (Jana, 2026-10-13); kept for screen readers as the section's name */}
+        <header className="sr-only">
+          <h2 id="map-h">
             {insights?.mapIntro ?? "Here's how the different parts of your life look together, based on what you've shared."}
           </h2>
         </header>
         {/* Left: the Map with the legend beneath, as one block that never moves. Right: the table, then "Show Map interpretation"
             beneath it, which opens the written reading in place (Jana, 2026-10-13). */}
-        <div className="mt-11 grid gap-10 lg:mt-[46px] lg:grid-cols-[1.35fr_1fr] lg:items-start lg:gap-x-16">
+        <div className="grid gap-10 lg:grid-cols-[1.35fr_1fr] lg:items-start lg:gap-x-16">
           <div className="min-w-0">
             <PersonalMap result={result} />
             <div className="mt-3 border-t hairline pt-6"><MapLegend distancePending={distancePending} columns={2} /></div>
