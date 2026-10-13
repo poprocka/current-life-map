@@ -30,7 +30,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
           <p className="eyebrow text-center">Your Current Life Map</p>
           <h1 id="open-h" className="mt-3 text-center font-serif text-[32px] font-light leading-[1.1] [text-wrap:balance] sm:text-[40px]">{insights.opening.title}.</h1>
           {/* Two paragraphs side by side, left-aligned (Jana, 2026-10-13); the closing line of the reflection sits beneath */}
-          <div className="mt-8 grid gap-6 text-left text-[15px] leading-[1.8] text-mahogany/85 [text-wrap:pretty] md:grid-cols-2 md:gap-12">
+          <div className="mt-8 grid gap-6 text-left text-[14px] leading-[1.75] text-mahogany/85 [text-wrap:pretty] md:grid-cols-2 md:gap-12">
             {insights.opening.paragraphs.slice(0, 2).map((p, i) => <p key={i}>{p.text}</p>)}
           </div>
           {insights.opening.paragraphs.slice(2).map((p, i) => (
