@@ -10,6 +10,9 @@ export { orbitGeometry };
 const IN = "#FFD445"; // inflow: bright, luminous yellow — this Orbit gives you energy (Jana, 2026-10-13)
 const OUT = "#D29E36"; // outflow: deeper sun yellow — this Orbit draws energy from the Sun (Jana, 2026-10-13)
 const STEADY = "#E6CE86"; // stable: a fine, still thread of soft yellow (Jana, 2026-10-13)
+/** Muted arrowheads inside the tubes show the direction at a glance, also in the still PDF (Jana, 2026-10-13). */
+const IN_ARROW = "#A8831C";
+const OUT_ARROW = "#8A6224";
 
 /**
  * Personalised Current Life Map.
@@ -89,17 +92,37 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
         const len = r1 - r0, dir = inward ? -1 : 1, from = inward ? r1 : r0;
         const gx = C + ux * from, gy = C + uy * from;
         const travel = len * 1.6;
+        // Centre line of the tube (quadratic, like the ribbon) — arrowheads ride on it and sway with it.
+        const centre = (t: number, bend: number) => {
+          const q = 2 * t * (1 - t);
+          const r = (1 - t) * (1 - t) * r0 + q * rm + t * t * r1;
+          return { x: C + ux * r + px * q * bend, y: C + uy * r + py * q * bend };
+        };
+        const arrowTs = mag === 1 ? [0.3, 0.52, 0.74] : [0.38, 0.66];
+        const rot = (g.a * 180) / Math.PI + (inward ? 180 : 0);
+        const aScale = (0.85 + mag * 0.35) * (still ? 1.45 : 1); // larger in the PDF, where nothing moves
         return (
           <g key={`e-${id}`}>
             {!steady && (
               <defs>
                 <linearGradient id={`flow-${id}`} gradientUnits="userSpaceOnUse" spreadMethod="repeat"
                   x1={gx} y1={gy} x2={gx + ux * dir * travel} y2={gy + uy * dir * travel}>
-                  <stop offset="0%" stopColor={color} stopOpacity={0.18} />
-                  <stop offset="30%" stopColor={color} stopOpacity={0.2} />
-                  <stop offset="50%" stopColor={color} stopOpacity={0.62 + mag * 0.25} />
-                  <stop offset="70%" stopColor={color} stopOpacity={0.2} />
-                  <stop offset="100%" stopColor={color} stopOpacity={0.18} />
+                  {reduceMotion ? (
+                    // Still (PDF, reduced motion): light builds toward where the energy goes
+                    <>
+                      <stop offset="0%" stopColor={color} stopOpacity={inward ? 0.4 : 0.25} />
+                      <stop offset={`${Math.round((len / travel) * 100)}%`} stopColor={color} stopOpacity={inward ? 0.95 : 0.6 + mag * 0.3} />
+                      <stop offset="100%" stopColor={color} stopOpacity={inward ? 0.95 : 0.6 + mag * 0.3} />
+                    </>
+                  ) : (
+                    <>
+                      <stop offset="0%" stopColor={color} stopOpacity={0.18} />
+                      <stop offset="30%" stopColor={color} stopOpacity={0.2} />
+                      <stop offset="50%" stopColor={color} stopOpacity={0.62 + mag * 0.25} />
+                      <stop offset="70%" stopColor={color} stopOpacity={0.2} />
+                      <stop offset="100%" stopColor={color} stopOpacity={0.18} />
+                    </>
+                  )}
                   {!reduceMotion && (
                     <animateTransform attributeName="gradientTransform" type="translate" begin={phase}
                       from="0 0" to={`${(ux * dir * travel).toFixed(1)} ${(uy * dir * travel).toFixed(1)}`} dur={`${mag === 1 ? 4.6 : 6.4}s`} repeatCount="indefinite" />
@@ -117,6 +140,20 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
                   calcMode="spline" keySplines={ease} repeatCount="indefinite" />
               )}
             </path>
+            {!steady && arrowTs.map((t, k) => {
+              const a = centre(t, sway * 0.35), b = centre(t, sway);
+              return (
+                <g key={k}>
+                  {!reduceMotion && (
+                    <animateTransform attributeName="transform" type="translate" values={`0 0;${(b.x - a.x).toFixed(2)} ${(b.y - a.y).toFixed(2)};0 0`}
+                      keyTimes="0;0.5;1" dur="8s" begin={phase} calcMode="spline" keySplines={ease} repeatCount="indefinite" />
+                  )}
+                  <path d="M-4.2 -2.2 L1.8 0 L-4.2 2.2" fill="none" stroke={inward ? IN_ARROW : OUT_ARROW} strokeWidth={1.2}
+                    strokeLinecap="round" strokeLinejoin="round" opacity={still ? 0.75 : 0.55}
+                    transform={`translate(${a.x.toFixed(1)} ${a.y.toFixed(1)}) rotate(${rot.toFixed(1)}) scale(${aScale.toFixed(2)})`} />
+                </g>
+              );
+            })}
           </g>
         );
       })}
@@ -207,6 +244,8 @@ function FlowSwatch({ color, inward = false }: { color: string; inward?: boolean
         </linearGradient>
       </defs>
       <polygon points={pts} fill={`url(#${id})`} />
+      {/* the same muted arrowhead as on the Map: toward the Sun (left) for energy in, away from it for energy out */}
+      <path d={inward ? "M17 6 L13 9 L17 12" : "M13 6 L17 9 L13 12"} fill="none" stroke={inward ? IN_ARROW : OUT_ARROW} strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" opacity={0.6} />
     </>
   );
 }
