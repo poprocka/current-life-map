@@ -7,7 +7,7 @@ import type { OrbitId } from "@/content/types";
 import { ORBIT_IDS } from "@/content/v10/chapters";
 import { type Ctx, COEXIST_LINES, cap, list, pick } from "./context";
 import { energyWords } from "./rules";
-import type { Destination, Evidence, InsightCard, InsightSection, NarrativeSection, Observation, OrbitNarrative, Para } from "./types";
+import type { CentralTheme, Destination, Evidence, InsightCard, InsightSection, MajorInsight, NarrativeSection, Observation, OrbitNarrative, Para } from "./types";
 
 export const DEEP_DIVE_BRIDGE =
   "There's only so much a Self-Interview can reveal on its own. Some patterns become clearer when you have the space to talk them through, question your assumptions and explore what they mean for the life you want to create.";
@@ -39,6 +39,7 @@ const INTRO: Record<string, string[]> = {
   self: ["Before looking at the eight areas of your life, something stands out in how you relate to yourself."],
   "well-supported": ["Your answers describe a life that, in many places, is working."],
   several: ["There's a lot happening in your life right now."],
+  centre: ["One area runs through many of your answers."],
   default: ["Looking at your answers, something stands out.", "There's something interesting in the way your life is organised right now.", "One thing stands out across your answers."],
 };
 const CURIOSITY: Record<string, (o: Observation, c: Ctx) => string> = {
@@ -56,6 +57,7 @@ const CURIOSITY: Record<string, (o: Observation, c: Ctx) => string> = {
   energy: () => "An area can be demanding and meaningful at the same time; the question is whether the cost still feels worth it.",
   leverage: () => "That instinct about where change would ripple outward is worth taking seriously.",
   mixed: () => "Mixed answers are often the most honest ones.",
+  centre: (o, c) => `It may be worth noticing how much of your life is currently organised around ${c.name(o.areas[0] as OrbitId)}, and whether that still feels like your choice.`,
   neutral: () => "Sometimes the most interesting part of a Map isn't an extreme, but the places where things are quietly mixed.",
 };
 
@@ -115,6 +117,88 @@ export function composeOpening(c: Ctx, A: Allocation): NarrativeSection & { lead
   return { key: "opening", title: "Your reality, as it is right now", paragraphs: paragraphs.map((t, i) => para(t, i === 0 ? [lead] : i === 1 ? refs.slice(1) : [])), fallback: false, lead };
 }
 
+
+// ── Central theme (approved 13 Oct) ─────────────────────────────────────────
+/** Descriptive observations: true but rarely the point. They step back when a central theme exists. */
+export const DESCRIPTIVE = new Set(["priority.top", "support.similar", "support.contrast", "support.top", "energy.balance", "link.overall"]);
+const LEAD_ORDER = ["centre.roles", "energy.same", "link.ambition-restoration", "link.demand-crowded", "priority.gap", "alignment.priority-gap", "alignment.expectations",
+  "link.familiar", "link.permission", "link.standards-care", "self.contrast", "self.values-living", "energy.meaningful-demand", "contrast.feelings-statements"];
+
+/** Supporting answers that add something new come first: the person's own choices and cross-area links. */
+const SUPPORT_ORDER = ["link.leverage", "link.familiar", "link.permission", "link.standards-care", "link.demand-crowded", "link.body-mind", "alignment.lived-values-low",
+  "priority.gap", "alignment.priority-gap", "alignment.expectations", "energy.meaningful-demand", "contrast.feelings-statements", "link.ambition-restoration"];
+const supRank = (o: Observation) => { const i = SUPPORT_ORDER.indexOf(o.rule); return i < 0 ? (o.rule.startsWith("emotion.") ? 99 : 50) : i; };
+
+export interface Theme { lead: Observation; support: Observation[]; cluster: Observation[]; anchor: Observation["areas"][number]; responses: Evidence[] }
+
+/**
+ * Group observations around each area (each Orbit and the Sun). Score = distinct responses behind its non-strength readings + 1.5 × the
+ * Life Interconnections roles the person gave that area + 2 when the cluster holds a tension or mixed reading
+ * + 3 × its strongest relevance. The best cluster with 3+ distinct responses becomes the central theme.
+ * A well-supported Map with no tension keeps "well supported" as its theme; nothing is manufactured.
+ */
+export function buildTheme(c: Ctx, all: Observation[]): Theme | null {
+  const ic = c.ic;
+  const roleCount = (o: string) => [ic.largestDemand, ic.largestSource, ic.leverageSelection, ic.crowdedOut, ic.priorityGap, ic.externalInfluence].filter((x) => x === o).length;
+  const candidates = [...(ORBIT_IDS as OrbitId[]), "sun" as const].map((anchor) => {
+    const cluster = all.filter((o) => o.areas.includes(anchor) && !DESCRIPTIVE.has(o.rule) && !o.rule.startsWith("pattern."));
+    // Strengths support a theme but don't make one: only non-strength readings count towards its weight.
+    const ids = new Map<string, Evidence>();
+    for (const o of cluster) if (o.valence !== "strength") for (const e of o.evidence) if (!ids.has(e.questionId)) ids.set(e.questionId, e);
+    const tense = cluster.some((o) => o.valence === "tension" || o.valence === "mixed");
+    const score = ids.size + 1.5 * (anchor === "sun" ? 0 : roleCount(anchor)) + (tense ? 2 : 0) + 3 * Math.max(0, ...cluster.map((o) => o.relevance));
+    return { anchor, cluster, responses: [...ids.values()], tense, score };
+  }).filter((x) => x.responses.length >= 3 && x.tense && x.cluster.length >= 2).sort((a, b) => b.score - a.score);
+  const wellSupported = all.find((o) => o.rule === "pattern.well-supported");
+  const best = candidates[0];
+  if (!best || (wellSupported && !best.cluster.some((o) => o.valence === "tension") && best.score < 9)) {
+    if (!wellSupported) return null;
+    const strengths = all.filter((o) => o.valence === "strength" && o !== wellSupported).slice(0, 2);
+    return { lead: wellSupported, support: strengths, cluster: [wellSupported, ...strengths], anchor: wellSupported.areas[0] ?? "sun", responses: dedupeEv([...wellSupported.evidence, ...strengths.flatMap((o) => o.evidence)]) };
+  }
+  const rank = (o: Observation) => { const i = LEAD_ORDER.indexOf(o.rule); return i < 0 ? 99 : i; };
+  const lead = [...best.cluster].sort((a, b) => rank(a) - rank(b) || b.relevance - a.relevance)[0];
+  // The theme is anchored on the lead's own area; its cluster and responses are gathered around that area.
+  const anchor = lead.rule === "centre.roles" ? lead.areas[0] : lead.areas.includes(best.anchor) ? best.anchor : lead.areas[0] ?? best.anchor;
+  const cluster = all.filter((o) => o.areas.includes(anchor) && !DESCRIPTIVE.has(o.rule) && !o.rule.startsWith("pattern."));
+  const leadIds = new Set(lead.evidence.map((e) => e.questionId));
+  const seen = new Set([lead.rule]);
+  const fresh = (o: Observation) => o.evidence.filter((e) => !leadIds.has(e.questionId)).length / Math.max(1, o.evidence.length);
+  const support = cluster.filter((o) => o !== lead && fresh(o) > 1 / 3 && !(o.rule === "priority.strength" && o.areas.length > 2))
+    .sort((a, b) => supRank(a) - supRank(b) || b.relevance - a.relevance)
+    .filter((o) => (seen.has(o.rule) ? false : (seen.add(o.rule), true))).slice(0, 2);
+  return { lead, support, cluster, anchor, responses: dedupeEv(cluster.flatMap((o) => o.evidence)) };
+}
+
+export function centralThemeOf(c: Ctx, t: Theme | null): CentralTheme | null {
+  if (!t) return null;
+  return { kind: t.lead.family, anchor: t.anchor, observationIds: t.cluster.map((o) => o.id), responses: t.responses, shared: t.responses.slice(0, 6).map(c.plain) };
+}
+
+export function majorOf(c: Ctx, o: Observation, question: string, extra: Evidence[] = []): MajorInsight {
+  return { observationId: o.id, shared: dedupeEv([...o.evidence, ...extra]).slice(0, 4).map(c.plain), pattern: o.text, meaning: o.meaning, alternative: o.alternatives[0] ?? "", question };
+}
+
+/** Opening built from the central theme: the pattern with its supporting answers, what it might mean, an alternative, then curiosity. */
+export function composeThemeOpening(c: Ctx, A: Allocation, t: Theme, closingQuestion: () => string): NarrativeSection & { lead: Observation; major: MajorInsight } {
+  const { lead, support } = t;
+  A.take(lead, "opening");
+  A.ref(support, "opening");
+  const intro = pick(INTRO[lead.family] ?? INTRO.default, `${c.seed}#intro`);
+  const clauses = support.map((o) => o.clause.replace(/^[A-Z](?=[a-z])/, (m) => (/^(Mind|Body|Restoration|Growth|Love|Social|Resources|Joy)/.test(o.clause) ? m : m.toLowerCase())));
+  const sameWay = support.every((o) => o.valence === lead.valence || (lead.valence !== "strength" && o.valence !== "strength"));
+  const supportLine = !clauses.length ? "" : sameWay
+    ? ` ${clauses.length > 1 ? "Other answers point the same way" : "Another answer points the same way"}: ${clauses.join(", and ")}.`
+    : ` Alongside this, ${clauses.join(", and ")}.`;
+  let p1 = `${intro} ${lead.text}${supportLine}`;
+  const p2 = [lead.meaning, lead.alternatives[0]].filter(Boolean).join(" ");
+  const p3 = (CURIOSITY[lead.family] ?? CURIOSITY.neutral)(lead, c);
+  if (words([p1, p2, p3].join(" ")) > 165 && clauses.length > 1) p1 = `${intro} ${lead.text}${sameWay ? " Another answer points the same way:" : " Alongside this,"} ${clauses[0]}.`;
+  const major: MajorInsight = { observationId: lead.id, shared: t.responses.slice(0, 6).map(c.plain), pattern: [lead.text, supportLine.trim()].filter(Boolean).join(" "), meaning: lead.meaning, alternative: lead.alternatives[0] ?? "", question: closingQuestion() };
+  return { key: "opening", title: "Your reality, as it is right now", fallback: false, lead, major,
+    paragraphs: [para(p1, [lead, ...support]), para(p2, [lead]), para(p3)].filter((x) => x.text) };
+}
+
 // ── B · Map reading (visual relationships; distance is not interpreted while it is pending) ──
 export function composeMapReading(c: Ctx, A: Allocation): NarrativeSection {
   const P: Para[] = [];
@@ -156,7 +240,8 @@ export function composeStandsOut(c: Ctx, A: Allocation): NarrativeSection {
   if (D && S && D === S) {
     P.push(para(`${c.name(D)} plays two roles at once: it takes the most of your time and energy, and it gives you the most back.`, [], [c.ev("interconnections.01"), c.ev("interconnections.02")]));
   } else if (D || S) {
-    const dPart = D ? `${c.name(D)} is where most of your time, attention and emotional energy goes${c.important(D) ? ", and it's also among what matters most to you, so this may be a demand you've chosen" : c.takes(D) ? ", even though it isn't among what you rated as most important" : ""}${c.gives(D) ? `. You also said it ${energyWords(c.energy(D))}: demanding and draining aren't the same thing` : ""}` : "";
+    const heavyD = D ? c.takes(D) || c.tones(D).strained.length >= 2 : false;
+    const dPart = D ? `${c.name(D)} is where most of your time, attention and emotional energy goes${c.important(D) ? (heavyD ? ", and it's also among what matters most to you, which can make its cost harder to step back from" : ", and it's also among what matters most to you, so this may be a demand you've chosen") : c.takes(D) ? ", even though it isn't among what you rated as most important" : ""}${c.gives(D) ? `. You also said it ${energyWords(c.energy(D))}: demanding and draining aren't the same thing` : ""}` : "";
     const sPart = S ? `${c.name(S)} is where your energy comes back${c.moreSupported(S) ? ", and it's also one of the better supported areas in your answers" : c.lessSupported(S) ? ", even though your answers describe it as less supported: something can be life-giving and still under-resourced" : ""}` : "";
     const text = D && S ? `${dPart}. ${sPart}.` : `${dPart || sPart}.`;
     P.push(para(text.replace(/\.\./g, "."), [], [...(D ? [c.ev("interconnections.01"), c.ev(`${D}.importance`)] : []), ...(S ? [c.ev("interconnections.02")] : [])]));
@@ -251,16 +336,26 @@ const HEADINGS: Record<string, (o: Observation, c: Ctx) => string> = {
   "emotion.strained": (o, c) => `What ${c.name(o.areas[0] as OrbitId)} is asking of you`,
   "link.leverage": () => "Where attention could ripple outward",
   "link.familiar": () => "How change feels right now",
+  "strength.reinforcing": () => "Strengths that support each other",
+  "centre.roles": (o, c) => `${c.name(o.areas[0] as OrbitId)} at the centre`,
+  "contrast.feelings-statements": (o, c) => `How ${c.name(o.areas[0] as OrbitId)} feels, and how it's set up`,
+  "link.lever-strong": () => "Building on a strength",
+  "alignment.crowded-unimportant": () => "A trade-off and a rating",
+  "link.permission": () => "Permission to rest and enjoy",
+  "link.standards-care": () => "Standards and self-care",
+  "link.body-mind": () => "Body and mind",
 };
 const claimOf = (o: Observation): InsightSection["claim"] => (o.wording === "state" ? "direct" : o.wording === "suggest" ? "derived" : "tentative");
 
-export function composeCards(c: Ctx, A: Allocation, closingText: () => string): InsightCard[] {
+export function composeCards(c: Ctx, A: Allocation, closingText: () => string, theme: Theme | null = null): InsightCard[] {
+  const hasTheme = !!theme;
   const order: { key: InsightCard["key"]; dest: Destination; extra?: (o: Observation) => boolean }[] = [
+    ...(theme ? [{ key: "overview" as const, dest: "card.overview" as Destination }] : []),
     { key: "tension", dest: "card.tension" },
     { key: "energy", dest: "card.energy" },
     { key: "support", dest: "card.support", extra: (o) => o.valence === "strength" },
     { key: "begin", dest: "card.begin" },
-    { key: "overview", dest: "card.overview" },
+    ...(theme ? [] : [{ key: "overview" as const, dest: "card.overview" as Destination }]),
   ];
   const built: Record<string, InsightCard> = {};
   for (const { key, dest, extra } of order) {
@@ -268,19 +363,24 @@ export function composeCards(c: Ctx, A: Allocation, closingText: () => string): 
     // Cards draw from their own destination; a deeper card may fall back to an unused opening candidate of the same kind.
     let picks = A.free(dest, extra);
     if (key === "begin" && !picks.length) picks = A.free("card.tension", (o) => !!o.question);
+    // The bigger picture deepens the central theme: its supporting readings, each in full.
+    if (key === "overview" && theme) picks = [...theme.support.filter((o) => !A.used.has(o.id)), ...picks];
+    // Less, but more meaningful: with a central theme, descriptive lines step back unless the card would be empty.
+    if (hasTheme && picks.some((o) => !DESCRIPTIVE.has(o.rule))) picks = picks.filter((o) => !DESCRIPTIVE.has(o.rule));
     // Fewer, stronger observations (Jana, 13 Oct): up to three, and a third only when it is as strong as the rest.
     picks = picks.filter((o, i) => i === 0 || o.relevance >= 0.4).slice(0, 3);
     if (picks.length === 3 && picks[2].relevance < 0.5) picks = picks.slice(0, 2);
     for (const o of picks) A.take(o, dest);
     const sections: InsightSection[] = picks.map((o) => ({ id: o.id, observationId: o.id, heading: (HEADINGS[o.rule] ?? (() => cap(o.clause)))(o, c), text: o.text, evidence: o.evidence, claim: claimOf(o) }));
     const fallback = !picks.length;
-    const lead = fallback ? meta.fallbackLead : leadFor(key, picks, c);
+    const lead = fallback ? meta.fallbackLead : key === "overview" && theme ? `The thread running through your answers: ${theme.lead.clause}.` : leadFor(key, picks, c);
     built[key] = {
       key, title: meta.title, purpose: meta.purpose, lead,
       sections: fallback ? [{ id: `${key}.fallback`, heading: meta.title, text: meta.fallbackText, evidence: [], claim: "direct" }] : sections,
       why: meta.why,
       question: picks.find((o) => o.question)?.question ?? meta.fallbackQuestion,
       fallback,
+      ...(fallback ? {} : { major: majorOf(c, picks[0], "") }),
     };
   }
   // One question per card, never the same as another card's or as the closing question.
@@ -290,6 +390,7 @@ export function composeCards(c: Ctx, A: Allocation, closingText: () => string): 
     if (seen.has(card.question)) card.question = CARD_META[k].fallbackQuestion;
     if (seen.has(card.question)) card.question = k === "support" ? "What would you want to keep, whatever else changes?" : "What would you like to understand better about this?";
     seen.add(card.question);
+    if (card.major) card.major.question = card.question;
   }
   return (["overview", "support", "tension", "energy", "begin"] as const).map((k) => built[k]);
 }
@@ -300,7 +401,13 @@ function leadFor(key: InsightCard["key"], picks: Observation[], c: Ctx) {
     case "overview": return m.length && m.length <= 3 ? `A season shaped most by ${list(m.map(c.name))}.` : "A season in which a lot of your life matters at once.";
     case "support": return names.length ? `Some of your firmest ground right now: ${list(names)}.` : "Some of what is quietly holding your life together.";
     case "tension": return names.length ? `Where what matters and how you live may not quite meet: ${list(names)}.` : "Where what matters and how you live may not quite meet.";
-    case "energy": return names.length ? `Where your energy goes, and where it comes back: ${list(names)}.` : "Where your energy goes, and where it comes back.";
+    case "energy": {
+      const D = c.ic.largestDemand, S = c.ic.largestSource;
+      if (D && S && D === S) return `${c.name(D)} asks the most of you, and gives the most back.`;
+      if (D && S) return `${c.name(D)} asks the most of you; ${c.name(S)} gives the most back.`;
+      const taking = (ORBIT_IDS as OrbitId[]).filter(c.takes);
+      return taking.length ? `Where your energy goes: ${list(taking.map(c.name))}.` : `Where your energy comes from: ${list(names)}.`;
+    }
     case "begin": return names.length ? `A place to look first: ${names[0]}.` : "A place where a better question may reveal something.";
   }
 }
@@ -317,7 +424,7 @@ const ORBIT_Q: Record<OrbitId, string> = {
   joy: "What do you enjoy simply for its own sake, and how often does it happen?",
 };
 
-export function composeOrbit(c: Ctx, o: OrbitId, A: Allocation): OrbitNarrative {
+export function composeOrbit(c: Ctx, o: OrbitId, A: Allocation, themeAreas: string[] = []): OrbitNarrative {
   const r = c.by[o];
   const ids = c.statements(o);
   const hi = ids.filter(c.high), lo = ids.filter(c.low);
@@ -364,6 +471,7 @@ export function composeOrbit(c: Ctx, o: OrbitId, A: Allocation): OrbitNarrative 
   const roleIds = ["interconnections.01", "interconnections.02", "interconnections.03", "interconnections.04", "interconnections.05", "interconnections.06"]
     .filter((id, i) => [ic.largestDemand, ic.largestSource, ic.leverageSelection, ic.crowdedOut, ic.priorityGap, ic.externalInfluence][i] === o);
   if (roles.length) { p.push(`In the wider picture, you named it ${list(roles)}.`); ev.push(...roleIds.map(c.ev)); }
+  if (themeAreas.includes(o)) p.push(themeAreas[0] === o ? "It's at the heart of what stands out most across your answers, described at the top of this page." : "It's part of what stands out most across your answers, described at the top of this page.");
   else if (c.unimportant(o) && c.lessSupported(o)) p.push("As it isn't a priority right now, this may simply be where you've chosen not to put your attention.");
   // Question
   let q = ORBIT_Q[o];
@@ -387,6 +495,7 @@ const CLOSING_BY_FAMILY: Record<string, (o: Observation, c: Ctx) => string | und
   self: (o) => o.question,
   leverage: (o) => o.question,
   "well-supported": (o) => o.question,
+  centre: (o) => o.question,
   several: () => "If you could give your full attention to just one area for a while, which would make the most difference to how you feel?",
 };
 export function composeClosing(c: Ctx, lead: Observation | null, A: Allocation) {

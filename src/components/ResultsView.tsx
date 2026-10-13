@@ -30,6 +30,18 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
           <div className="mt-6 space-y-4 text-left text-[15px] leading-[1.8] text-mahogany/85 [text-wrap:pretty] sm:text-center">
             {insights.opening.paragraphs.map((p, i) => <p key={i} className={i === insights.opening.paragraphs.length - 1 ? "font-serif text-[19px] italic leading-relaxed text-burgundy" : ""}>{p.text}</p>)}
           </div>
+          {/* What you shared: the answers behind the central theme, in plain words (approved 13 Oct) */}
+          {insights.opening.major && (
+            <details className="group mx-auto mt-6 max-w-[620px] text-left">
+              <summary className="cursor-pointer list-none text-center text-[11px] uppercase tracking-[0.16em] text-taupe hover:text-burgundy">
+                What this is based on <span aria-hidden className="inline-block transition group-open:rotate-90">›</span>
+              </summary>
+              <ul className="mt-4 space-y-1.5 border-t hairline pt-4 text-[12.5px] leading-relaxed text-mahogany/80">
+                {insights.opening.major.shared.map((x, i) => <li key={i}>{x}</li>)}
+              </ul>
+              <p className="mt-3 text-[11.5px] text-taupe">Your answers are the authority here. If this doesn't fit, trust what you know.</p>
+            </details>
+          )}
         </section>
       )}
 

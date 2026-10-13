@@ -45,6 +45,8 @@ export interface Observation {
   valence: Valence;
   /** Plausible alternative readings, shown or used as the "that doesn't necessarily mean…" line. */
   alternatives: string[];
+  /** What this might mean for their lived experience — tentative, limited to what the evidence supports. */
+  meaning: string;
   relevance: number;          // 0..1 — relevance × specificity × evidence quality × usefulness
   destinations: Destination[];
   /** Copy, second person. `text` is a full observation; `clause` a short form for synthesis (no full stop). */
@@ -62,6 +64,12 @@ export interface Para { text: string; observationIds: string[]; evidence: Eviden
 export interface NarrativeSection { key: string; title: string; paragraphs: Para[]; fallback: boolean }
 
 export interface InsightSection { id: string; heading: string; text: string; evidence: Evidence[]; claim: "direct" | "derived" | "tentative"; observationId?: string }
+/** The five steps of a major insight (approved 13 Oct). */
+export interface MajorInsight { shared: string[]; pattern: string; meaning: string; alternative: string; question: string; observationId: string }
+
+/** The central theme: the strongest cluster of observations, built from several responses. */
+export interface CentralTheme { kind: string; anchor: Area | null; observationIds: string[]; responses: Evidence[]; shared: string[] }
+
 export interface InsightCard {
   key: "overview" | "support" | "tension" | "energy" | "begin";
   title: string;           // approved UI heading (kept)
@@ -71,6 +79,8 @@ export interface InsightCard {
   why: string;             // why the pattern may matter
   question: string;        // one reflection question
   fallback: boolean;
+  /** The card's first observation, in five steps. */
+  major?: MajorInsight;
 }
 
 export interface OrbitNarrative { orbit: OrbitId; name: string; paragraphs: string[]; question: string; evidence: Evidence[] }
@@ -81,7 +91,8 @@ export interface ReflectionLayer { note: string; items: ReflectionLayerItem[] }
 export interface ResultNarrative {
   templateVersion: string;
   versions: { scoring: string; questionBank: string };
-  opening: NarrativeSection;        // A · Your reality, as it is right now
+  opening: NarrativeSection & { major: MajorInsight | null };        // A · Your reality, as it is right now
+  centralTheme: CentralTheme | null;
   mapIntro: string;                 // B · conversational introduction
   mapReading: NarrativeSection;     // B · what is distinctive about this Map
   standsOut: NarrativeSection;      // C · connected Reality Snapshot narrative

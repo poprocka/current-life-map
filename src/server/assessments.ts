@@ -140,8 +140,9 @@ export async function completeAssessment(db: Db, token: string): Promise<{ ok: t
       insights: result.insights.map((i) => ({ id: i.id, evidence: i.evidence })), snapshot: result.snapshot.map((s) => ({ key: s.key, evidence: s.evidence })),
       narrative: {
         templateVersion: narrative.templateVersion, versions: narrative.versions,
+        centralTheme: narrative.centralTheme,
         rendered: { opening: narrative.opening, mapReading: narrative.mapReading, standsOut: narrative.standsOut, self: narrative.self, connections: narrative.connections, cards: narrative.cards, orbits: narrative.orbits, closingQuestion: narrative.closingQuestion },
-        observations: narrative.observations.map((o) => ({ id: o.id, rule: o.rule, areas: o.areas, evidence: o.evidence.map((e) => e.questionId), sufficiency: o.sufficiency, wording: o.wording, relevance: o.relevance, usedIn: o.usedIn })),
+        observations: narrative.observations.map((o) => ({ id: o.id, rule: o.rule, areas: o.areas, evidence: o.evidence.map((e) => e.questionId), sufficiency: o.sufficiency, wording: o.wording, relevance: o.relevance, usedIn: o.usedIn, meaning: o.meaning, alternatives: o.alternatives })),
         validationIssues: narrative.validationIssues,
       },
     };

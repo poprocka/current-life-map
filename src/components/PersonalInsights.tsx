@@ -79,10 +79,19 @@ function InsightDialog({ insights, index, onIndex, onClose }: { insights: Result
         <p className="mt-4 text-[16px] leading-relaxed text-mahogany/70">{c.lead}</p>
         <div aria-hidden className="mx-auto my-10 h-px w-36 bg-[#D9C3A8]" />
         <div className="space-y-8">
-          {c.sections.map((s) => (
+          {c.sections.map((s, i) => (
             <section key={s.id}>
               <h3 className="font-serif text-[22px] font-normal">{s.heading}</h3>
-              <p className="mt-3 text-[14.5px] leading-[1.8] text-mahogany/85">{s.text}</p>
+              {i === 0 && c.major ? (
+                // The card's main insight, in five steps (approved 13 Oct)
+                <div className="mt-3 space-y-4 text-[14.5px] leading-[1.8] text-mahogany/85">
+                  <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">What you shared</p>
+                    <ul className="mt-1 space-y-1 text-[13px] text-mahogany/75">{c.major.shared.map((x, k) => <li key={k}>{x}</li>)}</ul></div>
+                  <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">What stands out</p><p className="mt-1">{c.major.pattern}</p></div>
+                  {c.major.meaning && <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">What it might mean</p><p className="mt-1">{c.major.meaning}</p></div>}
+                  {c.major.alternative && <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">It could also be</p><p className="mt-1">{c.major.alternative}</p></div>}
+                </div>
+              ) : <p className="mt-3 text-[14.5px] leading-[1.8] text-mahogany/85">{s.text}</p>}
             </section>
           ))}
           <section>

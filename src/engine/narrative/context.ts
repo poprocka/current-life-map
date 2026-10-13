@@ -100,6 +100,17 @@ export function makeContext(result: LifeMapResult, answers: Answers) {
     const fr = ids.filter((i) => reverse(i) && PHRASES[i]?.friction).map((i) => toYou(PHRASES[i].friction!));
     return [caps.length ? `${list(caps)} ${caps.length > 1 ? "feel" : "feels"} less true for you right now` : "", fr.length ? `you describe ${list(fr)}` : ""].filter(Boolean).join(", and ");
   };
+  /** "What you shared": one answer in plain words, quoting the question. */
+  const plain = (e: Evidence) => {
+    const q = questionById(e.questionId);
+    if (!q) return e.answer;
+    const area = q.chapterId === "sun" ? "your relationship with yourself" : NAMES[q.chapterId as OrbitId];
+    if (q.responseType === "importance") return `How important ${area} is to you: ${e.answer}`;
+    if (q.responseType === "energy") return `What ${area} does to your energy: ${e.answer}`;
+    if (q.responseType === "emotional_state") return `Feelings you chose for ${area}: ${e.answer.toLowerCase()}`;
+    if (q.responseType === "orbit_select" || q.responseType === "single_choice") return `${q.prompt} ${e.answer}`;
+    return `“${q.prompt}”${q.measure === "congruence" ? ` (${area})` : ""} — ${e.answer}`;
+  };
   const imp = (o: OrbitId) => by[o].importanceDirect;
   const impLabel = (o: OrbitId) => label(`${o}.importance`).toLowerCase();
   const energy = (o: OrbitId) => by[o].energyRaw; // 1 gives a lot … 5 drains a lot
@@ -139,7 +150,7 @@ export function makeContext(result: LifeMapResult, answers: Answers) {
   return {
     result, answers, by, ic, label, ev, keyed, answered, high, low, statements, reverse, capOf, lowPhrase,
     imp, impLabel, energy, gives, takes, important, unimportant, sufficient, spread, top, bottom,
-    lessSupported, moreSupported, supportEv, tones, feelings, mostImportant, seed,
+    lessSupported, moreSupported, supportEv, tones, feelings, mostImportant, seed, plain,
     name: (o: OrbitId) => NAMES[o],
   };
 }

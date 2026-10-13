@@ -19,11 +19,11 @@ import { ORBIT_IDS } from "@/content/v10/chapters";
 import type { OrbitId } from "@/content/types";
 import { type Answers, makeContext } from "./context";
 import { buildObservations } from "./rules";
-import { Allocation, DEEP_DIVE_BRIDGE, MAP_INTRO_CONVERSATIONAL, composeCards, composeClosing, composeConnections, composeMapReading, composeOpening, composeOrbit, composeSelf, composeStandsOut } from "./compose";
+import { Allocation, DEEP_DIVE_BRIDGE, MAP_INTRO_CONVERSATIONAL, buildTheme, centralThemeOf, composeCards, composeClosing, composeConnections, composeMapReading, composeOpening, composeOrbit, composeSelf, composeStandsOut, composeThemeOpening } from "./compose";
 import { dedupeSentences, filterValid } from "./validate";
 import type { ResultNarrative } from "./types";
 
-export const NARRATIVE_TEMPLATE_VERSION = "result-narrative-2";
+export const NARRATIVE_TEMPLATE_VERSION = "result-narrative-3"; // 3 = central theme, five-step insights, new rules (13 Oct)
 export const INSIGHT_DISCLAIMER = "These are provisional interpretations based on your self-reported answers. They are invitations to reflect, not diagnoses or psychological assessments.";
 
 export function generateNarrative(result: LifeMapResult, answers: Answers): ResultNarrative & { validationIssues: { observationId: string; reason: string }[]; removedRepeats: string[] } {
@@ -31,21 +31,27 @@ export function generateNarrative(result: LifeMapResult, answers: Answers): Resu
   const { valid, issues } = filterValid(buildObservations(c));
   const A = new Allocation(valid);
 
-  const opening = composeOpening(c, A);
+  const theme = buildTheme(c, valid);
+  let closingText = "";
+  const opening = theme ? composeThemeOpening(c, A, theme, () => closingText) : { ...composeOpening(c, A), major: null };
   const closing = composeClosing(c, opening.lead, A);
+  closingText = closing.text;
+  if (opening.major) opening.major.question = closing.text;
   const mapReading = composeMapReading(c, A);
   const standsOut = composeStandsOut(c, A);
   const self = composeSelf(c, A);
   const connections = composeConnections(c, A);
-  const cards = composeCards(c, A, () => closing.text);
-  const orbits = (ORBIT_IDS as OrbitId[]).map((o) => composeOrbit(c, o, A));
+  const cards = composeCards(c, A, () => closing.text, theme);
+  const themeAreas = theme ? [theme.anchor, ...theme.lead.areas.filter((a) => a !== theme.anchor)].filter((a) => a !== "sun") as string[] : [];
+  const orbits = (ORBIT_IDS as OrbitId[]).map((o) => composeOrbit(c, o, A, themeAreas));
   if (closing.observationId) A.ref(valid.filter((o) => o.id === closing.observationId), "closing");
 
   const { lead: _lead, ...openingSection } = opening;
   const n: ResultNarrative = {
     templateVersion: NARRATIVE_TEMPLATE_VERSION,
     versions: { scoring: result.versions.scoring, questionBank: result.versions.questionBank },
-    opening: openingSection,
+    opening: openingSection as ResultNarrative["opening"],
+    centralTheme: centralThemeOf(c, theme),
     mapIntro: MAP_INTRO_CONVERSATIONAL,
     mapReading, standsOut, self, connections, cards, orbits,
     closingQuestion: closing,

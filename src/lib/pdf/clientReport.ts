@@ -88,6 +88,11 @@ export async function buildClientPdf(result: LifeMapResult, opts: PdfOptions = {
     // A. Opening — the same personalised reflection as the results page
     text(`${n.opening.title}.`, { font: serif, size: 26, gap: 8 });
     n.opening.paragraphs.forEach((p, i) => (i === n.opening.paragraphs.length - 1 ? text(p.text, { font: serif, size: 12.5, color: BURGUNDY, gap: 8 }) : para(p.text)));
+    if (n.opening.major) {
+      text("WHAT THIS IS BASED ON", { font: sansBold, size: 7, color: TAUPE, gap: 2 });
+      for (const x of n.opening.major.shared) text(`- ${x}`, { size: 8.5, color: TAUPE, gap: 1 });
+      y -= 6;
+    }
     y -= 6;
     text(n.mapIntro, { font: serif, size: 14, gap: 4 });
   } else {
@@ -155,10 +160,17 @@ export async function buildClientPdf(result: LifeMapResult, opts: PdfOptions = {
       text(`INSIGHT ${i + 1} OF ${n.cards.length}`, { font: sansBold, size: 7, color: TAUPE, gap: 2 });
       text(c.title, { font: serif, size: 17, gap: 1 });
       text(c.lead, { size: 9.5, color: TAUPE, gap: 6 });
-      for (const sct of c.sections) {
+      c.sections.forEach((sct, i) => {
         text(sct.heading, { font: serif, size: 12, gap: 1 });
-        text(sct.text, { size: 9.5, gap: 6 });
-      }
+        if (i === 0 && c.major) {
+          const step = (label: string, body: string) => { if (!body) return; text(label.toUpperCase(), { font: sansBold, size: 7, color: TAUPE, gap: 1 }); text(body, { size: 9.5, gap: 4 }); };
+          text("WHAT YOU SHARED", { font: sansBold, size: 7, color: TAUPE, gap: 1 });
+          for (const x of c.major.shared) text(`- ${x}`, { size: 8.5, color: TAUPE, gap: 1 });
+          y -= 3;
+          step("What stands out", c.major.pattern); step("What it might mean", c.major.meaning); step("It could also be", c.major.alternative);
+          y -= 2;
+        } else text(sct.text, { size: 9.5, gap: 6 });
+      });
       text("Why it may matter", { font: serif, size: 12, gap: 1 });
       text(c.why, { size: 9.5, gap: 6 });
       text(c.question, { font: serif, size: 11.5, color: BURGUNDY, gap: 4 });

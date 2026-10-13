@@ -62,7 +62,8 @@ describe("QA scenarios (brief §10)", () => {
   });
   it("8 · several areas with friction → one gentle synthesis, not a catalogue", () => {
     const n = run(EXAMPLE_STRAIN);
-    expect(n.opening.paragraphs[0].text).toMatch(/several parts of life are asking for care/);
+    // The central theme names the area most answers point to, rather than a generic "several areas" line
+    expect(n.opening.paragraphs[0].text).toMatch(/Resources seems to sit at the centre of your life/);
     expect(n.observations.filter((o) => o.rule === "priority.gap").length).toBeLessThanOrEqual(2);
     for (const c of n.cards) expect(c.sections.length).toBeLessThanOrEqual(3);
   });
@@ -114,6 +115,37 @@ describe("QA scenarios (brief §10)", () => {
       expect(run(tagged)).toEqual(run(a));
       expect(all(a)).not.toMatch(GENDERED);
     }
+  });
+});
+
+describe("central theme and five-step insights (approved 13 Oct)", () => {
+  it.each([["ambition", EXAMPLE_AMBITION, "restoration"], ["working", EXAMPLE_WORKING, "growth"], ["strain", EXAMPLE_STRAIN, "resources"]] as const)("%s: a coherent central theme supported by 3+ responses", (_, a, anchor) => {
+    const n = run(a);
+    expect(n.centralTheme?.anchor).toBe(anchor);
+    expect(n.centralTheme!.responses.length).toBeGreaterThanOrEqual(3);
+    expect(n.opening.paragraphs[0].observationIds.length).toBeGreaterThanOrEqual(2); // the lead and at least one supporting reading
+  });
+  it.each(FIXTURES)("%s: every major insight has all five steps", (_, a) => {
+    const n = run(a);
+    const majors = [n.opening.major, ...n.cards.map((c) => c.major)].filter(Boolean);
+    expect(majors.length).toBeGreaterThanOrEqual(4);
+    for (const m of majors) {
+      expect(m!.shared.length, m!.observationId).toBeGreaterThan(0);
+      expect(m!.pattern).toBeTruthy(); expect(m!.meaning, m!.observationId).toBeTruthy(); expect(m!.alternative, m!.observationId).toBeTruthy(); expect(m!.question).toMatch(/\?$/);
+      for (const s of [m!.meaning, m!.alternative]) expect(s).not.toMatch(BANNED);
+    }
+  });
+  it("every observation carries a 'what it might mean' line and at least one alternative", () => {
+    for (const [, a] of FIXTURES) for (const o of run(a).observations) { expect(o.meaning, o.rule).toBeTruthy(); expect(o.alternatives.length, o.rule).toBeGreaterThan(0); }
+  });
+  it("new rules: one Orbit holding several roles; the lever already strong; feelings that don't match the statements", () => {
+    expect(rules(EXAMPLE_STRAIN)).toContain("centre.roles");
+    expect(rules(EXAMPLE_WORKING)).toContain("link.lever-strong");
+    expect(rules(EXAMPLE_AMBITION)).toContain("contrast.feelings-statements"); // Joy: aliveness and delight, statements in the middle
+    expect(rules(persona({ importance: { joy: 0 }, ic: { "04": "joy" } }))).toContain("alignment.crowded-unimportant");
+  });
+  it("'a demand you've chosen' never appears for a draining area described with strained feelings", () => {
+    expect(all(EXAMPLE_STRAIN)).not.toMatch(/demand you've chosen/);
   });
 });
 
