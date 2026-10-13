@@ -17,7 +17,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
   const byId = Object.fromEntries(result.orbits.map((o) => [o.orbit, o]));
   const snapshot = result.snapshot.filter((s) => s.available);
   const distancePending = result.orbits.every((o) => o.distanceBand == null);
-  // "Show Map interpretation" opens the written reading and the table together (Jana, 2026-10-13)
+  // "Show Map interpretation" opens the written reading under the table (Jana, 2026-10-13)
   const [readingOpen, setReadingOpen] = useState(false);
   const hasReading = !!insights && insights.mapReading.paragraphs.length > 0;
 
@@ -51,20 +51,21 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
             {insights?.mapIntro ?? "Here's how the different parts of your life look together, based on what you've shared."}
           </h2>
         </header>
-        {/* Row 1 (Jana, 2026-10-13): the Map | the legend, then "Show Map interpretation" beneath it. Row 2: the table, full width. */}
+        {/* Left: the Map with the legend beneath, as one block that never moves. Right: the table, then "Show Map interpretation"
+            beneath it, which opens the written reading in place (Jana, 2026-10-13). */}
         <div className="mt-11 grid gap-10 lg:mt-[46px] lg:grid-cols-[1.35fr_1fr] lg:items-start lg:gap-x-16">
           <div className="min-w-0">
             <PersonalMap result={result} />
+            <div className="mt-3 border-t hairline pt-6"><MapLegend distancePending={distancePending} columns={2} /></div>
           </div>
           <div className="min-w-0 lg:pt-[8px]">
-            <MapLegend distancePending={distancePending} columns={1} />
-            {insights && insights.mapReading.paragraphs.length > 0 && (
-              <div className="mt-8 border-t hairline pt-6"><MapReading paragraphs={insights.mapReading.paragraphs} open={readingOpen} onToggle={() => setReadingOpen((v) => !v)} /></div>
+            {/* Visible title removed (Jana, 2026-10-12); the table keeps an accessible name */}
+            <MapTable result={result} />
+            {hasReading && (
+              <div className="mt-6 border-t hairline pt-5"><MapReading paragraphs={insights!.mapReading.paragraphs} open={readingOpen} onToggle={() => setReadingOpen((v) => !v)} /></div>
             )}
           </div>
         </div>
-        {/* Visible title removed (Jana, 2026-10-12); the table keeps an accessible name */}
-        {(!hasReading || readingOpen) && <div id="map-table" className="mt-10 border-t hairline pt-8"><MapTable result={result} wide /></div>}
 
       </section>
 
@@ -164,11 +165,11 @@ export function MapTable({ result, wide = false }: { result: LifeMapResult; wide
   );
 }
 
-/** The Map interpretation (text, and the table below the Map), folded behind a button until the person asks for it (Jana, 2026-10-13). Always open in the PDF. */
+/** The written Map interpretation, folded behind a button under the table until the person asks for it (Jana, 2026-10-13). Always open in the PDF. */
 function MapReading({ paragraphs, open, onToggle }: { paragraphs: { text: string }[]; open: boolean; onToggle: () => void }) {
   return (
     <div>
-      <button type="button" aria-expanded={open} aria-controls="map-reading map-table" onClick={onToggle}
+      <button type="button" aria-expanded={open} aria-controls="map-reading" onClick={onToggle}
         className="inline-flex items-center gap-2 py-1 text-[11.5px] uppercase tracking-[0.16em] text-burgundy transition hover:text-burgundy-soft">{/* label and + only, no outline (Jana, 2026-10-13) */}
         {open ? "Hide Map interpretation" : "Show Map interpretation"}
         <svg aria-hidden width="11" height="11" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={`transition ${open ? "rotate-45" : ""}`}><path d="M11 2v18M2 11h18" /></svg>
