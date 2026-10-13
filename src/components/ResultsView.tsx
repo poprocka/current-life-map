@@ -58,12 +58,17 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
           </h2>
         </header>
         {/* Map and table share a row and are centred against each other; the legend sits under the Map (Jana, 2026-10-12) */}
-        <div className="mt-4 grid gap-12 lg:mt-2 lg:grid-cols-[1.45fr_1fr] lg:items-center lg:gap-x-16 lg:gap-y-2">
+        <div className="mt-4 grid gap-12 lg:mt-2 lg:grid-cols-[1.45fr_1fr] lg:items-center lg:gap-x-16 lg:gap-y-8">
           <div className="min-w-0 lg:col-start-1 lg:row-start-1">
             <PersonalMap result={result} />
           </div>
-          {/* Legend spans the full width of the card: three columns, two rows (Jana, 2026-10-13) */}
-          <div className="min-w-0 border-t hairline pt-6 lg:col-span-2 lg:row-start-2"><MapLegend distancePending={distancePending} /></div>
+          {/* Second row, top-aligned (Jana, 2026-10-13): the legend as a 2 × 3 grid under the Map, the interpretation beside it */}
+          <div className="min-w-0 border-t hairline pt-6 lg:col-start-1 lg:row-start-2 lg:self-start"><MapLegend distancePending={distancePending} columns={2} /></div>
+          {insights && insights.mapReading.paragraphs.length > 0 && (
+            <div className="min-w-0 space-y-3 border-t hairline pt-6 text-[14px] leading-[1.75] text-mahogany/85 lg:col-start-2 lg:row-start-2 lg:self-start">
+              {insights.mapReading.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}
+            </div>
+          )}
           <div className="min-w-0 lg:col-start-2 lg:row-start-1">
             {/* Visible title removed (Jana, 2026-10-12); the table keeps an accessible name */}
             <div className="overflow-x-auto">
@@ -96,12 +101,6 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
           </div>
         </div>
 
-        {/* What is distinctive about this Map (sizes, brightness, energy). Distance is not interpreted while pending. */}
-        {insights && insights.mapReading.paragraphs.length > 0 && (
-          <div className="mx-auto mt-8 max-w-[860px] space-y-3 border-t hairline pt-6 text-[14px] leading-[1.75] text-mahogany/85">
-            {insights.mapReading.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}
-          </div>
-        )}
       </section>
 
       {/* Book Your Session sits right below the Map (Jana, 2026-10-13) */}

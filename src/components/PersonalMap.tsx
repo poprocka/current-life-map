@@ -147,12 +147,12 @@ export function PersonalMap({ result }: { result: LifeMapResult }) {
  * Legend distinguishes active, proxy and pending indicators (spec §7.1).
  * distancePending: congruence is not yet approved, so every Orbit sits at the same distance.
  */
-export function MapLegend({ distancePending = true }: { distancePending?: boolean }) {
+export function MapLegend({ distancePending = true, columns = 3 }: { distancePending?: boolean; columns?: 2 | 3 }) {
   const item = "flex items-start gap-3";
   // Wording by Jana (2026-10-12). Full width of the Map card: three columns, two rows (2026-10-13):
   // energy in | energy out | steady  /  brightness | distance | size.
   return (
-    <div className="grid gap-x-10 gap-y-4 text-[12.5px] leading-snug text-mahogany/80 sm:grid-cols-2 lg:grid-cols-3">
+    <div className={`grid gap-x-8 gap-y-4 text-[12.5px] leading-snug text-mahogany/80 sm:grid-cols-2 ${columns === 3 ? "lg:grid-cols-3" : ""}`}>
       <div className={item}><Swatch><FlowSwatch color={IN} inward /></Swatch>
         <span><b className="font-normal text-mahogany">Energy in</b> — This Orbit gives you energy.</span></div>
       <div className={item}><Swatch><FlowSwatch color={OUT} /></Swatch>
