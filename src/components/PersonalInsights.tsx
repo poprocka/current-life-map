@@ -61,7 +61,6 @@ export function PersonalInsights({ insights }: { insights: ResultInsights }) {
 
 function InsightDialog({ insights, index, onIndex, onClose }: { insights: ResultInsights; index: number; onIndex: (i: number) => void; onClose: () => void }) {
   const c = insights.cards[index];
-  const next = insights.cards[index + 1];
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     ref.current?.focus();
@@ -80,20 +79,19 @@ function InsightDialog({ insights, index, onIndex, onClose }: { insights: Result
           <p className="eyebrow">Your personal insights · {index + 1} of {insights.cards.length}</p>
           <button onClick={onClose} aria-label="Close" className="text-[22px] leading-none text-mahogany hover:text-burgundy">×</button>
         </div>
-        <h2 id="insight-title" className="mt-4 font-serif text-[34px] font-light leading-tight lg:text-[36px] [@media(min-width:1024px)_and_(max-height:940px)]:mt-2 [@media(min-width:1024px)_and_(max-height:940px)]:text-[30px]">{c.title}</h2>
+        {/* All five insights as tabs, so any can be opened from here (Jana, 2026-10-13); replaces "Next insight" */}
+        <div role="tablist" aria-label="Your personal insights" className="sticky top-0 z-10 -mx-1 mt-4 flex gap-1 overflow-x-auto border-b hairline bg-[#F7F1EA] pb-px lg:static">
+          {insights.cards.map((t, i) => (
+            <button key={t.key} role="tab" aria-selected={i === index} onClick={() => onIndex(i)}
+              className={`shrink-0 whitespace-nowrap border-b-2 px-3 pb-2.5 pt-1 text-[13px] transition ${i === index ? "border-burgundy text-burgundy" : "border-transparent text-mahogany/60 hover:text-mahogany"}`}>
+              {t.title}
+            </button>
+          ))}
+        </div>
+        <h2 id="insight-title" className="mt-6 font-serif text-[34px] font-light leading-tight lg:text-[36px] [@media(min-width:1024px)_and_(max-height:940px)]:mt-4 [@media(min-width:1024px)_and_(max-height:940px)]:text-[30px]">{c.title}</h2>
         <p className="mt-3 max-w-[820px] text-[15.5px] leading-relaxed text-mahogany/70 [@media(min-width:1024px)_and_(max-height:940px)]:mt-2 [@media(min-width:1024px)_and_(max-height:940px)]:text-[14.5px]">{c.lead}</p>
         <div aria-hidden className="my-8 h-px w-full bg-[#D9C3A8]/70 lg:my-7 [@media(min-width:1024px)_and_(max-height:940px)]:my-5" />
         <InsightBody c={c} />
-        <div className="mt-10 grid gap-6 lg:mt-8 [@media(min-width:1024px)_and_(max-height:940px)]:mt-5 lg:grid-cols-2 lg:items-center lg:gap-14">
-          {/* Disclaimer removed from the popups (Jana, 2026-10-13); it appears once under the section intro */}
-          <span aria-hidden className="hidden lg:block" />
-          <button onClick={() => (next ? onIndex(index + 1) : onClose())}
-            className="flex w-full items-center justify-between rounded-[16px] border hairline bg-white px-6 py-4 [@media(min-width:1024px)_and_(max-height:940px)]:py-3 text-left transition hover:border-burgundy/40">
-            <span><span className="block text-[11px] text-taupe">{next ? "Next insight" : "Return to"}</span>
-              <span className="font-serif text-[20px]">{next ? next.title : "Your Map"}</span></span>
-            <span aria-hidden className="text-[18px]">›</span>
-          </button>
-        </div>
       </div>
     </div>
   );
