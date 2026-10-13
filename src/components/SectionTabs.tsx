@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useBooking } from "@/lib/useBooking";
 
 /**
  * Tabs that jump to each section of the results page, plus the two actions (Jana, 2026-10-13). They stay at the top
@@ -21,6 +22,7 @@ export function SectionTabs({ token }: { token?: string }) {
   const [present, setPresent] = useState(SECTIONS);
   const [active, setActive] = useState<string | null>("your-map"); // Your Map is above the fold on every device
   const [dl, setDl] = useState<"idle" | "working" | "error">("idle");
+  const booking = useBooking(token);
 
   useEffect(() => {
     const els = SECTIONS.map((s) => document.getElementById(s.id)).filter((e): e is HTMLElement => !!e);
@@ -88,10 +90,14 @@ export function SectionTabs({ token }: { token?: string }) {
         </li>
         <li className="shrink-0">
           {/* Primary */}
-          <a href="#deep-dive" onClick={go("deep-dive")} className={`${tab} border-burgundy bg-burgundy text-linen hover:bg-mahogany`}>Book a Deep Dive session</a>
+          {/* Opens Calendly directly (Jana, 2026-10-13) */}
+          <button type="button" onClick={booking.book} disabled={booking.state.kind === "working"} className={`${tab} border-burgundy bg-burgundy text-linen hover:bg-mahogany disabled:opacity-70`}>
+            {booking.state.kind === "working" ? "Opening…" : "Book a Deep Dive session"}
+          </button>
         </li>
       </ul>
       {dl === "error" && <p role="status" className="mt-2 text-right text-[12px] text-burgundy">We couldn't prepare your PDF just now. You can have it emailed below.</p>}
+      {booking.state.kind === "error" && <p role="status" className="mt-2 text-right text-[12px] text-burgundy">{booking.state.message}</p>}
     </nav>
   );
 }

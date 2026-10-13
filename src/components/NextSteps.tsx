@@ -1,8 +1,7 @@
 "use client";
 import { useState } from "react";
 
-/** Set NEXT_PUBLIC_BOOKING_ENABLED=1 once Calendly is connected. Until then the button says so honestly. */
-const BOOKING_ENABLED = process.env.NEXT_PUBLIC_BOOKING_ENABLED === "1";
+import { BOOKING_ENABLED, useBooking } from "@/lib/useBooking";
 
 type SendState = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind: "error"; message: string };
 
@@ -12,29 +11,7 @@ type SendState = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { k
  *  - PdfCard: receive the PDF by email (real delivery only; never a simulated "sent") — at the end, after the reflections
  */
 export function DeepDiveCard({ token }: { token?: string }) {
-  const [booking, setBooking] = useState<{ kind: "idle" | "working" } | { kind: "error"; message: string }>({ kind: "idle" });
-
-  /** The server creates a one-time link token for this Map, then we open the scheduler. No answers leave this site. */
-  async function book() {
-    if (!token) return setBooking({ kind: "error", message: "Booking isn't connected for this Map yet. Please try again later." });
-    const win = window.open("", "_blank");
-    setBooking({ kind: "working" });
-    try {
-      const r = await fetch("/api/booking/link", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) });
-      if (r.ok) {
-        const { url } = await r.json();
-        if (win) win.location.href = url; else window.location.href = url;
-        return setBooking({ kind: "idle" });
-      }
-      win?.close();
-      setBooking({ kind: "error", message: r.status === 503 || r.status === 404 || r.status === 409
-        ? "Booking isn't connected for this Map yet. Please try again later."
-        : "We couldn't open booking just now. Please try again in a moment." });
-    } catch {
-      win?.close();
-      setBooking({ kind: "error", message: "We couldn't reach the server. Check your connection and try again." });
-    }
-  }
+  const { state: booking, book } = useBooking(token);
 
   return (
     <section id="deep-dive" className="mt-8 scroll-mt-8 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-label="Life Map Deep Dive">

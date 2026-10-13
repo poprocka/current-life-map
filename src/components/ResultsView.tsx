@@ -6,6 +6,7 @@ import type { ResultInsights } from "@/engine/insights";
 import { OrbitList, PersonalInsights } from "@/components/PersonalInsights";
 import { QuestionBlock } from "@/components/QuestionBlock";
 import { SectionTabs } from "@/components/SectionTabs";
+import { useBooking } from "@/lib/useBooking";
 import { ENERGY_SHORT, IMPORTANCE_SHORT } from "@/lib/pdf/model";
 import { useEffect, useState } from "react";
 import { snapshotFingerprint } from "@/lib/stable";
@@ -133,7 +134,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
             <>
               <p className="mx-auto mt-6 max-w-[600px] text-[13.5px] leading-relaxed text-mahogany/70">{insights.deepDiveBridge}</p>
               {/* Primary CTA under the bridge text (Jana, 2026-10-13) */}
-              <a href="#deep-dive" className="mt-6 inline-block rounded-full bg-burgundy px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany">Explore your Map with Jana</a>
+              <ClosingBookButton token={token} />
             </>
           )}
         </section>
@@ -196,5 +197,19 @@ function MapReading({ paragraphs, open, onToggle }: { paragraphs: { text: string
         </div>
       )}
     </div>
+  );
+}
+
+/** "Explore your Map with Jana" under the closing question: opens Calendly directly, like the other Book buttons. */
+function ClosingBookButton({ token }: { token?: string }) {
+  const { state, book } = useBooking(token);
+  return (
+    <>
+      <button type="button" onClick={book} disabled={state.kind === "working"}
+        className="mt-6 inline-block rounded-full bg-burgundy px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany disabled:opacity-70">
+        {state.kind === "working" ? "Opening…" : "Explore your Map with Jana"}
+      </button>
+      {state.kind === "error" && <p role="status" className="mt-3 text-[12.5px] text-burgundy">{state.message}</p>}
+    </>
   );
 }
