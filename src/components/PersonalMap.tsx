@@ -102,11 +102,14 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
           return { x: C + ux * r + px * q * bend, y: C + uy * r + py * q * bend };
         };
         // Like a spine (Jana, 2026-10-13): evenly spaced arrowheads along the whole tube, ~16 map units apart
-        const SPACING = 16;
+        const SPACING = 13.5; // chain: 12-unit links with a small gap (Jana, 2026-10-13, shape reference: chevron chain)
         const nArrows = Math.max(3, Math.floor(((r1 - r0) * 0.8) / SPACING));
         const arrowTs = Array.from({ length: nArrows }, (_, k) => 0.1 + (0.8 * (k + 0.5)) / nArrows);
         const rot = (g.a * 180) / Math.PI + (inward ? 180 : 0);
-        const aScale = (0.85 + mag * 0.35) * (still ? 1.45 : 1); // larger in the PDF, where nothing moves
+        const aScale = still ? 1.2 : 1; // a little larger in the PDF, where nothing moves
+        // One chain link: a filled chevron with a notched back and a pointed front, pointing along +x
+        const H = 2.4 + mag * 0.9;
+        const LINK = `M-6.5 ${-H} L2.5 ${-H} L5.5 0 L2.5 ${H} L-6.5 ${H} L-3.5 0 Z`;
         return (
           <g key={`e-${id}`}>
             {!steady && (
@@ -163,8 +166,7 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
             {!steady && reduceMotion && arrowTs.map((t, k) => {
               const a = centre(t, sway * 0.35);
               return (
-                <path key={k} d="M-4.2 -2.2 L1.8 0 L-4.2 2.2" fill="none" stroke={inward ? IN_ARROW : OUT_ARROW} strokeWidth={1.2}
-                  strokeLinecap="round" strokeLinejoin="round" opacity={still ? 0.75 : 0.55}
+                <path key={k} d={LINK} fill={inward ? IN_ARROW : OUT_ARROW} opacity={still ? 0.5 : 0.35}
                   transform={`translate(${a.x.toFixed(1)} ${a.y.toFixed(1)}) rotate(${rot.toFixed(1)}) scale(${aScale.toFixed(2)})`} />
               );
             })}
@@ -175,17 +177,17 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
               const [ra, rb] = inward ? [r1, r0] : [r0, r1];
               const track = `M${P(ra)} Q${P(rm, bend)} ${P(rb)}`;
               // Subtle (Jana, 2026-10-13): the whole spine drifts slowly along the tube
-              const dur = inward ? (mag === 1 ? 7 : 8.5) : mag === 1 ? 9 : 11;
+              // ~28% slower again (Jana, 2026-10-13)
+              const dur = inward ? (mag === 1 ? 9.7 : 11.8) : mag === 1 ? 12.5 : 15.3;
 
               return (
                 <g>
                   {arrowTs.map((_, k) => {
                     const begin = `-${((k * dur) / arrowTs.length + i * 0.9).toFixed(2)}s`; // evenly spread: a continuous spine
                     return (
-                      <path key={k} d="M-4.2 -2.2 L1.8 0 L-4.2 2.2" fill="none" stroke={inward ? IN_ARROW : OUT_ARROW} strokeWidth={1.2 / aScale}
-                        strokeLinecap="round" strokeLinejoin="round" opacity={0} transform={`scale(${aScale.toFixed(2)})`}>
+                      <path key={k} d={LINK} fill={inward ? IN_ARROW : OUT_ARROW} opacity={0}>
                         <animateMotion path={track} dur={`${dur}s`} begin={begin} rotate="auto" repeatCount="indefinite" calcMode="linear" keyPoints="0.08;0.92" keyTimes="0;1" />
-                        <animate attributeName="opacity" values="0;0.42;0.42;0" keyTimes="0;0.1;0.9;1" dur={`${dur}s`} begin={begin} repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0;0.34;0.34;0" keyTimes="0;0.1;0.9;1" dur={`${dur}s`} begin={begin} repeatCount="indefinite" />
                       </path>
                     );
                   })}
@@ -283,7 +285,7 @@ function FlowSwatch({ color, inward = false }: { color: string; inward?: boolean
       </defs>
       <polygon points={pts} fill={`url(#${id})`} />
       {/* the same muted arrowhead as on the Map: toward the Sun (left) for energy in, away from it for energy out */}
-      <path d={inward ? "M17 6 L13 9 L17 12" : "M13 6 L17 9 L13 12"} fill="none" stroke={inward ? IN_ARROW : OUT_ARROW} strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" opacity={0.6} />
+      <path d={inward ? "M19.5 6.6 L13 6.6 L11 9 L13 11.4 L19.5 11.4 L17.5 9 Z" : "M10.5 6.6 L17 6.6 L19 9 L17 11.4 L10.5 11.4 L12.5 9 Z"} fill={inward ? IN_ARROW : OUT_ARROW} opacity={0.5} />
     </>
   );
 }
