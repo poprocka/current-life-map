@@ -46,15 +46,15 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
             {insights?.mapIntro ?? "Here's how the different parts of your life look together, based on what you've shared."}
           </h2>
         </header>
-        {/* Map and table share a row and are centred against each other; the legend sits under the Map (Jana, 2026-10-12) */}
-        <div className="mt-4 grid gap-12 lg:mt-2 lg:grid-cols-[1.45fr_1fr] lg:items-center lg:gap-x-16 lg:gap-y-8">
+        {/* Map and the right column (interpretation + table) are top-aligned (Jana, 2026-10-13); the legend sits under the Map */}
+        <div className="mt-8 grid gap-12 lg:mt-10 lg:grid-cols-[1.45fr_1fr] lg:items-start lg:gap-x-16 lg:gap-y-8">
           <div className="min-w-0 lg:col-start-1 lg:row-start-1">
             <PersonalMap result={result} />
           </div>
           {/* Second row, top-aligned (Jana, 2026-10-13): the legend as a 2 × 3 grid under the Map, the interpretation beside it */}
           <div className="min-w-0 border-t hairline pt-6 lg:col-start-1 lg:row-start-2 lg:self-start"><MapLegend distancePending={distancePending} columns={2} /></div>
           {/* The interpretation sits above the table, beside the Map (Jana, 2026-10-13) */}
-          <div className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
+          <div className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
             {insights && insights.mapReading.paragraphs.length > 0 && (
               <div className="mb-8 space-y-3 text-[14px] leading-[1.75] text-mahogany/85">
                 {insights.mapReading.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}
