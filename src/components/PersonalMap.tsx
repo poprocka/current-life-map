@@ -138,8 +138,6 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
               <path d={ribbon(sway * 0.35, 2.6)} fill={IN} opacity={still ? 0.28 : 0.22} filter="url(#flowGlow)">
                 {!reduceMotion && (
                   <>
-                    <animate attributeName="d" values={`${ribbon(sway * 0.35, 2.6)};${ribbon(sway, 2.6)};${ribbon(sway * 0.35, 2.6)}`} keyTimes="0;0.5;1" dur="8s" begin={phase}
-                      calcMode="spline" keySplines={ease} repeatCount="indefinite" />
                     <animate attributeName="opacity" values="0.14;0.36;0.14" keyTimes="0;0.5;1" dur={mag === 1 ? "2.9s" : "3.8s"} begin={phase}
                       calcMode="spline" keySplines={ease} repeatCount="indefinite" />
                   </>
@@ -147,7 +145,8 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
               </path>
             )}
             <path d={dA} fill={steady ? color : `url(#flow-${id})`} opacity={steady ? 0.55 : 1} filter="url(#flowSoft)">
-              {!reduceMotion && (
+              {/* Only the steady thread sways; tubes with arrowheads hold their curve so the arrowheads always ride inside them (Jana, 2026-10-13) */}
+              {!reduceMotion && steady && (
                 <animate attributeName="d" values={`${dA};${dB};${dA}`} keyTimes="0;0.5;1" dur={steady ? "11s" : "8s"} begin={phase}
                   calcMode="spline" keySplines={ease} repeatCount="indefinite" />
               )}
@@ -169,23 +168,20 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
             {!steady && !reduceMotion && (() => {
               const bend = sway * 0.35;
               const P = (r: number, k = 0) => `${(C + ux * r + px * k).toFixed(1)},${(C + uy * r + py * k).toFixed(1)}`;
-              const [ra, rb] = inward ? [r1 - 4, r0 + 8] : [r0 + 8, r1 - 4];
+              // Exactly the tube's centre line (same curve, reversed for energy in); arrowheads use its middle 84%
+              const [ra, rb] = inward ? [r1, r0] : [r0, r1];
               const track = `M${P(ra)} Q${P(rm, bend)} ${P(rb)}`;
               // Subtle (Jana, 2026-10-13): a small cluster of arrowheads, close together, drifting slowly along the tube
               const dur = inward ? (mag === 1 ? 7 : 8.5) : mag === 1 ? 9 : 11;
               const trackLen = Math.abs(rb - ra), gap = 9; // ≈9 map units between arrowheads
-              const m = centre(0.5, sway), m0 = centre(0.5, bend);
               return (
                 <g>
-                  {/* follow the tube's slow sway so the arrowheads stay inside it */}
-                  <animateTransform attributeName="transform" type="translate" values={`0 0;${((m.x - m0.x) * 0.5).toFixed(2)} ${((m.y - m0.y) * 0.5).toFixed(2)};0 0`}
-                    keyTimes="0;0.5;1" dur="8s" begin={phase} calcMode="spline" keySplines={ease} repeatCount="indefinite" />
                   {arrowTs.map((_, k) => {
                     const begin = `${((k * gap * dur) / trackLen - i * 0.9).toFixed(2)}s`;
                     return (
                       <path key={k} d="M-4.2 -2.2 L1.8 0 L-4.2 2.2" fill="none" stroke={inward ? IN_ARROW : OUT_ARROW} strokeWidth={1.2 / aScale}
                         strokeLinecap="round" strokeLinejoin="round" opacity={0} transform={`scale(${aScale.toFixed(2)})`}>
-                        <animateMotion path={track} dur={`${dur}s`} begin={begin} rotate="auto" repeatCount="indefinite" calcMode="linear" />
+                        <animateMotion path={track} dur={`${dur}s`} begin={begin} rotate="auto" repeatCount="indefinite" calcMode="linear" keyPoints="0.1;0.9" keyTimes="0;1" />
                         <animate attributeName="opacity" values="0;0.45;0.45;0" keyTimes="0;0.2;0.8;1" dur={`${dur}s`} begin={begin} repeatCount="indefinite" />
                       </path>
                     );
