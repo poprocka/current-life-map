@@ -11,8 +11,8 @@ const IN = "#FFD445"; // inflow: bright, luminous yellow — this Orbit gives yo
 const OUT = "#D29E36"; // outflow: deeper sun yellow — this Orbit draws energy from the Sun (Jana, 2026-10-13)
 const STEADY = "#E6CE86"; // stable: a fine, still thread of soft yellow (Jana, 2026-10-13)
 /** Muted arrowheads inside the tubes show the direction at a glance, also in the still PDF (Jana, 2026-10-13). */
-const IN_ARROW = "#A8831C";
-const OUT_ARROW = "#8A6224";
+const IN_ARROW = "#E2B235"; // lighter, close to the tube so the links blend into the light (Jana, 2026-10-13)
+const OUT_ARROW = "#B98B3C";
 
 /**
  * Personalised Current Life Map.
@@ -187,7 +187,7 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
                     return (
                       <path key={k} d={LINK} fill={inward ? IN_ARROW : OUT_ARROW} opacity={0}>
                         <animateMotion path={track} dur={`${dur}s`} begin={begin} rotate="auto" repeatCount="indefinite" calcMode="linear" keyPoints="0.08;0.92" keyTimes="0;1" />
-                        <animate attributeName="opacity" values="0;0.34;0.34;0" keyTimes="0;0.1;0.9;1" dur={`${dur}s`} begin={begin} repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0;0.42;0.42;0" keyTimes="0;0.1;0.9;1" dur={`${dur}s`} begin={begin} repeatCount="indefinite" />
                       </path>
                     );
                   })}
