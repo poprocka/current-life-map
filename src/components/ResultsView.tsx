@@ -4,6 +4,7 @@ import { ORBIT_TINT } from "@/components/LifeSystem";
 import type { LifeMapResult } from "@/engine/compute";
 import type { ResultInsights } from "@/engine/insights";
 import { PersonalInsights } from "@/components/PersonalInsights";
+import { QuestionBlock } from "@/components/QuestionBlock";
 import { ENERGY_SHORT, IMPORTANCE_SHORT } from "@/lib/pdf/model";
 
 /**
@@ -93,7 +94,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
             <p className="eyebrow">The Sun</p>
             <h2 id="self-h" className="mt-3 font-serif text-[32px] font-light leading-tight">{insights.self.title}</h2>
             <div className="mt-5 space-y-4 text-[14.5px] leading-[1.8] text-mahogany/85">{insights.self.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
-            {insights.self.question && <p className="mt-5 font-serif text-[19px] italic leading-relaxed text-burgundy">{insights.self.question}</p>}
+            {insights.self.question && <QuestionBlock className="mt-5">{insights.self.question}</QuestionBlock>}
           </section>
           {/* E. Life Interconnections */}
           <section aria-labelledby="links-h">
@@ -111,7 +112,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
       {insights && (
         <section className="mx-auto mt-24 max-w-[760px] text-center" aria-labelledby="closing-h">
           <p id="closing-h" className="eyebrow">A question worth taking with you</p>
-          <p className="mt-5 font-serif text-[28px] font-light italic leading-snug text-burgundy [text-wrap:balance] sm:text-[32px]">{insights.closingQuestion.text}</p>
+          <QuestionBlock size="lg" className="mt-5">{insights.closingQuestion.text}</QuestionBlock>
           {!embedded && afterMap && (
             <>
               <p className="mx-auto mt-6 max-w-[600px] text-[13.5px] leading-relaxed text-mahogany/70">{insights.deepDiveBridge}</p>

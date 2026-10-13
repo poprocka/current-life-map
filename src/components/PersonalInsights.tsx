@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ResultInsights } from "@/engine/insights";
 import { INSIGHT_DISCLAIMER } from "@/engine/insights";
 import { ORBIT_TINT } from "@/components/map-geometry";
+import { QuestionBlock } from "@/components/QuestionBlock";
 
 /**
  * Personal insights (brief §4F–G): five evidence-led cards that open one at a time — each with a personalised
@@ -46,7 +47,7 @@ export function PersonalInsights({ insights }: { insights: ResultInsights }) {
                 </summary>
                 <div className="mt-3 max-w-[760px] space-y-2 pl-5 text-[13.5px] leading-relaxed text-mahogany/85">
                   {o.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
-                  <p className="pt-2 font-serif text-[19px] italic leading-relaxed text-burgundy">{o.question}</p>
+                  <QuestionBlock className="!mt-4">{o.question}</QuestionBlock>
                 </div>
               </details>
             </li>
@@ -114,7 +115,7 @@ export function InsightBody({ c }: { c: ResultInsights["cards"][number] }) {
         </section>
         <section>
           <h3 className="font-serif text-[21px] font-normal">A question to consider</h3>
-          <p className="mt-2 font-serif text-[19px] italic leading-relaxed text-burgundy">{c.question}</p>
+          <QuestionBlock className="mt-2">{c.question}</QuestionBlock>
         </section>
       </div>
     </div>

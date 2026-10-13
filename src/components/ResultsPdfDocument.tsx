@@ -5,6 +5,7 @@ import { MapLegend, PersonalMap } from "@/components/PersonalMap";
 import { MapTable } from "@/components/ResultsView";
 import { InsightBody } from "@/components/PersonalInsights";
 import { ORBIT_TINT } from "@/components/map-geometry";
+import { QuestionBlock } from "@/components/QuestionBlock";
 import { CONTACT_EMAIL } from "@/content/contact";
 import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
 
@@ -93,7 +94,7 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
             <p className="eyebrow">The Sun</p>
             <h2 className={h2}>{insights.self.title}</h2>
             <div className={`mt-4 space-y-3 ${body}`}>{insights.self.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
-            {insights.self.question && <p className="mt-4 font-serif text-[18px] italic leading-relaxed text-burgundy">{insights.self.question}</p>}
+            {insights.self.question && <QuestionBlock size="sm" className="mt-4">{insights.self.question}</QuestionBlock>}
           </section>
           <section className="pdf-keep">
             <p className="eyebrow">Life Interconnections</p>
@@ -138,7 +139,7 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
                 </p>
                 <div className="mt-2 space-y-1.5 pl-5 text-[13.5px] leading-relaxed text-mahogany/85">
                   {o.paragraphs.map((p, k) => <p key={k}>{p}</p>)}
-                  <p className="pt-1 font-serif text-[18px] italic leading-relaxed text-burgundy">{o.question}</p>
+                  <QuestionBlock size="sm" className="!mt-3">{o.question}</QuestionBlock>
                 </div>
               </li>
             ))}
@@ -150,7 +151,7 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
       {insights && (
         <section className="pdf-keep mx-auto mt-14 max-w-[680px] text-center">
           <p className="eyebrow">A question worth taking with you</p>
-          <p className="mt-4 font-serif text-[28px] font-light italic leading-snug text-burgundy [text-wrap:balance]">{insights.closingQuestion.text}</p>
+          <QuestionBlock size="lg" className="mt-4">{insights.closingQuestion.text}</QuestionBlock>
         </section>
       )}
 
