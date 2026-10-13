@@ -151,7 +151,7 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
       {insights && (
         <section className="pdf-keep mx-auto mt-14 max-w-[680px] text-center">
           <p className="eyebrow">A question worth taking with you</p>
-          <QuestionBlock size="lg" className="mt-4">{insights.closingQuestion.text}</QuestionBlock>
+          <p className="mt-4 font-serif text-[28px] font-light italic leading-snug text-burgundy [text-wrap:balance]">{insights.closingQuestion.text}</p>
         </section>
       )}
 

@@ -109,7 +109,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
       {insights && (
         <section className="mx-auto mt-24 max-w-[760px] text-center" aria-labelledby="closing-h">
           <p id="closing-h" className="eyebrow">A question worth taking with you</p>
-          <QuestionBlock size="lg" className="mt-5">{insights.closingQuestion.text}</QuestionBlock>
+          <p className="mt-5 font-serif text-[28px] font-light italic leading-snug text-burgundy [text-wrap:balance] sm:text-[32px]">{insights.closingQuestion.text}</p>{/* no outline on the closing question (Jana, 2026-10-13) */}
           {!embedded && afterMap && (
             <>
               <p className="mx-auto mt-6 max-w-[600px] text-[13.5px] leading-relaxed text-mahogany/70">{insights.deepDiveBridge}</p>
