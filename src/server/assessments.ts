@@ -9,7 +9,7 @@ import { computeLifeMap, type LifeMapResult } from "@/engine/compute";
 import { isComplete, validate } from "@/engine/navigation";
 import { generateCoachReport, COACH_REPORT_TEMPLATE_VERSION } from "@/engine/coach/report";
 import { generateDeepDiveScript, type IntakeAnswer } from "@/engine/coach/script";
-import { buildClientPdf } from "@/lib/pdf/clientReport";
+import { renderResultsHtml } from "@/server/pdf/document.generated.cjs";
 import { snapshotFingerprint } from "@/lib/stable";
 import type { Db, Sql } from "./db";
 import { decrypt, encrypt, encryptionConfigured, randomToken, sha256 } from "./crypto";
@@ -151,8 +151,10 @@ export async function completeAssessment(db: Db, token: string): Promise<{ ok: t
       [a.id, result.versions.scoring, JSON.stringify(metrics), JSON.stringify(evidence), JSON.stringify(result), sha]);
     await sql.query(`update assessments set status = 'completed', completed_at = now(), sections_completed = 10, last_activity_at = now() where id = $1`, [a.id]);
 
-    const pdf = await buildClientPdf(result, { generatedAt: new Date(ins.rows[0].generated_at), insights: narrative });
-    await sql.query(`insert into report_artifacts (assessment_id, artifact_type, version, checksum, generation_status) values ($1, 'client_pdf', 1, $2, 'ready')`, [a.id, sha256(pdf)]);
+    // The PDF itself is printed by Chromium only when someone asks for it (email or coach download), never inside this
+    // transaction. Recorded here: a checksum of the exact page content it will print, which is deterministic.
+    const pdfHtml = renderResultsHtml({ result, insights: narrative, generatedAt: new Date(ins.rows[0].generated_at).toISOString() });
+    await sql.query(`insert into report_artifacts (assessment_id, artifact_type, version, checksum, generation_status) values ($1, 'client_pdf', 2, $2, 'ready')`, [a.id, sha256(new TextEncoder().encode(pdfHtml))]);
     await writeCoachMaterial(sql, a.id, result, answers);
     await audit(sql, null, "assessment.completed", "assessment", a.id, { scoring: result.versions.scoring });
     return { ok: true as const, assessmentId: a.id, sha256: sha };

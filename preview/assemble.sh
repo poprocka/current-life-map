@@ -1,6 +1,7 @@
 #!/bin/sh
 # Rebuild the single-file preview from current source.
 set -e
+node scripts/build-pdf-assets.mjs >/dev/null 2>&1
 node preview/build.mjs
 npx tailwindcss -i src/app/globals.css -c tailwind.config.ts --content "./src/**/*.tsx,./preview/**/*.tsx" -o preview/out/app.css --minify 2>/dev/null
 node -e '

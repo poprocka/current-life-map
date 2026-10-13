@@ -1,6 +1,6 @@
 import "server-only";
 import { PRIVACY_NOTICE_VERSION } from "@/content/privacy-version";
-import { buildClientPdf } from "@/lib/pdf/clientReport";
+import { buildResultsPdf as buildClientPdf } from "@/server/pdf/render";
 import type { Db } from "./db";
 import { frozenResult, loadAnswers, resolveToken } from "./assessments";
 import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";

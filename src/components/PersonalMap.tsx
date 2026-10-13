@@ -31,9 +31,10 @@ function usePrefersReducedMotion() {
   return reduce;
 }
 
-export function PersonalMap({ result }: { result: LifeMapResult }) {
+export function PersonalMap({ result, still = false }: { result: LifeMapResult; still?: boolean }) {
   const by = Object.fromEntries(result.orbits.map((o) => [o.orbit, o]));
-  const reduceMotion = usePrefersReducedMotion();
+  const prefersReduced = usePrefersReducedMotion();
+  const reduceMotion = still || prefersReduced; // `still`: the PDF, where nothing moves
 
   return (
     <svg viewBox={mapViewBox(result.orbits).attr} overflow="visible" className="w-full" role="img"

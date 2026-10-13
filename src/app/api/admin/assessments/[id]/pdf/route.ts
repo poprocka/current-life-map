@@ -4,7 +4,7 @@ import { coachForApi } from "@/server/auth";
 import { frozenResult, loadAnswers } from "@/server/assessments";
 import { generateResultInsights } from "@/engine/insights";
 import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
-import { buildClientPdf } from "@/lib/pdf/clientReport";
+import { buildResultsPdf as buildClientPdf } from "@/server/pdf/render";
 import { audit } from "@/server/audit";
 
 /** The client's PDF exactly as they receive it, regenerated from the frozen snapshot. Coach-only. */

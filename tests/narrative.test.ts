@@ -8,7 +8,8 @@ import { computeLifeMap } from "@/engine/compute";
 import { generateNarrative, generateReflectionLayer } from "@/engine/narrative";
 import { BANNED, GENDERED, sentences, visibleTexts } from "@/engine/narrative/validate";
 import { questionById } from "@/content/v10/question-bank";
-import { buildClientPdf } from "@/lib/pdf/clientReport";
+import { buildResultsPdf as buildClientPdf } from "@/server/pdf/render";
+import { pdfText } from "./helpers/pdf-text";
 import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
 import { EXAMPLE_AMBITION, EXAMPLE_STRAIN, EXAMPLE_WORKING, persona, type Raw } from "./fixtures/personas";
 import { fullAnswers } from "./e2e/helpers";
@@ -239,19 +240,10 @@ describe("repetition and structure", () => {
 });
 
 describe("PDF and results stay consistent", () => {
-  function pdfText(bytes: Uint8Array) {
-    const buf = Buffer.from(bytes), raw = buf.toString("latin1");
-    let out = "";
-    for (const m of raw.matchAll(/stream\r?\n/g)) {
-      const start = m.index! + m[0].length, end = raw.indexOf("endstream", start);
-      try { out += inflateSync(buf.subarray(start, end)).toString("latin1"); } catch { /* not a content stream */ }
-    }
-    return [...out.matchAll(/<([0-9A-Fa-f]+)> Tj/g)].map((x) => Buffer.from(x[1], "hex").toString("latin1")).join(" ");
-  }
   it("the PDF carries the same opening, closing question and reflection layer", async () => {
     const a = EXAMPLE_AMBITION; const result = computeLifeMap(a); const n = generateNarrative(result, a);
     const q = POST_MAP_REFLECTIONS.questions[1];
-    const t = pdfText(await buildClientPdf(result, { insights: n, reflections: [{ prompt: q.prompt, text: "Looks right, isn't mine." }] })).replace(/\s+/g, " ");
+    const t = (await pdfText(await buildClientPdf(result, { insights: n, reflections: [{ prompt: q.prompt, text: "Looks right, isn't mine." }] }))).replace(/\s+/g, " ");
     expect(t).toContain("Your reality, as it is right now");
     expect(t).toContain(n.closingQuestion.text.slice(0, 40));
     expect(t).toContain("Looks right, isn't mine.");

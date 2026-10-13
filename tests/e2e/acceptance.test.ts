@@ -16,7 +16,8 @@ import { handleStripeEvent, verifyStripeSignature } from "@/server/booking/strip
 import { listAssessments, loadWorkspace, reconciliationQueue } from "@/server/admin/queries";
 import { saveScriptEdit, saveNote } from "@/server/admin/mutations";
 import { computeLifeMap } from "@/engine/compute";
-import { buildClientPdf } from "@/lib/pdf/clientReport";
+import { buildResultsPdf as buildClientPdf } from "@/server/pdf/render";
+import { pdfText } from "../helpers/pdf-text";
 import { reportModel } from "@/lib/pdf/model";
 import { snapshotFingerprint } from "@/lib/stable";
 import { winAnsi } from "@/lib/pdf/clientReport";
@@ -48,15 +49,6 @@ async function bookingToken(token: string) {
 const asJana = <T,>(fn: Parameters<typeof asCoach<T>>[2]) => asCoach(db, coach, fn);
 
 /** Text drawn by pdf-lib is hex-encoded inside Flate-compressed content streams. */
-function pdfText(bytes: Uint8Array) {
-  const buf = Buffer.from(bytes), raw = buf.toString("latin1");
-  let out = "";
-  for (const m of raw.matchAll(/stream\r?\n/g)) {
-    const start = m.index! + m[0].length, end = raw.indexOf("endstream", start);
-    try { out += inflateSync(buf.subarray(start, end)).toString("latin1"); } catch { /* not a content stream */ }
-  }
-  return [...out.matchAll(/<([0-9A-Fa-f]+)> Tj/g)].map((x) => Buffer.from(x[1], "hex").toString("latin1")).join("\n");
-}
 
 beforeAll(async () => {
   pg = await freshDb();
@@ -87,10 +79,10 @@ describe("§9 acceptance", () => {
     // What the respondent's browser computes from their own answers (free text never affects scoring)
     const local = computeLifeMap(fullAnswers());
     expect(await snapshotFingerprint(local)).toBe(frozen.sha256);
-    const text = pdfText(await buildClientPdf(local));
+    const text = (await pdfText(await buildClientPdf(local))).replace(/\s+/g, " ");
     const m = reportModel(frozen.snapshot);
     for (const r of m.table) { expect(text).toContain(r.name); expect(text).toContain(r.energy); }
-    for (const s of m.snapshot) expect(text.replace(/\n/g, " ")).toContain(winAnsi(s.body).split(" ").slice(0, 6).join(" "));
+    for (const s of m.snapshot) expect(text).toContain(s.body.split(" ").slice(0, 6).join(" "));
     expect(text).toContain(frozen.sha256.slice(0, 12));
     expect(text).not.toContain("That I keep postponing rest"); // optional reflections are not in the PDF
   });
@@ -299,8 +291,8 @@ describe("optional reflections in the emailed PDF", () => {
     await saveReflections(db, token, { "postmap.04": "Sleeping before midnight." });
     const before = (await frozenResult(db, id))!.sha256;
     expect(await requestPdfEmail(db, token, "r@example.com")).toEqual({ ok: true, state: "sent" });
-    const text = pdfText(email.sent.at(-1)!.attachments![0].content);
-    expect(text).toContain("Your reflections".toUpperCase());
+    const text = (await pdfText(email.sent.at(-1)!.attachments![0].content)).replace(/\s+/g, " ");
+    expect(text).toContain("In your own words");
     expect(text).toContain("Sleeping before midnight.");
     expect(text).toContain("That I keep postponing rest.");
     expect((await frozenResult(db, id))!.sha256).toBe(before);
