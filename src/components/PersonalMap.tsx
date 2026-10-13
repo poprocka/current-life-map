@@ -47,6 +47,9 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
         <filter id="flowSoft" filterUnits="userSpaceOnUse" x="-100" y="-100" width="800" height="800">
           <feGaussianBlur stdDeviation="1.3" />
         </filter>
+        <filter id="flowGlow" filterUnits="userSpaceOnUse" x="-100" y="-100" width="800" height="800">
+          <feGaussianBlur stdDeviation="4" />
+        </filter>
       </defs>
 
       {/* distance axes */}
@@ -81,8 +84,8 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
         const w0 = steady ? 0.8 : 3 + mag * 2.5;
         const w1 = steady ? 0.6 : Math.max(1.6, g.size * 0.22);
         const wm = steady ? 0.5 : 0.9 + mag * 1.1;
-        const ribbon = (bend: number) => {
-          const P = (r: number, w: number, k = 0) => `${(C + ux * r + px * (w + k)).toFixed(1)},${(C + uy * r + py * (w + k)).toFixed(1)}`;
+        const ribbon = (bend: number, wide = 1) => {
+          const P = (r: number, w: number, k = 0) => `${(C + ux * r + px * (w * wide + k)).toFixed(1)},${(C + uy * r + py * (w * wide + k)).toFixed(1)}`;
           return `M${P(r0, w0)} Q${P(rm, wm, bend)} ${P(r1, w1)} L${P(r1, -w1)} Q${P(rm, -wm, bend)} ${P(r0, -w0)} Z`;
         };
         const sway = (i % 2 ? 1 : -1) * (steady ? 4 : 7 + mag * 5);
@@ -125,10 +128,23 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
                   )}
                   {!reduceMotion && (
                     <animateTransform attributeName="gradientTransform" type="translate" begin={phase}
-                      from="0 0" to={`${(ux * dir * travel).toFixed(1)} ${(uy * dir * travel).toFixed(1)}`} dur={`${mag === 1 ? 4.6 : 6.4}s`} repeatCount="indefinite" />
+                      from="0 0" to={`${(ux * dir * travel).toFixed(1)} ${(uy * dir * travel).toFixed(1)}`} dur={`${inward ? (mag === 1 ? 2.9 : 3.8) : mag === 1 ? 4.6 : 6.4}s`} repeatCount="indefinite" />
                   )}
                 </linearGradient>
               </defs>
+            )}
+            {/* Energy in: an infused halo of light around the tube that breathes, so giving Orbits stand out (Jana, 2026-10-13) */}
+            {inward && (
+              <path d={ribbon(sway * 0.35, 2.6)} fill={IN} opacity={still ? 0.28 : 0.22} filter="url(#flowGlow)">
+                {!reduceMotion && (
+                  <>
+                    <animate attributeName="d" values={`${ribbon(sway * 0.35, 2.6)};${ribbon(sway, 2.6)};${ribbon(sway * 0.35, 2.6)}`} keyTimes="0;0.5;1" dur="8s" begin={phase}
+                      calcMode="spline" keySplines={ease} repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.14;0.36;0.14" keyTimes="0;0.5;1" dur={mag === 1 ? "2.9s" : "3.8s"} begin={phase}
+                      calcMode="spline" keySplines={ease} repeatCount="indefinite" />
+                  </>
+                )}
+              </path>
             )}
             <path d={dA} fill={steady ? color : `url(#flow-${id})`} opacity={steady ? 0.55 : 1} filter="url(#flowSoft)">
               {!reduceMotion && (
@@ -140,20 +156,41 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
                   calcMode="spline" keySplines={ease} repeatCount="indefinite" />
               )}
             </path>
-            {!steady && arrowTs.map((t, k) => {
-              const a = centre(t, sway * 0.35), b = centre(t, sway);
+            {/* Arrowheads: still in the PDF and under reduced motion; otherwise they glide along the tube in the direction
+                of the energy, fading in and out at the ends (Jana, 2026-10-13) */}
+            {!steady && reduceMotion && arrowTs.map((t, k) => {
+              const a = centre(t, sway * 0.35);
               return (
-                <g key={k}>
-                  {!reduceMotion && (
-                    <animateTransform attributeName="transform" type="translate" values={`0 0;${(b.x - a.x).toFixed(2)} ${(b.y - a.y).toFixed(2)};0 0`}
-                      keyTimes="0;0.5;1" dur="8s" begin={phase} calcMode="spline" keySplines={ease} repeatCount="indefinite" />
-                  )}
-                  <path d="M-4.2 -2.2 L1.8 0 L-4.2 2.2" fill="none" stroke={inward ? IN_ARROW : OUT_ARROW} strokeWidth={1.2}
-                    strokeLinecap="round" strokeLinejoin="round" opacity={still ? 0.75 : 0.55}
-                    transform={`translate(${a.x.toFixed(1)} ${a.y.toFixed(1)}) rotate(${rot.toFixed(1)}) scale(${aScale.toFixed(2)})`} />
-                </g>
+                <path key={k} d="M-4.2 -2.2 L1.8 0 L-4.2 2.2" fill="none" stroke={inward ? IN_ARROW : OUT_ARROW} strokeWidth={1.2}
+                  strokeLinecap="round" strokeLinejoin="round" opacity={still ? 0.75 : 0.55}
+                  transform={`translate(${a.x.toFixed(1)} ${a.y.toFixed(1)}) rotate(${rot.toFixed(1)}) scale(${aScale.toFixed(2)})`} />
               );
             })}
+            {!steady && !reduceMotion && (() => {
+              const bend = sway * 0.35;
+              const P = (r: number, k = 0) => `${(C + ux * r + px * k).toFixed(1)},${(C + uy * r + py * k).toFixed(1)}`;
+              const [ra, rb] = inward ? [r1 - 4, r0 + 8] : [r0 + 8, r1 - 4];
+              const track = `M${P(ra)} Q${P(rm, bend)} ${P(rb)}`;
+              const dur = inward ? (mag === 1 ? 2.9 : 3.8) : mag === 1 ? 4.6 : 6.4; // energy in moves livelier
+              const m = centre(0.5, sway), m0 = centre(0.5, bend);
+              return (
+                <g>
+                  {/* follow the tube's slow sway so the arrowheads stay inside it */}
+                  <animateTransform attributeName="transform" type="translate" values={`0 0;${((m.x - m0.x) * 0.5).toFixed(2)} ${((m.y - m0.y) * 0.5).toFixed(2)};0 0`}
+                    keyTimes="0;0.5;1" dur="8s" begin={phase} calcMode="spline" keySplines={ease} repeatCount="indefinite" />
+                  {arrowTs.map((_, k) => {
+                    const begin = `-${((k * dur) / arrowTs.length + i * 0.7).toFixed(2)}s`;
+                    return (
+                      <path key={k} d="M-4.2 -2.2 L1.8 0 L-4.2 2.2" fill="none" stroke={inward ? IN_ARROW : OUT_ARROW} strokeWidth={1.2 / aScale}
+                        strokeLinecap="round" strokeLinejoin="round" opacity={0} transform={`scale(${aScale.toFixed(2)})`}>
+                        <animateMotion path={track} dur={`${dur}s`} begin={begin} rotate="auto" repeatCount="indefinite" calcMode="linear" />
+                        <animate attributeName="opacity" values="0;0.6;0.6;0" keyTimes="0;0.18;0.8;1" dur={`${dur}s`} begin={begin} repeatCount="indefinite" />
+                      </path>
+                    );
+                  })}
+                </g>
+              );
+            })()}
           </g>
         );
       })}
