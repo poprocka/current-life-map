@@ -418,7 +418,7 @@ function readinessSection(c: Ctx, answers: Answers, intake: { question: string; 
       evidence: [...["mind.01", "mind.06", "sun.02"].filter(c.answered).map(c.ev), ...reflections.map((id) => ({ questionId: id, answer: "(written)" }))] },
     { key: "agency", label: "Ownership and agency", level: lvl(["sun.04", "resources.04", "sun.07"]), note: "Based on self-trust, practical choice and responsibility.", evidence: ["sun.04", "resources.04", "sun.07"].filter(c.answered).map(c.ev) },
     { key: "motivation", label: "Motivation", level: (c.ic.leverageSelection || c.ic.priorityGap || intake.length ? "partly established" : "not yet established") as ReadinessLevel,
-      note: "The self-interview can show where they see room for change; what they genuinely want to work on needs a conversation.", evidence: [...(c.ic.leverageSelection ? [c.ev("interconnections.03")] : []), ...(c.ic.priorityGap ? [c.ev("interconnections.05")] : []), ...intake.map((x, i) => ({ questionId: `booking.intake.${i}`, answer: x.answer }))] },
+      note: "The Self-Interview can show where they see room for change; what they genuinely want to work on needs a conversation.", evidence: [...(c.ic.leverageSelection ? [c.ev("interconnections.03")] : []), ...(c.ic.priorityGap ? [c.ev("interconnections.05")] : []), ...intake.map((x, i) => ({ questionId: `booking.intake.${i}`, answer: x.answer }))] },
     { key: "openness", label: "Openness", level: lvl(["growth.02", "mind.02", "mind.03"]), note: "Based on openness to change and perspective on their own thinking.", evidence: ["growth.02", "mind.02", "mind.03"].filter(c.answered).map(c.ev) },
     { key: "capacity", label: "Capacity for action", level: (c.drains("restoration") || c.ic.overallSupport?.value === "strongly_compete" || (c.support("restoration") ?? 1) <= 0.3 ? "not yet established" : lvl(["sun.08", "restoration.03"])) as ReadinessLevel,
       note: c.drains("restoration") || (c.support("restoration") ?? 1) <= 0.3 ? "Their capacity may be stretched right now; space for reflection and follow-through needs checking in conversation." : "Based on follow-through and recovery.", evidence: ["sun.08", "restoration.03", "restoration.energy"].filter(c.answered).map(c.ev) },
@@ -428,7 +428,7 @@ function readinessSection(c: Ctx, answers: Answers, intake: { question: string; 
   const conclusion: ReadinessConclusion = motivated && established >= 2 && dims[4].level !== "not yet established" ? "Explore 1:1 coaching fit" : "Clarify goals and readiness during the Deep Dive";
   const conclusionReason = conclusion === "Explore 1:1 coaching fit"
     ? "Several readiness signals are present and they point to areas where they see room for change. Fit still needs to be confirmed in conversation."
-    : "Some readiness signals are present, but their goals, expectations or current capacity aren't yet clear from the self-interview alone.";
+    : "Some readiness signals are present, but their goals, expectations or current capacity aren't yet clear from the Self-Interview alone.";
   return { dimensions: dims, conclusion, conclusionReason };
 }
 

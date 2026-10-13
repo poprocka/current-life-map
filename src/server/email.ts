@@ -49,7 +49,7 @@ export type PdfEmailResult =
 export const EMAIL_SUBJECT = "Your Current Life Map";
 export const EMAIL_TEXT = `Hello,
 
-Thank you for taking the time to complete the self-interview. Your Current Life Map is attached as a PDF.
+Thank you for taking the time to complete the Self-Interview. Your Current Life Map is attached as a PDF.
 
 It reflects the life you described: what matters most to you right now, what gives and takes your energy, and how the different parts of your life influence one another. It isn't a verdict or a diagnosis. It's a starting point for seeing your life more clearly.
 

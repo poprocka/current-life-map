@@ -7,7 +7,7 @@ export const POST_MAP_REFLECTIONS = {
   placeholder: "Optional — write what comes up",
   maxLength: 2000,
   questions: [
-    { id: "postmap.01", prompt: "What can you see about your life now that you were not seeing as clearly before this self-interview?" },
+    { id: "postmap.01", prompt: "What can you see about your life now that you were not seeing as clearly before this Self-Interview?" },
     { id: "postmap.02", prompt: "Is there an area of your life that looks right from the outside but does not feel fully like yours when you are honest with yourself?" },
     { id: "postmap.03", prompt: "What are you most tempted to explain away, minimize or postpone after seeing your Map?" },
     { id: "postmap.04", prompt: "Where do you feel the strongest gap between knowing what you need and actually living it?" },

@@ -41,7 +41,7 @@ export function CoachReportView({ data, answers, actions }: { data: WorkspaceDat
   const [review, setReview] = useState(data.coachReport?.review_state ?? "unreviewed");
   const [vals, setVals] = useState<Vmap>(() => Object.fromEntries((data.validations ?? []).map((v) => [v.insight_id, { status: v.status, note: v.note }])));
 
-  if (!current) return <p className="text-[13px] text-taupe">The Coach Report is generated when the respondent completes the self-interview.</p>;
+  if (!current) return <p className="text-[13px] text-taupe">The Coach Report is generated when the respondent completes the Self-Interview.</p>;
   const intel = editing ? draft : current.content.intelligence;
   const report = current.content;
   const marked = intel ? intel.validatable.filter((x) => vals[x.id]).length : 0;

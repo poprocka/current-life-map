@@ -95,7 +95,7 @@ export function SystemDefs() {
 
 /**
  * Neutral, unpersonalised Life System illustration.
- * `active` highlights the current chapter during the self-interview; transitions are CSS so the
+ * `active` highlights the current chapter during the Self-Interview; transitions are CSS so the
  * system stays mounted and moves continuously from one area to the next.
  */
 export function LifeSystem({

@@ -56,7 +56,7 @@ export interface WorkspaceData {
 // ── Client profiles (Oct 13) ─────────────────────────────────────────────────
 export type Stage = "prospect" | "lead" | "client";
 export const STAGES: { value: Stage; label: string; hint: string }[] = [
-  { value: "prospect", label: "Prospect", hint: "Did the self-interview" },
+  { value: "prospect", label: "Prospect", hint: "Did the Self-Interview" },
   { value: "lead", label: "Lead", hint: "Booked a Life Map Deep Dive" },
   { value: "client", label: "Client", hint: "On 1:1 coaching" },
 ];

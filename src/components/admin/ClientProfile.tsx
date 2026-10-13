@@ -221,7 +221,7 @@ function InviteCard({ stage, invite, actions }: { stage: Stage; invite: ClientPr
   useEffect(() => setToken(invite?.token ?? null), [invite?.token]);
   const url = token ? actions.inviteUrl(token) : null;
   return (
-    <Card title="Private self-interview link">
+    <Card title="Private Self-Interview link">
       {url ? (
         <>
           <p className="break-all rounded-lg bg-linen-deep px-3 py-2 font-mono text-[11px]">{url}</p>

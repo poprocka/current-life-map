@@ -6,7 +6,7 @@ import { audit } from "./audit";
 /**
  * Client profiles — the parts the public flow touches.
  *
- * Private client link: Jana gives a Client a personal self-interview link (…/#invite=<token>). The token travels in
+ * Private client link: Jana gives a Client a personal Self-Interview link (…/#invite=<token>). The token travels in
  * the URL fragment, which browsers never send to servers or logs, and then in the request body. A Map started with
  * a valid token is attached to that profile (link source "client_invite") and chained to the person's previous Map.
  * Nothing else is ever matched automatically — in particular, never by email.

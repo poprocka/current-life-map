@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 /**
  * Private client links look like https://…/#invite=<token>. The fragment never reaches the server or its logs.
- * We keep the token on this device until the self-interview starts, then send it once in the request body,
+ * We keep the token on this device until the Self-Interview starts, then send it once in the request body,
  * and remove it from the address bar straight away.
  */
 export function InviteCapture() {
@@ -17,7 +17,7 @@ export function InviteCapture() {
   }, []);
   return invited ? (
     <p role="status" className="mt-6 rounded-[14px] bg-white/50 px-4 py-3 text-[12.5px] leading-relaxed text-mahogany/80">
-      This is your personal link from Jana. When you complete the self-interview, your Map will be shared with her as part of your coaching.
+      This is your personal link from Jana. When you complete the Self-Interview, your Map will be shared with her as part of your coaching.
     </p>
   ) : null;
 }

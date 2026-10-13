@@ -117,7 +117,7 @@ export async function createProfileForAssessment(sql: Sql, coachId: string, asse
   return id;
 }
 
-/** Prospect / Lead / Client. Becoming a Client also creates the private self-interview link (if none yet). */
+/** Prospect / Lead / Client. Becoming a Client also creates the private Self-Interview link (if none yet). */
 export async function setStage(sql: Sql, coachId: string, clientId: string, stage: Stage, since: string | null = null) {
   const r = await sql.query<{ invite_token_hash: string | null }>(
     `update clients set stage = $2, stage_changed_at = now(), coaching_enrolled = ($2 = 'client'),

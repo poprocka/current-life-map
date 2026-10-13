@@ -117,7 +117,7 @@ function ReconQueue({ rows, onReconcile, onSearch }: { rows: ReconRow[]; onRecon
   return (
     <section className="rounded-[18px] border border-[#E7C98F] bg-[#FBF3E3] p-5" aria-labelledby="recon-h">
       <h2 id="recon-h" className="text-[10.5px] uppercase tracking-[0.16em] text-[#8A6420]">Needs reconciliation · {rows.length}</h2>
-      <p className="mt-1 text-[12px] text-mahogany/70">Bookings that couldn’t be matched to a self-interview automatically. Find the right assessment by name, email or assessment ID, then confirm the link. Nothing is linked until you confirm.</p>
+      <p className="mt-1 text-[12px] text-mahogany/70">Bookings that couldn’t be matched to a Self-Interview automatically. Find the right assessment by name, email or assessment ID, then confirm the link. Nothing is linked until you confirm.</p>
       <ul className="mt-4 divide-y divide-[#EBD9B4]">
         {rows.map((r) => <ReconItem key={r.id} r={r} onReconcile={onReconcile} onSearch={onSearch} />)}
       </ul>
@@ -166,7 +166,7 @@ function ReconItem({ r, onReconcile, onSearch }: { r: ReconRow; onReconcile: Adm
                 </li>
               ))}
             </ul>
-          ) : <p className="mt-2 text-[12px] text-taupe">No assessments match. If they haven’t taken the self-interview yet, send it to them first.</p>)}
+          ) : <p className="mt-2 text-[12px] text-taupe">No assessments match. If they haven’t taken the Self-Interview yet, send it to them first.</p>)}
           <div className="mt-3 flex items-center gap-3">
             <button className={btnPrimary} disabled={!picked || busy}
               onClick={async () => { setBusy(true); setErr(null); try { await onReconcile(r.id, picked!); } catch { setErr("Couldn’t link that booking. Please try again."); } setBusy(false); }}>

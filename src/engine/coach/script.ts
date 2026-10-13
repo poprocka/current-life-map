@@ -39,7 +39,7 @@ export function generateDeepDiveScript(result: LifeMapResult, answers: Answers, 
   const r = generateCoachIntelligence(result, answers, intake);
 
   const person: CoachItem[] = [
-    g("person.why", "What made them want to take the self-interview now?"),
+    g("person.why", "What made them want to take the Self-Interview now?"),
     g("person.resonated", "What resonated most when they saw their Map, and what surprised them?"),
     g("person.hope", "What do they hope to understand by the end of the hour?"),
   ];
@@ -68,7 +68,7 @@ export function generateDeepDiveScript(result: LifeMapResult, answers: Answers, 
     g("fit.tried", "What have they already tried, and what helped?"),
     g("fit.support", "What kind of support are they looking for?"),
     g("fit.success", "If coaching went really well, what would be different in six months?"),
-    ...r.readiness.dimensions.filter((d) => d.level === "not yet established").map((d) => g(`fit.${d.key}`, `${d.label} isn't established from the self-interview. ${d.note}`)),
+    ...r.readiness.dimensions.filter((d) => d.level === "not yet established").map((d) => g(`fit.${d.key}`, `${d.label} isn't established from the Self-Interview. ${d.note}`)),
   ];
 
   const close: CoachItem[] = [

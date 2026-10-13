@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "The Current Life Map",
-  description: "A guided self-interview based on the Life System.",
+  description: "A guided Self-Interview based on the Life System.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

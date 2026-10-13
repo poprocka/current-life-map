@@ -266,7 +266,7 @@ function PostMapCard({ answers, rows }: { answers: Record<string, string | strin
 
 // ── B. Client's Map ──────────────────────────────────────────────────────────
 function MapTab({ data, pdfHref }: { data: WorkspaceData; pdfHref: string | null }) {
-  if (!data.result) return <p className="text-[13px] text-taupe">No results yet — the respondent hasn’t completed the self-interview.</p>;
+  if (!data.result) return <p className="text-[13px] text-taupe">No results yet — the respondent hasn’t completed the Self-Interview.</p>;
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-[14px] bg-linen-deep/60 px-4 py-3 text-[12px] text-mahogany/80">

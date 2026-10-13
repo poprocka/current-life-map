@@ -27,9 +27,9 @@ export default function Results() {
     return (
       <main className="mx-auto flex min-h-dvh max-w-[520px] flex-col justify-center px-6">
         <h1 className="font-serif text-[36px] font-light">Your Map isn't ready yet.</h1>
-        <p className="mt-4 text-[14px] text-mahogany/75">It appears once every question in the self-interview has an answer.</p>
+        <p className="mt-4 text-[14px] text-mahogany/75">It appears once every question in the Self-Interview has an answer.</p>
         <Link href="/interview?resume=1" className="mt-8 self-start rounded-full bg-burgundy px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen">
-          Continue the self-interview
+          Continue the Self-Interview
         </Link>
       </main>
     );
