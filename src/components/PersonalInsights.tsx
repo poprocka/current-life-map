@@ -38,11 +38,15 @@ export function PersonalInsights({ insights }: { insights: ResultInsights }) {
                 <summary className="flex cursor-pointer list-none items-center gap-3 font-serif text-[22px] font-light">
                   <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: ORBIT_TINT[o.orbit] }} />
                   {o.name}
-                  <span aria-hidden className="ml-auto text-[14px] text-taupe transition group-open:rotate-90">›</span>
+                  {/* Same "View ›" cue as the insight cards (Jana, 2026-10-13); the arrow turns down when open */}
+                  <span className="ml-auto font-sans text-[11px] uppercase tracking-[0.16em] text-burgundy">
+                    <span className="group-open:hidden">View</span><span className="hidden group-open:inline">Close</span>{" "}
+                    <span aria-hidden className="inline-block transition group-open:rotate-90">›</span>
+                  </span>
                 </summary>
                 <div className="mt-3 max-w-[760px] space-y-2 pl-5 text-[13.5px] leading-relaxed text-mahogany/85">
                   {o.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
-                  <p className="pt-1 font-serif text-[16px] italic text-burgundy">{o.question}</p>
+                  <p className="pt-2 font-serif text-[19px] italic leading-relaxed text-burgundy">{o.question}</p>
                 </div>
               </details>
             </li>

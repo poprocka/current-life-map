@@ -138,10 +138,11 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
           <p id="closing-h" className="eyebrow">A question worth taking with you</p>
           <p className="mt-5 font-serif text-[28px] font-light italic leading-snug text-burgundy [text-wrap:balance] sm:text-[32px]">{insights.closingQuestion.text}</p>
           {!embedded && afterMap && (
-            <p className="mx-auto mt-8 max-w-[600px] text-[13.5px] leading-relaxed text-mahogany/70">
-              {insights.deepDiveBridge}{" "}
-              <a href="#deep-dive" className="whitespace-nowrap text-burgundy underline underline-offset-4 hover:text-mahogany">Explore your Map with Jana</a>
-            </p>
+            <>
+              <p className="mx-auto mt-8 max-w-[600px] text-[13.5px] leading-relaxed text-mahogany/70">{insights.deepDiveBridge}</p>
+              {/* Primary CTA under the bridge text (Jana, 2026-10-13) */}
+              <a href="#deep-dive" className="mt-6 inline-block rounded-full bg-burgundy px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany">Explore your Map with Jana</a>
+            </>
           )}
         </section>
       )}

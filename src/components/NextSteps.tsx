@@ -97,7 +97,8 @@ export function PdfCard({ token }: { token?: string }) {
   return (
     <section className="mt-6" aria-label="Receive your results as a PDF">
       {/* PDF by email */}
-      <div className="grid gap-6 rounded-[28px] border hairline p-8 sm:p-10 lg:grid-cols-[1fr_1.1fr] lg:items-center lg:gap-16">
+      {/* Same card style as the Map block (Jana, 2026-10-13) */}
+      <div className="grid gap-6 rounded-[28px] border hairline bg-linen-deep/70 p-8 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_24px_60px_-40px_rgba(84,15,38,0.25)] sm:p-10 lg:grid-cols-[1fr_1.1fr] lg:items-center lg:gap-16">
         <div>
         <p className="eyebrow">Keep your Map</p>
         <h2 className="mt-3 font-serif text-[30px] font-light leading-tight">Receive your results as a PDF</h2>
