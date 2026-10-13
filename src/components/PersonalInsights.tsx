@@ -40,9 +40,9 @@ export function PersonalInsights({ insights }: { insights: ResultInsights }) {
                 <summary className="flex cursor-pointer list-none items-center gap-3 font-serif text-[22px] font-light">
                   <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: ORBIT_TINT[o.orbit] }} />
                   {o.name}
-                  {/* A large + (no outline) shows the row expands; it turns into × when open (Jana, 2026-10-13) */}
+                  {/* A + (no outline, 16.5px) shows the row expands; it turns into × when open (Jana, 2026-10-13) */}
                   <span aria-hidden className="ml-auto flex h-9 w-9 items-center justify-center text-burgundy transition group-hover:text-mahogany group-open:rotate-45">
-                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M11 2v18M2 11h18" /></svg>
+                    <svg width="16.5" height="16.5" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M11 2v18M2 11h18" /></svg>
                   </span>
                 </summary>
                 <div className="mt-3 max-w-[760px] space-y-2 pl-5 text-[13.5px] leading-relaxed text-mahogany/85">
