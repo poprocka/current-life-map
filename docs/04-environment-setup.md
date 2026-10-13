@@ -72,3 +72,12 @@ Needs a paid Calendly plan that includes **webhooks and Stripe payments** (confi
 npm run build && npm run check:bundle   # no server secret names in browser bundles
 npm test                                # schema, RLS, §9 acceptance, auth, engine
 ```
+
+## Client profiles: file storage (Oct 13)
+
+Attachments on client profiles (session plans, homework, notes, profile files) are stored in a private Supabase Storage bucket.
+
+1. After `0001_initial.sql`, run `supabase/migrations/0002_storage.sql`. It creates the private bucket `client-files` (10 MB per file) and storage policies that allow access only to signed-in coaches at MFA level (aal2).
+2. No new secrets. Files are encrypted by the server with `FIELD_ENCRYPTION_KEY` (AES-256-GCM) before upload, so the bucket only holds ciphertext. Access uses the coach's own session; the service-role key is still not used.
+3. Allowed types: PDF, PNG, JPEG, WebP, HEIC, TXT, CSV, Markdown, Word, Excel, PowerPoint, MP3, M4A. Anything else is refused.
+4. Private self-interview links look like `https://<your domain>/#invite=<token>`. The token sits in the URL fragment, which browsers never send to servers or logs, and is stored hashed (for lookup) and encrypted (so you can copy it again). "New link" invalidates the old one; "Turn off" removes it.

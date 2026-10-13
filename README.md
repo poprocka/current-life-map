@@ -54,3 +54,12 @@ One `assessment_id` runs through everything. Raw answers → `assessment_answers
 See `docs/04-environment-setup.md` for step-by-step setup. In short: Supabase (database + coach sign-in), Resend (PDF email), Calendly with Stripe (booking + payment), Vercel (hosting + cron), and three random secrets. Every variable is listed in `.env.example`.
 
 **Do not launch publicly** until the staging plan (webhook linkage, authorisation, payment state, deletion, PDF access) has passed end to end and the privacy notice has had a legal review (flag F9). Nothing here constitutes legal review.
+
+
+## Client profiles (Oct 13)
+
+Coach workspace → **Clients**. Each profile has a stage (**Prospect**: did the self-interview · **Lead**: booked a Deep Dive, set automatically when the booking is confirmed · **Client**: on 1:1 coaching, set by the coach), all of the person's Maps with a side-by-side comparison, sessions (date, plan, notes, exercises and homework, files), notes about the person, and files.
+
+- **More Maps under one profile:** a Client gets a private self-interview link; any Map completed through it attaches to their profile automatically (e.g. the 3-month follow-up). Maps are never joined by email automatically: a matching email is shown as a suggestion and Jana confirms it, or attaches a Map by searching name, email or ID.
+- **Privacy:** sessions, notes and files are encrypted at the application layer; profile tables are behind RLS + MFA; every view, change and download is audited. Deleting one assessment never removes a profile Jana is working with; deleting a whole profile is admin-only.
+- Code: `src/server/clients.ts` (private link, Lead promotion), `src/server/admin/clients.ts`, `src/components/admin/ClientProfile.tsx`, `ClientsTable.tsx`; tests in `tests/clients.test.ts`.

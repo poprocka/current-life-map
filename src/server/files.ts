@@ -42,3 +42,15 @@ export function memoryFileStore(): FileStore & { files: Map<string, Uint8Array> 
     async remove(paths) { for (const p of paths) files.delete(p); },
   };
 }
+
+let override: FileStore | null = null;
+/** Tests only. */
+export const setFileStore = (s: FileStore | null) => { override = s; };
+
+/** The store for the current coach request: the signed-in coach's own Supabase session (RLS on storage). */
+export async function fileStoreForRequest(): Promise<FileStore | null> {
+  if (override) return override;
+  const { supabaseServer } = await import("./auth");
+  const sb = await supabaseServer();
+  return sb ? supabaseFileStore(sb as unknown as SupabaseClient) : null;
+}

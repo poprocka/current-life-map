@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
-import type { WorkspaceData, NoteView, ScriptVersion } from "@/server/admin/types";
+import type { WorkspaceData, NoteView, ScriptVersion, Stage } from "@/server/admin/types";
+import { STAGES } from "@/server/admin/types";
 import type { NoteInput } from "@/server/admin/mutations";
 import type { DeepDiveScript, ScriptBlock } from "@/engine/coach/script";
 import type { CoachItem } from "@/engine/coach/shared";
@@ -25,7 +26,11 @@ export interface WorkspaceActions {
   setBookingOutcome(bookingId: string, state: "completed" | "no_show"): Promise<void>;
   deleteAssessment(): Promise<void>;
   setName(name: string | null): Promise<void>;
-  setCoaching(enrolled: boolean, since: string | null): Promise<void>;
+  /** Client profiles: create one from this Map, set the stage, add this Map to a suggested profile. */
+  createProfile(name: string | null): Promise<string>;
+  setStage(clientId: string, stage: Stage): Promise<void>;
+  attachToProfile(clientId: string): Promise<void>;
+  profileHref(clientId: string): string;
   saveReportVersion(content: CoachReport): Promise<void>;
   saveValidation(v: { insightId: string; title: string; status: ValidationStatus; note: string | null }): Promise<void>;
   generateUnderstanding(validations: Validation[]): Promise<{ version: number; content: UnderstandingDocument }>;
@@ -51,12 +56,12 @@ export function Workspace({ data, actions }: { data: WorkspaceData; actions: Wor
 
   return (
     <div className="mx-auto max-w-[1280px] px-6 pb-24 pt-6 sm:px-10">
-      <Link href={actions.listHref} className="text-[11px] uppercase tracking-[0.14em] text-taupe hover:text-burgundy">← All assessments</Link>
+      <div className="flex gap-4"><Link href={actions.listHref} className="text-[11px] uppercase tracking-[0.14em] text-taupe hover:text-burgundy">← All assessments</Link>{data.profile && <Link href={actions.profileHref(data.profile.client_id)} className="text-[11px] uppercase tracking-[0.14em] text-taupe hover:text-burgundy">Client profile</Link>}</div>
       <header className="mt-4 flex flex-wrap items-end justify-between gap-4 border-b hairline pb-5">
         <div>
           <p className="eyebrow">Assessment <span className="font-mono normal-case tracking-normal">{data.assessment.id}</span></p>
           <NameHeading id={data.assessment.id} initial={data.clients.map((c) => c.name).filter(Boolean).at(-1) ?? null} onSave={actions.setName} />
-          <CoachingLine initial={(() => { const c = data.clients.find((x) => x.coaching_enrolled); return { enrolled: !!c, since: c?.coaching_enrolled_at ?? null }; })()} onSave={actions.setCoaching} />
+          <ProfileLine data={data} actions={actions} />
           <p className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-taupe">
             <Badge v={data.assessment.status} /> {data.assessment.status === "completed" ? `Completed ${fmtDate(data.assessment.completed_at)}` : `${data.assessment.sections_completed}/10 sections`}
             {booking && <> · Deep Dive <Badge v={booking.booking_state} /> {fmtDate(booking.scheduled_start, booking.timezone)} <Badge v={booking.payment_state} /></>}
@@ -96,27 +101,46 @@ export function Workspace({ data, actions }: { data: WorkspaceData; actions: Wor
   );
 }
 
-/** Client profile: enrolled on 1:1 coaching (more profile details can join this line later). */
-function CoachingLine({ initial, onSave }: { initial: { enrolled: boolean; since: string | null }; onSave: WorkspaceActions["setCoaching"] }) {
-  const [state, setState] = useState(initial);
-  const [err, setErr] = useState(false);
-  const save = async (next: { enrolled: boolean; since: string | null }) => {
-    const prev = state; setState(next); setErr(false);
-    try { await onSave(next.enrolled, next.since); } catch { setState(prev); setErr(true); }
-  };
+/**
+ * The client profile behind this Map: stage (Prospect / Lead / Client) and a link to the profile, or a button to
+ * create one. Profiles sharing an email are offered as suggestions only; nothing is joined until Jana confirms.
+ */
+function ProfileLine({ data, actions }: { data: WorkspaceData; actions: WorkspaceActions }) {
+  const [profile, setProfile] = useState(data.profile ?? null);
+  const [added, setAdded] = useState<string[]>([]);
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const run = async (fn: () => Promise<void>) => { setBusy(true); setErr(null); try { await fn(); } catch { setErr("Couldn’t save. Please try again."); } finally { setBusy(false); } };
+  const suggestions = (data.possibleProfiles ?? []).filter((p) => !added.includes(p.client_id));
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-3 text-[12.5px]">
-      <label className="flex cursor-pointer items-center gap-2">
-        <input type="checkbox" checked={state.enrolled}
-          onChange={(e) => save({ enrolled: e.target.checked, since: e.target.checked ? state.since ?? new Date().toISOString().slice(0, 10) : null })} />
-        <span className={state.enrolled ? "text-burgundy" : "text-mahogany/80"}>Enrolled on 1:1 coaching</span>
-      </label>
-      {state.enrolled && (
-        <label className="flex items-center gap-2 text-taupe">since
-          <input type="date" className={`${input} py-1`} value={state.since ?? ""} onChange={(e) => save({ enrolled: true, since: e.target.value || null })} />
-        </label>
+    <div className="mt-2 space-y-2 text-[12.5px]">
+      {profile ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-taupe">Client profile</span>
+          <div role="radiogroup" aria-label="Stage" className="inline-flex overflow-hidden rounded-full border border-linen-line">
+            {STAGES.map((st) => (
+              <button key={st.value} role="radio" aria-checked={profile.stage === st.value} title={st.hint} disabled={busy}
+                onClick={() => run(async () => { await actions.setStage(profile.client_id, st.value); setProfile({ ...profile, stage: st.value }); })}
+                className={`px-3 py-1 text-[11.5px] transition ${profile.stage === st.value ? "bg-burgundy text-linen" : "text-mahogany/75 hover:text-burgundy"}`}>{st.label}</button>
+            ))}
+          </div>
+          <Link href={actions.profileHref(profile.client_id)} className="text-[11px] uppercase tracking-[0.12em] text-burgundy underline-offset-4 hover:underline">Open profile →</Link>
+        </div>
+      ) : (
+        <button className={btn} disabled={busy} onClick={() => run(async () => {
+          const id = await actions.createProfile(data.clients.map((c) => c.name).filter(Boolean).at(-1) ?? null);
+          setProfile({ client_id: id, name: null, stage: "prospect" });
+        })}>Create client profile</button>
       )}
-      {err && <span role="alert" className="text-[12px] text-burgundy">Couldn’t save.</span>}
+      {suggestions.map((p) => (
+        <p key={p.client_id} className="flex flex-wrap items-center gap-2 rounded-[12px] bg-[#F6ECD9] px-3 py-2 text-[12px] text-[#6E4F18]">
+          Possible match: <b className="font-normal text-mahogany">{p.name ?? p.email}</b> ({STAGES.find((s) => s.value === p.stage)?.label}) has a profile with the same email.
+          <button className="underline underline-offset-4 hover:text-burgundy" disabled={busy}
+            onClick={() => run(async () => { await actions.attachToProfile(p.client_id); setAdded((a) => [...a, p.client_id]); setProfile({ client_id: p.client_id, name: p.name, stage: p.stage }); })}>
+            Add this Map to their profile</button>
+        </p>
+      ))}
+      {err && <p role="alert" className="text-[12px] text-burgundy">{err}</p>}
     </div>
   );
 }

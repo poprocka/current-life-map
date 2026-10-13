@@ -2,8 +2,10 @@
 import React, { useMemo, useState } from "react";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { Workspace } from "@/components/admin/Workspace";
+import { ClientProfile } from "@/components/admin/ClientProfile";
+import { ClientsTable } from "@/components/admin/ClientsTable";
 import { DemoBanner } from "@/components/admin/ui";
-import type { ListFilters, ListRow, ReconRow, WorkspaceData } from "@/server/admin/types";
+import type { AttachmentView, ClientListRow, ClientMap, ClientProfileData, ListFilters, ListRow, ReconRow, SessionView, Stage, WorkspaceData } from "@/server/admin/types";
 import { computeLifeMap } from "@/engine/compute";
 import { generateCoachReport, COACH_REPORT_TEMPLATE_VERSION } from "@/engine/coach/report";
 import { generateDeepDiveScript } from "@/engine/coach/script";
@@ -51,7 +53,71 @@ const PEOPLE: Person[] = [
     booking: { state: "confirmed", payment: "paid", start: ahead(8, 15), tz: "America/New_York", rescheduled: true }, review: "reviewed", follow: "planned", coaching: "2026-10-01" },
   { id: "5d2b7e46-9c1a-4b3f-a6e8-9d3e2f6a8b06", name: "Jordan Lee", email: "jordan@example.com", seed: 5, complete: true, sections: 10, created: 14,
     booking: { state: "cancelled", payment: "refunded", start: ago(2, 14), tz: "Europe/London" }, review: "unreviewed", follow: "none" },
+  // Mira's 3-month follow-up, completed through her private link
+  { id: "d81f4b27-3e6a-4c90-b2d5-0f1e2a3b4c08", name: "Mira Chen", email: "mira@example.com", seed: 7, complete: true, sections: 10, created: 1, review: "unreviewed", follow: "none" },
+  // An older Map someone did with Alex's email (PDF request) — a separate record until Jana confirms it's theirs
+  { id: "6e4c9a10-2b7d-4f15-9a3c-1d2e3f4a5b07", name: null, email: "alex@example.com", seed: 6, complete: true, sections: 10, created: 120, pdf: "delivered", review: "unreviewed", follow: "none" },
 ];
+
+// ── Demo client profiles (in memory; nothing is saved) ─────────────────────
+interface DemoClient { id: string; name: string | null; email: string | null; stage: Stage; since: string | null; changed: string; created: string; maps: { id: string; via: string[] }[];
+  sessions: SessionView[]; notes: ClientProfileData["notes"]; files: AttachmentView[]; invite: string | null; mergedInto?: string }
+const CL = { alex: "c1a0e5b2-7d3f-4a19-8c6e-1f2a3b4c5d01", alexOld: "c1a0e5b2-7d3f-4a19-8c6e-1f2a3b4c5d02", mira: "c1a0e5b2-7d3f-4a19-8c6e-1f2a3b4c5d03",
+  sam: "c1a0e5b2-7d3f-4a19-8c6e-1f2a3b4c5d04", jordan: "c1a0e5b2-7d3f-4a19-8c6e-1f2a3b4c5d05" };
+const iso = (d: string) => new Date(d).toISOString();
+const DEMO_CLIENTS: DemoClient[] = [
+  { id: CL.mira, name: "Mira Chen", email: "mira@example.com", stage: "client", since: "2026-10-01", changed: ago(12), created: ago(9),
+    maps: [{ id: "a9f3c185-6b2d-4e1f-8a37-8c2d1e5f7a05", via: ["booking"] }, { id: "d81f4b27-3e6a-4c90-b2d5-0f1e2a3b4c08", via: ["client_invite"] }],
+    invite: "DEMOinviteTokenOnly-for-preview-3m",
+    sessions: [
+      { id: "s-mira-2", session_date: ahead(5).slice(0, 10), title: "Restoration as the lever", kind: "coaching", assessment_id: "d81f4b27-3e6a-4c90-b2d5-0f1e2a3b4c08",
+        plan: "Compare Map 1 and Map 2: Restoration brighter? Explore what changed in her evenings.\nTry: the 'non-negotiables' exercise.", notes: "", homework: "",
+        created_at: ago(1, 18), updated_at: ago(1, 18), attachments: [] },
+      { id: "s-mira-1", session_date: ago(9).slice(0, 10), title: "Deep Dive", kind: "deep_dive", assessment_id: "a9f3c185-6b2d-4e1f-8a37-8c2d1e5f7a05",
+        plan: "Ambition and restoration; what 'busy season' protects.", notes: "Recognised the trade-off immediately. Challenged the idea that work is chosen: 'it's expected'. Wants rest without guilt.",
+        homework: "Two evenings a week with no work. Note what comes up.", created_at: ago(11, 9), updated_at: ago(9, 17), attachments: [] },
+    ],
+    notes: [{ id: "n-mira-1", body: "Prefers early-morning sessions. Training for a half marathon in spring; protect recovery around long runs.", created_at: ago(9, 18), updated_at: ago(9, 18), attachments: [] }],
+    files: [] },
+  { id: CL.alex, name: "Alex Rivera", email: "alex@example.com", stage: "lead", since: null, changed: ago(3), created: ago(4), maps: [{ id: "3f9c2a71-8d4e-4b1a-9c55-2e7f0a6b1d01", via: ["booking", "pdf_request"] }],
+    sessions: [], notes: [], files: [], invite: null },
+  { id: CL.alexOld, name: null, email: "alex@example.com", stage: "prospect", since: null, changed: ago(120), created: ago(120), maps: [{ id: "6e4c9a10-2b7d-4f15-9a3c-1d2e3f4a5b07", via: ["pdf_request"] }],
+    sessions: [], notes: [], files: [], invite: null },
+  { id: CL.sam, name: null, email: "sam@example.com", stage: "prospect", since: null, changed: ago(6), created: ago(6), maps: [{ id: "e2d7b904-1a6c-4f3e-9d28-7b1c0d4e6f04", via: ["pdf_request"] }],
+    sessions: [], notes: [], files: [], invite: null },
+  { id: CL.jordan, name: "Jordan Lee", email: "jordan@example.com", stage: "lead", since: null, changed: ago(13), created: ago(14), maps: [{ id: "5d2b7e46-9c1a-4b3f-a6e8-9d3e2f6a8b06", via: ["booking"] }],
+    sessions: [], notes: [], files: [], invite: null },
+];
+void iso;
+const blobUrls = new Map<string, string>();
+const live = () => DEMO_CLIENTS.filter((c) => !c.mergedInto);
+const clientOfMap = (aid: string) => live().find((c) => c.maps.some((m) => m.id === aid)) ?? null;
+
+function clientMap(m: { id: string; via: string[] }): ClientMap {
+  const p = PEOPLE.find((x) => x.id === m.id)!;
+  const r = p.complete ? computeLifeMap(Object.fromEntries(Object.entries(answersFor(p.seed)).filter(([k]) => k !== "interconnections.reflection" && !k.startsWith("postmap.")))) : null;
+  return { assessment_id: p.id, created_at: ago(p.created, 9), completed_at: p.complete ? ago(p.created, 9) : null, status: p.complete ? "completed" : "in_progress", link_sources: m.via,
+    orbits: r ? r.orbits.map((o) => ({ orbit: o.orbit, name: o.name, importanceOrdinal: o.importanceOrdinal, energyRaw: o.energyRaw, responseSupportIndex: o.responseSupportIndex })) : null, sunIndex: r?.sun.responseIndex ?? null };
+}
+function profileData(c: DemoClient): ClientProfileData {
+  const maps = c.maps.map(clientMap).sort((a, b) => a.created_at.localeCompare(b.created_at));
+  const matches = c.email ? live().filter((o) => o.id !== c.id && o.email === c.email).map((o) => ({ client_id: o.id, name: o.name, email: o.email, stage: o.stage,
+    assessments: o.maps.filter((m) => !c.maps.some((x) => x.id === m.id)).map((m) => { const p = PEOPLE.find((x) => x.id === m.id)!; return { id: p.id, created_at: ago(p.created, 9), status: p.complete ? "completed" : "in_progress" }; }) }))
+    .filter((m) => m.assessments.length) : [];
+  return { client: { id: c.id, name: c.name, email: c.email, phone: null, stage: c.stage, stage_changed_at: c.changed, created_at: c.created, coaching_enrolled_at: c.since,
+      invite: c.invite ? { token: c.invite, created_at: c.changed } : null },
+    maps, sessions: c.sessions, notes: c.notes, attachments: c.files.filter((f) => !f.session_id && !f.note_id), possibleMatches: matches, viewer: { userId: "demo-coach", role: "admin" } };
+}
+function clientRows(): ClientListRow[] {
+  const todayS = new Date().toISOString().slice(0, 10);
+  return live().map((c) => {
+    const maps = c.maps.map(clientMap);
+    const dates = c.sessions.map((s) => s.session_date).filter((d): d is string => !!d);
+    return { client_id: c.id, name: c.name, email: c.email, stage: c.stage, stage_changed_at: c.changed, created_at: c.created, maps: maps.length,
+      last_map_at: maps.map((m) => m.completed_at ?? m.created_at).sort().at(-1) ?? null, sessions: c.sessions.length,
+      next_session: dates.filter((d) => d >= todayS).sort()[0] ?? null, last_session: dates.filter((d) => d < todayS).sort().at(-1) ?? null };
+  }).sort((a, b) => ["client", "lead", "prospect"].indexOf(a.stage) - ["client", "lead", "prospect"].indexOf(b.stage));
+}
 
 function listRow(p: Person): ListRow {
   return {
@@ -60,6 +126,7 @@ function listRow(p: Person): ListRow {
     coaching_enrolled: !!p.coaching, client_name: p.name, client_email: p.booking && p.email2 ? p.email : p.email, contact_source: [p.pdf && "pdf_request", p.booking && "booking"].filter(Boolean).join(",") || null,
     email_delivery_state: p.pdf ?? null, booking_state: p.booking?.state ?? null, scheduled_start: p.booking?.start ?? null, timezone: p.booking?.tz ?? null,
     payment_state: p.booking?.payment ?? null, report_status: p.complete ? "ready" : null, coach_review_state: p.complete ? p.review : null, follow_up_status: p.follow,
+    client_stage: clientOfMap(p.id)?.stage ?? null,
   };
 }
 
@@ -124,6 +191,8 @@ function workspace(p: Person): WorkspaceData {
       ...(p.complete ? [{ action: "assessment.completed", actor_id: null, target_type: "assessment", created_at: ago(p.created, 9), metadata: null }] : []),
     ],
     relatedAssessments: [],
+    profile: (() => { const c = clientOfMap(p.id); return c ? { client_id: c.id, name: c.name, stage: c.stage } : null; })(),
+    possibleProfiles: (() => { const c = clientOfMap(p.id); return c?.email ? live().filter((o) => o.id !== c.id && o.email === c.email && o.stage !== "prospect").map((o) => ({ client_id: o.id, name: o.name, email: o.email, stage: o.stage })) : []; })(),
     viewer: { userId: "demo-coach", role: "admin" },
   };
 }
@@ -134,7 +203,13 @@ const RECON: ReconRow[] = [{ id: "r1", booked_name: "Pat Morgan", booked_email: 
 function DemoHeader() {
   return (
     <header className="flex items-center justify-between border-b hairline px-6 py-4 sm:px-10">
-      <button onClick={() => navigate("/admin")} className="font-serif text-[20px]">The Current Life Map <span className="text-[11px] uppercase tracking-[0.16em] text-taupe">· Coach workspace</span></button>
+      <div className="flex flex-wrap items-baseline gap-6">
+        <button onClick={() => navigate("/admin")} className="font-serif text-[20px]">The Current Life Map <span className="text-[11px] uppercase tracking-[0.16em] text-taupe">· Coach workspace</span></button>
+        <nav aria-label="Coach workspace" className="flex gap-4 text-[11px] uppercase tracking-[0.14em] text-taupe">
+          <button onClick={() => navigate("/admin")} className="uppercase hover:text-burgundy">Assessments</button>
+          <button onClick={() => navigate("/admin/clients")} className="uppercase hover:text-burgundy">Clients</button>
+        </nav>
+      </div>
       <span className="text-[12px] text-taupe">jana@… · admin (demo)</span>
     </header>
   );
@@ -145,6 +220,9 @@ export function AdminDemo({ path }: { path: string }) {
   const [filters, setFilters] = useState<ListFilters>({});
   const [recon, setRecon] = useState(RECON);
   const id = path.startsWith("/admin/assessments/") ? path.split("/")[3] : null;
+  const clientId = path.startsWith("/admin/clients/") ? path.split("/")[3] : null;
+  const [, bump] = useState(0);
+  const refresh = () => bump((n) => n + 1);
   const rows = useMemo(() => {
     let r = PEOPLE.map(listRow);
     const q = filters.q?.toLowerCase();
@@ -161,10 +239,67 @@ export function AdminDemo({ path }: { path: string }) {
     <div className="min-h-dvh bg-linen">
       <DemoBanner />
       <DemoHeader />
-      {person ? (
+      {path === "/admin/clients" ? (
+        <main className="px-6 py-8 sm:px-10">
+          <h1 className="font-serif text-[32px] font-light">Clients</h1>
+          <div className="mt-6"><ClientsTable rows={clientRows()} profileHref={(i) => `/admin/clients/${i}`} /></div>
+        </main>
+      ) : clientId && DEMO_CLIENTS.find((c) => c.id === clientId) ? (() => {
+        const c0 = DEMO_CLIENTS.find((c) => c.id === clientId)!;
+        const c = c0.mergedInto ? DEMO_CLIENTS.find((x) => x.id === c0.mergedInto)! : c0;
+        const findSession = (sid: string) => c.sessions.find((x) => x.id === sid)!;
+        return <ClientProfile key={c.id + c.maps.length + c.stage} data={profileData(c)} actions={{
+          setStage: async (st, since) => { await later(); c.stage = st; c.since = since; c.changed = new Date().toISOString(); if (st === "client" && !c.invite) c.invite = "DEMO" + Math.random().toString(36).slice(2, 26); },
+          saveDetails: async (d) => { await later(); c.name = d.name; c.email = d.email; },
+          createInvite: async () => { await later(); c.invite = "DEMO" + Math.random().toString(36).slice(2, 26); return c.invite; },
+          revokeInvite: async () => { await later(); c.invite = null; },
+          attach: async (aid) => {
+            await later();
+            if (!c.maps.some((m) => m.id === aid)) c.maps.push({ id: aid, via: ["coach_manual"] });
+            for (const o of DEMO_CLIENTS) if (o.id !== c.id && !o.mergedInto && o.stage === "prospect" && o.maps.every((m) => c.maps.some((x) => x.id === m.id)) && !o.sessions.length && !o.notes.length) o.mergedInto = c.id;
+          },
+          detach: async (aid) => { await later(); c.maps = c.maps.filter((m) => m.id !== aid || !m.via.some((v) => v === "coach_manual" || v === "client_invite")); },
+          search: async (q) => { const t = q.toLowerCase(); return PEOPLE.filter((x) => x.id.startsWith(t) || x.email?.includes(t) || x.name?.toLowerCase().includes(t))
+            .map((x) => ({ assessment_id: x.id, created_at: ago(x.created, 9), status: x.complete ? "completed" : "in_progress", client_name: x.name, client_email: x.email, booking_state: x.booking?.state ?? null })); },
+          saveSession: async (sx) => {
+            await later();
+            if (sx.id) { Object.assign(findSession(sx.id), sx, { title: sx.title || null, updated_at: new Date().toISOString() }); return sx.id; }
+            const sid = "s-" + Math.random().toString(36).slice(2, 10); const now = new Date().toISOString();
+            c.sessions.unshift({ ...sx, id: sid, title: sx.title || null, created_at: now, updated_at: now, attachments: [] }); return sid;
+          },
+          deleteSession: async (sid) => { await later(); c.sessions = c.sessions.filter((x) => x.id !== sid); },
+          saveNote: async (n) => {
+            await later(); const now = new Date().toISOString();
+            if (n.id) { Object.assign(c.notes.find((x) => x.id === n.id)!, { body: n.body, updated_at: now }); return n.id; }
+            const nid = "n-" + Math.random().toString(36).slice(2, 10); c.notes.unshift({ id: nid, body: n.body.trim(), created_at: now, updated_at: now, attachments: [] }); return nid;
+          },
+          deleteNote: async (nid) => { await later(); c.notes = c.notes.filter((x) => x.id !== nid); },
+          upload: async (file, purpose, ids) => {
+            await later(); const aid = "f-" + Math.random().toString(36).slice(2, 10);
+            blobUrls.set(aid, URL.createObjectURL(file));
+            const a: AttachmentView = { id: aid, filename: file.name, content_type: file.type, size_bytes: file.size, purpose, session_id: ids.sessionId ?? null, note_id: ids.noteId ?? null, created_at: new Date().toISOString() };
+            if (ids.sessionId) findSession(ids.sessionId).attachments.push(a); else if (ids.noteId) c.notes.find((x) => x.id === ids.noteId)!.attachments.push(a); else c.files.push(a);
+            return a;
+          },
+          deleteAttachment: async (aid) => { await later(); c.files = c.files.filter((f) => f.id !== aid); for (const x of c.sessions) x.attachments = x.attachments.filter((f) => f.id !== aid); for (const x of c.notes) x.attachments = x.attachments.filter((f) => f.id !== aid); },
+          attachmentHref: (aid) => blobUrls.get(aid) ?? "#",
+          workspaceHref: (aid) => `/admin/assessments/${aid}`,
+          inviteUrl: (token) => `https://map.jasia.design/#invite=${token}`,
+          listHref: "/admin/clients",
+          refresh,
+        }} />;
+      })() : person ? (
         <Workspace key={person.id} data={workspace(person)} actions={{
           saveScript: async () => { await later(); return 3; }, saveNote: async () => { await later(); return "n1"; },
-          setReview: later, setBookingOutcome: later, setName: later, setCoaching: later,
+          setReview: later, setBookingOutcome: later, setName: later,
+          createProfile: async (name) => {
+            await later(); const nid = "c1a0e5b2-7d3f-4a19-8c6e-" + Math.random().toString(16).slice(2, 14).padEnd(12, "0");
+            DEMO_CLIENTS.push({ id: nid, name, email: person.email, stage: "prospect", since: null, changed: new Date().toISOString(), created: new Date().toISOString(), maps: [{ id: person.id, via: ["coach_manual"] }], sessions: [], notes: [], files: [], invite: null });
+            return nid;
+          },
+          setStage: async (cid, st) => { await later(); const c = DEMO_CLIENTS.find((x) => x.id === cid)!; c.stage = st; c.changed = new Date().toISOString(); if (st === "client" && !c.invite) c.invite = "DEMO" + Math.random().toString(36).slice(2, 26); },
+          attachToProfile: async (cid) => { await later(); DEMO_CLIENTS.find((x) => x.id === cid)!.maps.push({ id: person.id, via: ["coach_manual"] }); },
+          profileHref: (cid) => `/admin/clients/${cid}`,
           saveReportVersion: later, saveValidation: later,
           generateUnderstanding: async (validations) => {
             await later();

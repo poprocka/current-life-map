@@ -58,7 +58,7 @@ async function clientFor(sql: Sql, assessmentId: string): Promise<string> {
 /** Enrolled on 1:1 coaching (set by the coach), with an optional start date. */
 export async function setCoachingEnrollment(sql: Sql, coachId: string, assessmentId: string, enrolled: boolean, since: string | null) {
   const clientId = await clientFor(sql, assessmentId);
-  await sql.query(`update clients set coaching_enrolled = $2, coaching_enrolled_at = $3 where id = $1`, [clientId, enrolled, enrolled ? since : null]);
+  await sql.query(`update clients set coaching_enrolled = $2, coaching_enrolled_at = $3, stage = case when $2 then 'client' when stage = 'client' then 'lead' else stage end, stage_changed_at = now() where id = $1`, [clientId, enrolled, enrolled ? since : null]);
   await audit(sql, coachId, enrolled ? "client.coaching_enrolled" : "client.coaching_unenrolled", "assessment", assessmentId);
 }
 

@@ -4,7 +4,13 @@ import { SignOut } from "./connected";
 export function AdminHeader({ email, role }: { email: string | null; role: string }) {
   return (
     <header className="flex items-center justify-between border-b hairline px-6 py-4 sm:px-10">
-      <Link href="/admin" className="font-serif text-[20px]">The Current Life Map <span className="text-[11px] uppercase tracking-[0.16em] text-taupe">· Coach workspace</span></Link>
+      <div className="flex flex-wrap items-baseline gap-6">
+        <Link href="/admin" className="font-serif text-[20px]">The Current Life Map <span className="text-[11px] uppercase tracking-[0.16em] text-taupe">· Coach workspace</span></Link>
+        <nav aria-label="Coach workspace" className="flex gap-4 text-[11px] uppercase tracking-[0.14em] text-taupe">
+          <Link href="/admin" className="hover:text-burgundy">Assessments</Link>
+          <Link href="/admin/clients" className="hover:text-burgundy">Clients</Link>
+        </nav>
+      </div>
       <span className="flex items-center gap-4 text-[12px] text-taupe">{email} · {role}<SignOut /></span>
     </header>
   );
