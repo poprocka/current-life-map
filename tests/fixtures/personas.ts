@@ -47,7 +47,7 @@ export const EXAMPLE_AMBITION = persona({
   energy: { social: -1, growth: 1, restoration: -1, joy: 2, mind: -1, body: 0 },
   orbitTruth: { growth: 3, social: 3, restoration: 1, joy: 2 },
   items: { "restoration.02": 4, "restoration.06": 1, "joy.02": 2, "sun.02": 4, "sun.03": 1, "sun.11": 3, "sun.04": 3, "growth.06": 1, "growth.congruence": 3, "social.congruence": 3, "body.01": 2 },
-  feelings: { growth: ["Hope", "Overwhelm"], restoration: ["Guilt", "Exhaustion", "Rush"], social: ["Recognition", "Pressure"], joy: ["Aliveness", "Delight"], mind: ["Clarity", "Busyness"] },
+  feelings: { growth: ["Hope", "Overwhelm"], restoration: ["Guilt", "Exhaustion", "Rush"], social: ["Recognition", "Pressure"], joy: ["Aliveness", "Delight"], mind: ["Clarity", "Busyness"], body: ["Energy", "Tension"], love: ["Longing"], resources: ["Stability"] },
   ic: { "01": "social", "02": "joy", "03": "restoration", "04": "restoration", "05": "body", "06": "social", "07": "somewhat_compete" },
 });
 
@@ -57,7 +57,7 @@ export const EXAMPLE_WORKING = persona({
   energy: { growth: 2, mind: 1, body: 1, joy: 1, social: 0, restoration: 1, resources: 0, love: 0 },
   orbitTruth: { mind: 3, body: 3, restoration: 3, growth: 3, social: 3, resources: 3, joy: 3, love: 3, sun: 3 },
   items: { "love.02": "na", "love.03": "na", "body.01": 4, "mind.04": 4, "growth.congruence": 4, "mind.congruence": 3, "sun.08": 1, "sun.04": 4 },
-  feelings: { growth: ["Momentum", "Stretch"], joy: ["Peace", "Delight"], restoration: ["Calm", "Replenishment"] },
+  feelings: { growth: ["Momentum", "Stretch"], joy: ["Peace", "Delight"], restoration: ["Calm", "Replenishment"], mind: ["Clarity", "Curiosity"], body: ["Strength", "Energy"], social: ["Belonging", "Support"], love: ["Ease"], resources: ["Security", "Stability"] },
   ic: { "01": "growth", "02": "growth", "03": "mind", "04": "joy", "05": "joy", "06": "resources", "07": "mostly_support" },
 });
 // A well-supported Map has no named gap or trade-off: undo the defaulted selections.
@@ -69,6 +69,6 @@ export const EXAMPLE_STRAIN = persona({
   energy: { resources: -2, social: -1, body: -1, mind: -1, restoration: 0, growth: 0, joy: 1, love: 0 },
   orbitTruth: { resources: 1, social: 1, body: 1, mind: 1, restoration: 1, joy: 2, growth: 2, love: 2, sun: 2 },
   items: { "resources.05": 4, "growth.06": 4, "mind.05": 4, "body.01": 0, "restoration.06": 0, "joy.02": 0, "social.congruence": 0, "sun.01": 4, "sun.06": 0, "resources.congruence": 1 },
-  feelings: { resources: ["Pressure", "Fear", "Constraint"], social: ["Drain", "Pressure"], mind: ["Rumination", "Fatigue"], joy: ["Peace"] },
+  feelings: { resources: ["Pressure", "Fear", "Constraint"], social: ["Drain", "Pressure"], mind: ["Rumination", "Fatigue"], joy: ["Peace"], body: ["Depletion", "Tension"], restoration: ["Restlessness", "Depletion"], growth: ["Uncertainty", "Hope"], love: ["Connection"] },
   ic: { "01": "resources", "02": "joy", "03": "resources", "04": "body", "05": "joy", "06": "social", "07": "strongly_compete" },
 });
