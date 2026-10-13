@@ -47,7 +47,7 @@ export function PersonalInsights({ insights }: { insights: ResultInsights }) {
                 </summary>
                 <div className="mt-3 max-w-[760px] space-y-2 pl-5 text-[13.5px] leading-relaxed text-mahogany/85">
                   {o.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
-                  <QuestionBlock className="!mt-4">{o.question}</QuestionBlock>
+                  <QuestionBlock className="!mt-4" label="A question to ask yourself">{o.question}</QuestionBlock>
                 </div>
               </details>
             </li>
