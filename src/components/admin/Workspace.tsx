@@ -249,6 +249,7 @@ function MapTab({ data, pdfHref }: { data: WorkspaceData; pdfHref: string | null
         <span>Frozen snapshot · scoring <span className="font-mono">{data.result.scoring_version}</span> · generated {fmtDate(data.result.generated_at)} · fingerprint <span className="font-mono">{data.result.sha256.slice(0, 12)}</span> (printed on the client’s PDF)</span>
         {pdfHref && <a className={btn} href={pdfHref} target="_blank" rel="noopener noreferrer">Open client PDF</a>}
       </div>
+      <p className="mt-3 font-serif text-[17px] italic text-mahogany/80">Public Current Life Map: “Here’s what your answers reveal about the life you’re living.” Exactly what they read.</p>
       <div className="mt-2 rounded-[24px] border hairline bg-linen">
         <ResultsView result={data.result.snapshot} insights={generateResultInsights(data.result.snapshot, Object.fromEntries(data.answers.map((a) => [a.question_id, a.value ?? undefined])))} embedded />
       </div>

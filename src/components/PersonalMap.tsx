@@ -149,9 +149,10 @@ export function PersonalMap({ result }: { result: LifeMapResult }) {
  */
 export function MapLegend({ distancePending = true }: { distancePending?: boolean }) {
   const item = "flex items-start gap-3";
-  // Two-column grid, wording by Jana (2026-10-12): energy in | out, steady | brightness, distance | size.
+  // Wording by Jana (2026-10-12). Full width of the Map card: three columns, two rows (2026-10-13):
+  // energy in | energy out | steady  /  brightness | distance | size.
   return (
-    <div className="grid gap-x-8 gap-y-3 text-[12.5px] leading-snug text-mahogany/80 sm:grid-cols-2">
+    <div className="grid gap-x-10 gap-y-4 text-[12.5px] leading-snug text-mahogany/80 sm:grid-cols-2 lg:grid-cols-3">
       <div className={item}><Swatch><FlowSwatch color={IN} inward /></Swatch>
         <span><b className="font-normal text-mahogany">Energy in</b> — This Orbit gives you energy.</span></div>
       <div className={item}><Swatch><FlowSwatch color={OUT} /></Swatch>

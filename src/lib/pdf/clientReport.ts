@@ -9,7 +9,8 @@ import { ORBIT_TINT, orbitGeometry } from "@/components/map-geometry";
 import { OPENING } from "@/content/v10/opening";
 import { snapshotFingerprint } from "@/lib/stable";
 import { reportModel } from "./model";
-import { INSIGHT_DISCLAIMER, type ResultInsights } from "@/engine/insights";
+import { INSIGHT_DISCLAIMER, generateReflectionLayer, type ResultInsights } from "@/engine/insights";
+import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
 
 const LINEN = rgb(0.961, 0.929, 0.886);
 const MAHOGANY = rgb(0.122, 0.078, 0.067);
@@ -79,10 +80,20 @@ export async function buildClientPdf(result: LifeMapResult, opts: PdfOptions = {
   };
   const eyebrow = (s: string) => { need(40); y -= 10; text(s.toUpperCase(), { font: sansBold, size: 7.5, color: BURGUNDY, gap: 4 }); };
 
+  const n = opts.insights;
+  const para = (t: string) => text(t, { size: 10, gap: 6 });
   newPage();
   eyebrow("Your Current Life Map");
-  text(OPENING.title, { font: serif, size: 28, gap: 8 });
-  text(model.intro, { size: 9.5, color: TAUPE, gap: 10 });
+  if (n) {
+    // A. Opening — the same personalised reflection as the results page
+    text(`${n.opening.title}.`, { font: serif, size: 26, gap: 8 });
+    n.opening.paragraphs.forEach((p, i) => (i === n.opening.paragraphs.length - 1 ? text(p.text, { font: serif, size: 12.5, color: BURGUNDY, gap: 8 }) : para(p.text)));
+    y -= 6;
+    text(n.mapIntro, { font: serif, size: 14, gap: 4 });
+  } else {
+    text(OPENING.title, { font: serif, size: 28, gap: 8 });
+    text(model.intro, { size: 9.5, color: TAUPE, gap: 10 });
+  }
 
   // Map — same geometry as the on-screen Map (size = importance, brightness = support proxy, neutral distance)
   const box = 290;
@@ -102,6 +113,8 @@ export async function buildClientPdf(result: LifeMapResult, opts: PdfOptions = {
   for (const l of model.legend) text(l, { size: 7.5, color: TAUPE });
   y -= 8;
 
+  if (n) for (const p of n.mapReading.paragraphs) text(p.text, { size: 9.5, gap: 4 });
+
   eyebrow("Map interpretation");
   for (const r of model.table) {
     need(16);
@@ -115,38 +128,57 @@ export async function buildClientPdf(result: LifeMapResult, opts: PdfOptions = {
   }
 
   eyebrow("Reality Snapshot");
+  if (n) { text(n.standsOut.title, { font: serif, size: 18, gap: 4 }); for (const p of n.standsOut.paragraphs) para(p.text); y -= 4; }
   for (const s of model.snapshot) {
     text(`${s.label}: ${s.orbits}`, { font: serif, size: 13 });
     text(s.body, { size: 9.5, color: TAUPE, gap: 6 });
   }
 
-  if (opts.insights) {
+  if (n) {
+    // D. The Sun and E. Life Interconnections
+    eyebrow("The Sun");
+    text(n.self.title, { font: serif, size: 18, gap: 4 });
+    for (const p of n.self.paragraphs) para(p.text);
+    if (n.self.question) text(n.self.question, { font: serif, size: 11.5, color: BURGUNDY, gap: 6 });
+    eyebrow("Life Interconnections");
+    text(n.connections.title, { font: serif, size: 18, gap: 4 });
+    for (const p of n.connections.paragraphs) para(p.text);
+
+    // F. Five cards
     need(160);
     y -= 14;
     eyebrow("Personal insights");
     text("A closer look at your reality", { font: serif, size: 22, gap: 4 });
-    text("Interpretations of the answers you gave, including the places that support you and the patterns that may deserve attention.", { size: 9.5, color: TAUPE, gap: 6 });
-    opts.insights.cards.forEach((c, i) => {
+    n.cards.forEach((c, i) => {
       need(90);
       y -= 12;
-      text(`INSIGHT ${i + 1} OF ${opts.insights!.cards.length}`, { font: sansBold, size: 7, color: TAUPE, gap: 2 });
+      text(`INSIGHT ${i + 1} OF ${n.cards.length}`, { font: sansBold, size: 7, color: TAUPE, gap: 2 });
       text(c.title, { font: serif, size: 17, gap: 1 });
-      text(c.lead, { size: 9, color: TAUPE, gap: 6 });
+      text(c.lead, { size: 9.5, color: TAUPE, gap: 6 });
       for (const sct of c.sections) {
-        const isQ = sct.id === "begin.question";
-        text(sct.heading, { font: serif, size: 12, color: isQ ? BURGUNDY : MAHOGANY, gap: 1 });
-        text(sct.text, { font: isQ ? serif : sans, size: isQ ? 11 : 9.5, color: isQ ? BURGUNDY : MAHOGANY, gap: 6 });
+        text(sct.heading, { font: serif, size: 12, gap: 1 });
+        text(sct.text, { size: 9.5, gap: 6 });
       }
+      text("Why it may matter", { font: serif, size: 12, gap: 1 });
+      text(c.why, { size: 9.5, gap: 6 });
+      text(c.question, { font: serif, size: 11.5, color: BURGUNDY, gap: 4 });
     });
     text(INSIGHT_DISCLAIMER, { size: 8, color: TAUPE, gap: 4 });
 
+    // G. Eight Orbits
     eyebrow("Your Orbits, one by one");
-    for (const o of opts.insights.orbits) {
+    for (const o of n.orbits) {
       need(60);
       text(o.name, { font: serif, size: 13 });
       for (const p of o.paragraphs) text(p, { size: 9.5, gap: 2 });
       text(o.question, { font: serif, size: 10.5, color: BURGUNDY, gap: 8 });
     }
+
+    // H. A question worth taking with you
+    need(90);
+    eyebrow("A question worth taking with you");
+    text(n.closingQuestion.text, { font: serif, size: 16, color: BURGUNDY, gap: 8 });
+    text(n.deepDiveBridge, { size: 9, color: TAUPE, gap: 4 });
   } else {
     eyebrow("Energy Architecture");
     for (const l of model.reported) text(l, { size: 9.5 });
@@ -156,10 +188,17 @@ export async function buildClientPdf(result: LifeMapResult, opts: PdfOptions = {
 
   const refl = (opts.reflections ?? []).filter((r) => r.text.trim());
   if (refl.length) {
+    // Separate layer, clearly labelled: their words verbatim; the interpretation above is unchanged.
+    const byId = Object.fromEntries(POST_MAP_REFLECTIONS.questions.map((q) => [q.id, refl.find((r) => r.prompt === q.prompt)?.text]));
+    const layer = generateReflectionLayer(result, byId);
     eyebrow("Your reflections");
+    if (layer) text(layer.note, { size: 8.5, color: TAUPE, gap: 6 });
     for (const r of refl) {
       text(r.prompt, { font: sansBold, size: 8.5, color: MAHOGANY, gap: 2 });
-      text(r.text, { font: serif, size: 11, color: MAHOGANY, gap: 8 });
+      text(r.text, { font: serif, size: 11, color: MAHOGANY, gap: 3 });
+      const al = layer?.items.find((i) => i.prompt === r.prompt)?.alongside;
+      if (al) text(al.text, { size: 8.5, color: TAUPE, gap: 3 });
+      y -= 5;
     }
   }
 

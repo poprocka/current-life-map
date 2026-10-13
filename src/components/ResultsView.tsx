@@ -2,24 +2,19 @@
 import { MapLegend, PersonalMap } from "@/components/PersonalMap";
 import { ORBIT_TINT } from "@/components/LifeSystem";
 import type { LifeMapResult } from "@/engine/compute";
-import { OPENING } from "@/content/v10/opening";
 import type { ResultInsights } from "@/engine/insights";
 import { PersonalInsights } from "@/components/PersonalInsights";
-import { ENERGY_SHORT, IMPORTANCE_SHORT, MAP_INTRO, energyInsightsOf } from "@/lib/pdf/model";
+import { ENERGY_SHORT, IMPORTANCE_SHORT } from "@/lib/pdf/model";
 
 /**
  * Exactly what the respondent sees (results page) — also rendered read-only in the coach workspace
  * from the frozen snapshot, so "Client's Map" is the same component and the same data.
  */
-export function ResultsView({ result, insights, children, embedded }: { result: LifeMapResult; insights?: ResultInsights; children?: React.ReactNode; embedded?: boolean }) {
+export function ResultsView({ result, insights, children, embedded, afterMap }: { result: LifeMapResult; insights?: ResultInsights; children?: React.ReactNode; embedded?: boolean; afterMap?: React.ReactNode }) {
   const Root = embedded ? "div" : "main";
   const byId = Object.fromEntries(result.orbits.map((o) => [o.orbit, o]));
-  const giving = result.orbits.filter((o) => (o.energySigned ?? 0) > 0);
-  const taking = result.orbits.filter((o) => (o.energySigned ?? 0) < 0);
   const snapshot = result.snapshot.filter((s) => s.available);
   const distancePending = result.orbits.every((o) => o.congruence === null);
-  // Feelings are quoted only for Orbits already in the energy story, so the list stays specific (spec §9 rule 7).
-  const energyInsights = energyInsightsOf(result);
 
   return (
     <Root className="mx-auto max-w-[1180px] px-6 pb-24 sm:px-10">
@@ -27,21 +22,32 @@ export function ResultsView({ result, insights, children, embedded }: { result: 
         <p className="mt-4 text-center text-[11px] uppercase tracking-[0.16em] text-taupe">Preview · methodology under review</p>
       )}
 
-      {/* 1. Map — in its own block so it stands out (Jana, 2026-10-12) */}
-      <section className="mt-8 rounded-[32px] border hairline bg-linen-deep/70 px-5 pb-10 pt-10 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_24px_60px_-40px_rgba(84,15,38,0.25)] sm:px-10 lg:mt-10 lg:px-14 lg:pb-14 lg:pt-14 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-labelledby="map-h">
-        <header className="mx-auto max-w-[600px] text-center">
+      {/* A. Opening — a personalised reflection before any numbers (brief §4A) */}
+      {insights && (
+        <section className="mx-auto mt-10 max-w-[720px] text-center lg:mt-14" aria-labelledby="open-h">
           <p className="eyebrow">Your Current Life Map</p>
-          <h1 id="map-h" className="mt-3 font-serif text-[28px] font-light leading-[1.1] [text-wrap:balance] sm:text-[34px]">{OPENING.title}</h1>
-          <p className="mx-auto mt-3 max-w-[540px] text-[13px] leading-relaxed text-mahogany/75 [text-wrap:pretty]">
-            {MAP_INTRO}
-          </p>
+          <h1 id="open-h" className="mt-3 font-serif text-[32px] font-light leading-[1.1] [text-wrap:balance] sm:text-[40px]">{insights.opening.title}.</h1>
+          <div className="mt-6 space-y-4 text-left text-[15px] leading-[1.8] text-mahogany/85 [text-wrap:pretty] sm:text-center">
+            {insights.opening.paragraphs.map((p, i) => <p key={i} className={i === insights.opening.paragraphs.length - 1 ? "font-serif text-[19px] italic leading-relaxed text-burgundy" : ""}>{p.text}</p>)}
+          </div>
+        </section>
+      )}
+
+      {/* B. Map — in its own block so it stands out (Jana, 2026-10-12) */}
+      <section className="mt-12 rounded-[32px] border hairline bg-linen-deep/70 px-5 pb-10 pt-10 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_24px_60px_-40px_rgba(84,15,38,0.25)] sm:px-10 lg:px-14 lg:pb-14 lg:pt-12 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-labelledby="map-h">
+        <header className="mx-auto max-w-[600px] text-center">
+          {!insights && <p className="eyebrow">Your Current Life Map</p>}
+          <h2 id="map-h" className="font-serif text-[22px] font-light leading-snug [text-wrap:balance] sm:text-[26px]">
+            {insights?.mapIntro ?? "Here's how the different parts of your life look together, based on what you've shared."}
+          </h2>
         </header>
         {/* Map and table share a row and are centred against each other; the legend sits under the Map (Jana, 2026-10-12) */}
         <div className="mt-4 grid gap-12 lg:mt-2 lg:grid-cols-[1.45fr_1fr] lg:items-center lg:gap-x-16 lg:gap-y-2">
           <div className="min-w-0 lg:col-start-1 lg:row-start-1">
             <PersonalMap result={result} />
           </div>
-          <div className="min-w-0 border-t hairline pt-6 lg:col-start-1 lg:row-start-2"><MapLegend distancePending={distancePending} /></div>
+          {/* Legend spans the full width of the card: three columns, two rows (Jana, 2026-10-13) */}
+          <div className="min-w-0 border-t hairline pt-6 lg:col-span-2 lg:row-start-2"><MapLegend distancePending={distancePending} /></div>
           <div className="min-w-0 lg:col-start-2 lg:row-start-1">
             {/* Visible title removed (Jana, 2026-10-12); the table keeps an accessible name */}
             <div className="overflow-x-auto">
@@ -73,12 +79,23 @@ export function ResultsView({ result, insights, children, embedded }: { result: 
             </div>
           </div>
         </div>
+
+        {/* What is distinctive about this Map (sizes, brightness, energy). Distance is not interpreted while pending. */}
+        {insights && insights.mapReading.paragraphs.length > 0 && (
+          <div className="mx-auto mt-8 max-w-[860px] space-y-3 border-t hairline pt-6 text-[14px] leading-[1.75] text-mahogany/85">
+            {insights.mapReading.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}
+          </div>
+        )}
       </section>
 
-      {/* 2. Reality Snapshot — only cards with real evidence are shown (spec §7.2) */}
+      {/* Book Your Session sits right below the Map (Jana, 2026-10-13) */}
+      {afterMap}
+
+      {/* C. What stands out — the Reality Snapshot, connected into one narrative (brief §4C) */}
       <section className="mt-24" aria-labelledby="snap-h">
         <p className="eyebrow">Reality Snapshot</p>
-        <h2 id="snap-h" className="mt-3 font-serif text-[36px] font-light">Where your life stands today</h2>
+        <h2 id="snap-h" className="mt-3 font-serif text-[36px] font-light">{insights?.standsOut.title ?? "Where your life stands today"}</h2>
+        {insights && <div className="mt-5 max-w-[820px] space-y-3 text-[14.5px] leading-[1.8] text-mahogany/85">{insights.standsOut.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>}
         <div className="mt-10 grid border-l border-t hairline sm:grid-cols-2 lg:grid-cols-3">
           {snapshot.map((s) => (
             <article key={s.key} className="border-b border-r hairline p-7">
@@ -90,8 +107,40 @@ export function ResultsView({ result, insights, children, embedded }: { result: 
         </div>
       </section>
 
-      {/* 3. Personal insights (Decision Guide): five evidence-led cards + eight Orbits. Energy Architecture now lives in its card. */}
+      {insights && (
+        <div className="mt-24 grid gap-14 lg:grid-cols-2 lg:gap-16">
+          {/* D. The Sun */}
+          <section aria-labelledby="self-h">
+            <p className="eyebrow">The Sun</p>
+            <h2 id="self-h" className="mt-3 font-serif text-[32px] font-light leading-tight">{insights.self.title}</h2>
+            <div className="mt-5 space-y-4 text-[14.5px] leading-[1.8] text-mahogany/85">{insights.self.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
+            {insights.self.question && <p className="mt-5 font-serif text-[19px] italic leading-relaxed text-burgundy">{insights.self.question}</p>}
+          </section>
+          {/* E. Life Interconnections */}
+          <section aria-labelledby="links-h">
+            <p className="eyebrow">Life Interconnections</p>
+            <h2 id="links-h" className="mt-3 font-serif text-[32px] font-light leading-tight">{insights.connections.title}</h2>
+            <div className="mt-5 space-y-4 text-[14.5px] leading-[1.8] text-mahogany/85">{insights.connections.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
+          </section>
+        </div>
+      )}
+
+      {/* F + G. Five insight cards and the eight Orbits */}
       {insights && <PersonalInsights insights={insights} />}
+
+      {/* H. A question worth taking with you */}
+      {insights && (
+        <section className="mx-auto mt-24 max-w-[760px] text-center" aria-labelledby="closing-h">
+          <p id="closing-h" className="eyebrow">A question worth taking with you</p>
+          <p className="mt-5 font-serif text-[28px] font-light italic leading-snug text-burgundy [text-wrap:balance] sm:text-[32px]">{insights.closingQuestion.text}</p>
+          {!embedded && afterMap && (
+            <p className="mx-auto mt-8 max-w-[600px] text-[13.5px] leading-relaxed text-mahogany/70">
+              {insights.deepDiveBridge}{" "}
+              <a href="#deep-dive" className="whitespace-nowrap text-burgundy underline underline-offset-4 hover:text-mahogany">Explore your Map with Jana</a>
+            </p>
+          )}
+        </section>
+      )}
 
       {/* "Where attention may matter most" removed from the client view (Jana, 2026-10-12); still in the Coach Report and script */}
       {children}

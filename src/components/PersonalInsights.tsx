@@ -5,8 +5,8 @@ import { INSIGHT_DISCLAIMER } from "@/engine/insights";
 import { ORBIT_TINT } from "@/components/map-geometry";
 
 /**
- * Personal insights below the Map and Reality Snapshot (Decision Guide, 12 Oct 2026):
- * five evidence-led cards that open one at a time, then the eight Orbits one by one.
+ * Personal insights (brief §4F–G): five evidence-led cards that open one at a time — each with a personalised
+ * opening, up to three observations, why it may matter and one question — then the eight Orbits one by one.
  */
 export function PersonalInsights({ insights }: { insights: ResultInsights }) {
   const [open, setOpen] = useState<number | null>(null);
@@ -82,9 +82,17 @@ function InsightDialog({ insights, index, onIndex, onClose }: { insights: Result
           {c.sections.map((s) => (
             <section key={s.id}>
               <h3 className="font-serif text-[22px] font-normal">{s.heading}</h3>
-              <p className={`mt-3 text-[14.5px] leading-[1.8] ${s.id === "begin.question" ? "font-serif text-[18px] italic text-burgundy" : "text-mahogany/85"}`}>{s.text}</p>
+              <p className="mt-3 text-[14.5px] leading-[1.8] text-mahogany/85">{s.text}</p>
             </section>
           ))}
+          <section>
+            <h3 className="font-serif text-[22px] font-normal">Why it may matter</h3>
+            <p className="mt-3 text-[14.5px] leading-[1.8] text-mahogany/85">{c.why}</p>
+          </section>
+          <section>
+            <h3 className="font-serif text-[22px] font-normal">A question to consider</h3>
+            <p className="mt-3 font-serif text-[19px] italic leading-relaxed text-burgundy">{c.question}</p>
+          </section>
         </div>
         <p className="mt-10 text-[11.5px] leading-relaxed text-taupe">{INSIGHT_DISCLAIMER}</p>
         <button onClick={() => (next ? onIndex(index + 1) : onClose())}

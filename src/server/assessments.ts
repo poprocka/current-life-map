@@ -3,6 +3,7 @@ import type { AnswerValue } from "@/content/types";
 import { NOT_APPLICABLE } from "@/content/types";
 import { ACTIVE_QUESTIONS, ASSESSMENT_VERSION, QUESTION_BANK_VERSION, questionById } from "@/content/v10/question-bank";
 import { CHAPTERS } from "@/content/v10/chapters";
+import { generateNarrative } from "@/engine/narrative";
 import { computeLifeMap, type LifeMapResult } from "@/engine/compute";
 import { isComplete, validate } from "@/engine/navigation";
 import { generateCoachReport, COACH_REPORT_TEMPLATE_VERSION } from "@/engine/coach/report";
@@ -123,13 +124,23 @@ export async function completeAssessment(db: Db, token: string): Promise<{ ok: t
     const result = computeLifeMap(scored);
     const sha = await snapshotFingerprint(result);
     const metrics = { sun: { responseIndex: result.sun.responseIndex, coverage: result.sun.coverage }, orbits: result.orbits.map(({ items: _i, ...o }) => o) };
-    const evidence = { insights: result.insights.map((i) => ({ id: i.id, evidence: i.evidence })), snapshot: result.snapshot.map((s) => ({ key: s.key, evidence: s.evidence })) };
+    // Versioned public narrative with evidence provenance (brief §7 step 12): what the person read, and why.
+    const narrative = generateNarrative(result, scored);
+    const evidence = {
+      insights: result.insights.map((i) => ({ id: i.id, evidence: i.evidence })), snapshot: result.snapshot.map((s) => ({ key: s.key, evidence: s.evidence })),
+      narrative: {
+        templateVersion: narrative.templateVersion, versions: narrative.versions,
+        rendered: { opening: narrative.opening, mapReading: narrative.mapReading, standsOut: narrative.standsOut, self: narrative.self, connections: narrative.connections, cards: narrative.cards, orbits: narrative.orbits, closingQuestion: narrative.closingQuestion },
+        observations: narrative.observations.map((o) => ({ id: o.id, rule: o.rule, areas: o.areas, evidence: o.evidence.map((e) => e.questionId), sufficiency: o.sufficiency, wording: o.wording, relevance: o.relevance, usedIn: o.usedIn })),
+        validationIssues: narrative.validationIssues,
+      },
+    };
     const ins = await sql.query<{ generated_at: Date }>(
       `insert into assessment_results (assessment_id, scoring_version, metrics, evidence, snapshot, snapshot_sha256) values ($1,$2,$3,$4,$5,$6) returning generated_at`,
       [a.id, result.versions.scoring, JSON.stringify(metrics), JSON.stringify(evidence), JSON.stringify(result), sha]);
     await sql.query(`update assessments set status = 'completed', completed_at = now(), sections_completed = 10, last_activity_at = now() where id = $1`, [a.id]);
 
-    const pdf = await buildClientPdf(result, { generatedAt: new Date(ins.rows[0].generated_at) });
+    const pdf = await buildClientPdf(result, { generatedAt: new Date(ins.rows[0].generated_at), insights: narrative });
     await sql.query(`insert into report_artifacts (assessment_id, artifact_type, version, checksum, generation_status) values ($1, 'client_pdf', 1, $2, 'ready')`, [a.id, sha256(pdf)]);
     await writeCoachMaterial(sql, a.id, result, answers);
     await audit(sql, null, "assessment.completed", "assessment", a.id, { scoring: result.versions.scoring });

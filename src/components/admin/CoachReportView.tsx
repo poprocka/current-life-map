@@ -67,7 +67,10 @@ export function CoachReportView({ data, answers, actions }: { data: WorkspaceDat
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
       <div className="space-y-6">
-        <p className="rounded-[14px] bg-[#F3E9EC] px-4 py-3 text-[12px] text-burgundy">Private to coaches. Never shown in the client’s results, PDF or any API they can reach.</p>
+        <div className="rounded-[14px] bg-[#F3E9EC] px-4 py-3 text-[12px] text-burgundy">
+          <p className="font-serif text-[15px] italic">Private Coach Report: “Here’s what Jana may want to explore with this person, what the evidence supports, and what still needs to be understood.”</p>
+          <p className="mt-1">Private to coaches. Never shown in the client’s results, PDF or any API they can reach. What they read is in tab B.</p>
+        </div>
         {!intel ? <LegacyReport report={report} answers={answers} /> : (
           <>
             <Section n={1} title="Coach Overview">

@@ -1,0 +1,462 @@
+/**
+ * Library of evidence-backed interpretation rules.
+ *
+ * Each rule reads only direct answers, Life Interconnections selections, or approved calculations (stated
+ * importance, the response-support proxy compared with the F6 tolerance, the energy rating). It produces a
+ * candidate Observation with its supporting answers, alternative readings, wording strength and the places on
+ * the page where it may appear. Nothing here uses distance/congruence metrics, which are not yet approved;
+ * the parallel congruence statement is only ever quoted as the person's own answer.
+ *
+ * Copy is DRAFT for Jana's approval. Tone: warm, observant, direct, never a verdict.
+ */
+import type { OrbitId } from "@/content/types";
+import { ORBIT_IDS } from "@/content/v10/chapters";
+import { type Ctx, cap, isAre, list, pick } from "./context";
+import type { Area, Destination, Evidence, Observation, Sufficiency, Valence, Wording } from "./types";
+
+export interface RuleDoc { id: string; family: string; evidence: string; reads: string; destinations: Destination[] }
+
+/** Human-readable index of the rules (exported to the deliverables pack). */
+export const RULES: RuleDoc[] = [
+  { id: "priority.top", family: "priority", evidence: "[orbit].importance — highest rating (≥ Moderately important)", reads: "What matters most right now.", destinations: ["map", "card.overview"] },
+  { id: "support.similar", family: "support", evidence: "Support proxy for ≥2 Orbits with sufficient answers; spread < 0.10 (F6)", reads: "Support is similar across areas — no winner is named.", destinations: ["map", "card.overview"] },
+  { id: "support.contrast", family: "support", evidence: "Support proxy; spread ≥ 0.10; groups within 0.05 (F6)", reads: "Where support is fuller and thinner, relatively.", destinations: ["map", "card.overview"] },
+  { id: "priority.gap", family: "priority-gap", evidence: "[orbit].importance ≥ Very important AND (lower F6 group or proxy ≤ 0.35) AND ≥1 low statement", reads: "High importance, lower reported support (scenario 1).", destinations: ["opening", "card.tension"] },
+  { id: "priority.strength", family: "strength", evidence: "[orbit].importance ≥ Very important AND (higher F6 group or proxy ≥ 0.75) AND ≥1 high statement", reads: "Matters and feels supported.", destinations: ["card.support", "opening"] },
+  { id: "priority.quiet-supported", family: "strength", evidence: "[orbit].importance ≤ Slightly important AND well supported", reads: "Low importance, high satisfaction (scenario 4) — never told to prioritise.", destinations: ["card.support"] },
+  { id: "priority.quiet-choice", family: "allocation", evidence: "[orbit].importance ≤ Slightly important AND less supported", reads: "A possible conscious allocation — never a deficit.", destinations: ["card.overview"] },
+  { id: "energy.same", family: "asks-gives", evidence: "interconnections.01 = interconnections.02", reads: "Same Orbit is the largest demand and largest source (scenario 5).", destinations: ["opening", "card.energy"] },
+  { id: "energy.exchange", family: "energy", evidence: "interconnections.01 ≠ interconnections.02, both answered", reads: "One area asks, another restores.", destinations: ["card.energy"] },
+  { id: "energy.meaningful-demand", family: "energy", evidence: "[orbit].importance ≥ Very important AND [orbit].energy takes more than it gives", reads: "Demanding and meaningful — not treated as a problem.", destinations: ["card.energy", "opening"] },
+  { id: "energy.balance", family: "energy", evidence: "[orbit].energy for all Orbits", reads: "Which Orbits give and which take.", destinations: ["map", "card.energy"] },
+  { id: "energy.source-takes", family: "mixed", evidence: "interconnections.02 = X AND X.energy takes more than it gives", reads: "Contradictory answers acknowledged (scenario 9).", destinations: ["card.energy"] },
+  { id: "alignment.priority-gap", family: "priority-gap", evidence: "interconnections.05 (+ importance when they differ)", reads: "What matters but gets less time — in their words.", destinations: ["opening", "card.tension", "card.begin"] },
+  { id: "alignment.expectations", family: "expectations", evidence: "interconnections.06 (+ that Orbit's congruence statement)", reads: "Where others' expectations come in.", destinations: ["card.tension", "opening"] },
+  { id: "alignment.lived-values-low", family: "priority-gap", evidence: "Important Orbit AND its congruence statement ≤ Somewhat true", reads: "Their own answer that how they live it doesn't fully reflect what matters.", destinations: ["card.tension"] },
+  { id: "alignment.lived-values-high", family: "strength", evidence: "Important Orbit(s) with congruence statement ≥ Very true", reads: "Lived in line with what matters — in their words.", destinations: ["card.support"] },
+  { id: "self.contrast", family: "self", evidence: "Two Sun statements, one ≥ Very true and one ≤ Somewhat true, from an approved pair", reads: "A difference within the relationship with self (e.g. clarity vs gentleness).", destinations: ["self", "opening"] },
+  { id: "self.strengths", family: "self", evidence: "≥2 Sun statements ≥ Very true", reads: "What they describe as established.", destinations: ["self"] },
+  { id: "self.quieter", family: "self", evidence: "≥2 Sun statements ≤ Somewhat true", reads: "What feels less available right now — no labels.", destinations: ["self"] },
+  { id: "self.values-living", family: "self", evidence: "sun.01 ≥ Very true AND an important Orbit's congruence statement ≤ Somewhat true", reads: "Knowing what they want vs how one area is lived (never 'self-deception').", destinations: ["self"] },
+  { id: "self.even", family: "self", evidence: "Sun answers mostly in the middle", reads: "Fallback.", destinations: ["self"] },
+  { id: "emotion.mixed", family: "emotion", evidence: "[orbit].emotion with expansive + strained/ambivalent selections (proposed tone list)", reads: "States that coexist (scenario 6).", destinations: ["orbit", "card.energy"] },
+  { id: "emotion.strained", family: "emotion", evidence: "[orbit].emotion with ≥2 strained selections and none expansive", reads: "The area is asking something of them.", destinations: ["orbit", "card.energy"] },
+  { id: "emotion.alive", family: "emotion", evidence: "[orbit].emotion with ≥2 expansive selections and none strained", reads: "The area feels alive.", destinations: ["orbit", "card.support"] },
+  { id: "link.demand-crowded", family: "tradeoff", evidence: "interconnections.04 + interconnections.01 (different Orbits)", reads: "A trade-off they named.", destinations: ["opening", "connections", "card.tension"] },
+  { id: "link.ambition-restoration", family: "ambition-restoration", evidence: "Growth/Social importance or interconnections.01 + restoration.02, Restoration support or interconnections.04", reads: "Ambition and restoration (scenarios 2 and 3).", destinations: ["opening", "connections", "card.support"] },
+  { id: "link.body-mind", family: "body-mind", evidence: "body.01 + mind.04 / mind.05 / mind.emotion", reads: "Body and mental clarity — co-occurrence only.", destinations: ["connections"] },
+  { id: "link.career-community", family: "career-belonging", evidence: "Social World career vs community statements (difference ≥ 0.35)", reads: "Career and belonging.", destinations: ["connections"] },
+  { id: "link.permission", family: "permission", evidence: "restoration.06 + joy.02, both ≤ Somewhat true", reads: "Earning rest and pleasure.", destinations: ["opening", "connections"] },
+  { id: "link.standards-care", family: "standards", evidence: "sun.10 + restoration.05 or restoration.02", reads: "Personal standards and self-care.", destinations: ["opening", "connections"] },
+  { id: "link.voice", family: "self-expression", evidence: "love.01/love.02 (answered) + sun.06 or social.03", reads: "Intimacy and self-expression.", destinations: ["connections"] },
+  { id: "link.room-to-grow", family: "resources-freedom", evidence: "resources.06 + growth.05 or Growth importance", reads: "Resources and freedom.", destinations: ["connections"] },
+  { id: "link.familiar", family: "status-quo", evidence: "resources.05 + growth.06 (both endorsed)", reads: "How change feels right now.", destinations: ["opening", "connections", "card.begin"] },
+  { id: "link.growth-joy", family: "growth-joy", evidence: "Growth importance or interconnections.01 + joy.02 / joy.04", reads: "Growth and joy.", destinations: ["connections"] },
+  { id: "link.leverage", family: "leverage", evidence: "interconnections.03 (+ support / interconnections.05)", reads: "Where they believe change would ripple outward.", destinations: ["card.begin", "connections"] },
+  { id: "link.overall", family: "system", evidence: "interconnections.07", reads: "Whether areas help or compete — in their words.", destinations: ["connections", "card.overview"] },
+  { id: "pattern.several", family: "several", evidence: "≥4 Orbits less supported (sufficient answers)", reads: "Several areas at once — never a catalogue (scenario 8).", destinations: ["opening"] },
+  { id: "pattern.well-supported", family: "well-supported", evidence: "All Orbits with sufficient answers ≥ 0.6, none lower, no trade-off named", reads: "Nothing manufactured (scenario 7).", destinations: ["opening", "card.overview"] },
+];
+
+type Draft = {
+  rule: string; family: string; areas: Area[]; evidence: Evidence[]; counterEvidence?: Evidence[];
+  sufficiency: Sufficiency; wording: Wording; valence: Valence; alternatives?: string[]; relevance: number;
+  destinations: Destination[]; text: string; clause: string; question?: string; link?: Observation["link"];
+};
+
+const ENERGY_WORDS: Record<number, string> = { 1: "gives you a lot of energy", 2: "gives you more energy than it takes", 3: "keeps your energy fairly stable", 4: "takes more energy than it gives", 5: "drains a lot of your energy" };
+export const energyWords = (n: number | null) => (n === null ? null : ENERGY_WORDS[n]);
+
+export function buildObservations(c: Ctx): Observation[] {
+  const out: Observation[] = [];
+  const add = (d: Draft) => {
+    const weight = Math.max(0, ...d.areas.filter((a): a is OrbitId => a !== "sun").map((a) => c.imp(a) ?? 0));
+    out.push({
+      id: `${d.rule}:${d.areas.join("+") || "system"}`, counterEvidence: [], alternatives: [], ...d,
+      relevance: Math.round(Math.min(1, d.relevance + 0.08 * weight + (d.evidence.length >= 3 ? 0.03 : 0)) * 1000) / 1000,
+    });
+  };
+  const v = (rule: string, xs: string[]) => pick(xs, `${c.seed}#${rule}`);
+  const N = c.name;
+  const ic = c.ic;
+  const D = ic.largestDemand, S = ic.largestSource, L = ic.leverageSelection, C = ic.crowdedOut, P = ic.priorityGap, E = ic.externalInfluence;
+  const orbits = ORBIT_IDS as OrbitId[];
+  const his = (o: Area) => c.statements(o).filter(c.high);
+  const los = (o: Area) => c.statements(o).filter(c.low);
+
+  // ── Priorities and support ────────────────────────────────────────────────
+  if (c.mostImportant.length) {
+    const m = c.mostImportant;
+    add({ rule: "priority.top", family: "priority", areas: m, evidence: m.map((o) => c.ev(`${o}.importance`)), sufficiency: "explicit", wording: "state", valence: "neutral", relevance: 0.4,
+      destinations: ["map", "card.overview"],
+      text: m.length >= 5
+        ? `You rated ${m.length} of your eight Orbits as "${c.impLabel(m[0])}". A lot of your life matters to you at once, which can be a source of richness and of strain.`
+        : `You placed the most importance on ${list(m.map(N))}. Importance doesn't mean an area must take up most of your time; it tells you what matters in this season.`,
+      clause: `${list(m.map(N))} ${isAre(m.length)} what matters most to you right now` });
+  }
+  if (c.sufficient.length >= 2 && c.spread < 0.1)
+    add({ rule: "support.similar", family: "support", areas: [], evidence: c.sufficient.flatMap((o) => c.supportEv(o.orbit).slice(0, 1)), sufficiency: "comparative", wording: "suggest", valence: "neutral", relevance: 0.3,
+      destinations: ["map", "card.overview"],
+      text: "Your answers describe a similar level of support across most areas of your life. No single area stands far apart from the rest, so the individual statements may say more than any comparison.",
+      clause: "support looks similar across most areas" });
+  else if (c.top.length && c.bottom.length)
+    add({ rule: "support.contrast", family: "support", areas: [...c.top, ...c.bottom], evidence: [...c.top, ...c.bottom].flatMap((o) => c.supportEv(o)), sufficiency: "comparative", wording: "suggest", valence: "neutral", relevance: 0.35,
+      destinations: ["map", "card.overview"],
+      text: `${list(c.top.map(N))} ${isAre(c.top.length)} more supported in your answers; ${list(c.bottom.map(N))} ${isAre(c.bottom.length)} less supported by comparison. These are starting points for reflection, not fixed labels.`,
+      clause: `${list(c.top.map(N))} ${isAre(c.top.length)} more supported than ${list(c.bottom.map(N))}` });
+
+  const gapOrbits = orbits.filter((o) => c.important(o) && c.lessSupported(o) && los(o).length)
+    .sort((a, b) => (c.imp(b) ?? 0) - (c.imp(a) ?? 0) || (c.by[a].responseSupportIndex ?? 1) - (c.by[b].responseSupportIndex ?? 1)).slice(0, 2);
+  const strongOrbits = orbits.filter((o) => c.important(o) && c.moreSupported(o) && his(o).length);
+  if (strongOrbits.length) {
+    const [a1, a2] = strongOrbits;
+    const one = strongOrbits.length === 1;
+    add({ rule: "priority.strength", family: "strength", areas: strongOrbits, evidence: strongOrbits.flatMap((o) => [c.ev(`${o}.importance`), ...his(o).slice(0, 2).map(c.ev)]), sufficiency: "corroborated", wording: "suggest", valence: "strength", relevance: 0.5,
+      destinations: ["card.support", "opening"],
+      text: one
+        ? `${N(a1)} matters to you and feels well supported. You describe ${list(his(a1).slice(0, 2).map(c.capOf))}.`
+        : `${list(strongOrbits.map(N))} matter to you and feel well supported. In ${N(a1)}, you describe ${list(his(a1).slice(0, 2).map(c.capOf))}; in ${N(a2)}, ${list(his(a2).slice(0, 2).map(c.capOf))}.`,
+      clause: `${list(strongOrbits.map(N))} ${one ? "matters" : "matter"} to you and ${one ? "feels" : "feel"} well supported`,
+      question: `What are you already doing in ${N(a1)} that you'd want to protect?` });
+  }
+  {
+    const covered = new Set([...strongOrbits]);
+    const others = c.top.filter((o) => !covered.has(o) && !c.unimportant(o));
+    if (others.length && others.length <= 3)
+      add({ rule: "support.top", family: "strength", areas: others, evidence: others.flatMap((o) => his(o).slice(0, 2).map(c.ev)).concat(others.flatMap((o) => c.supportEv(o).slice(0, 1))), sufficiency: "comparative", wording: "suggest", valence: "strength", relevance: 0.38,
+        destinations: ["card.support"],
+        text: `${list(others.map(N))} ${isAre(others.length)} among the better supported areas in your answers right now. Whatever is helping there may be worth knowing about.`,
+        clause: `${list(others.map(N))} ${isAre(others.length)} among the better supported areas` });
+  }
+  if (S && D !== S && !c.takes(S))
+    add({ rule: "energy.source", family: "strength", areas: [S], evidence: [c.ev("interconnections.02"), c.ev(`${S}.energy`)], sufficiency: "explicit", wording: "state", valence: "strength", relevance: 0.4,
+      destinations: ["card.support"],
+      text: `You named ${N(S)} as the area that gives you the most energy or makes you feel most alive. Notice what is different about the way you experience it.`,
+      clause: `${N(S)} gives you the most energy`,
+      question: `What about ${N(S)} makes you feel more alive, steady or resourced?` });
+
+  for (const o of orbits) {
+    const hi = his(o), lo = los(o);
+    if (gapOrbits.includes(o)) {
+      const l2 = lo.slice(0, 2);
+      add({ rule: "priority.gap", family: "priority-gap", areas: [o], evidence: [c.ev(`${o}.importance`), ...l2.map(c.ev)], counterEvidence: hi.slice(0, 2).map(c.ev),
+        sufficiency: lo.length >= 2 ? "corroborated" : "comparative", wording: "suggest", valence: "tension", relevance: 0.66 + (lo.length >= 2 ? 0.06 : 0),
+        destinations: ["opening", "card.tension"],
+        alternatives: ["That gap doesn't automatically mean something is wrong. It may reflect a demanding season, or a choice you've made for now.", "You may already know this, and be working on it in your own way."],
+        text: v(`gap.${o}`, [
+          `${N(o)} matters a lot to you (you rated it "${c.impLabel(o)}"), and yet ${c.lowPhrase(l2)}.`,
+          `You rated ${N(o)} as "${c.impLabel(o)}". Your answers also suggest that ${c.lowPhrase(l2)}.`,
+        ]),
+        clause: `${N(o)} matters a great deal to you and feels less supported right now`,
+        question: `What would it take for ${N(o)} to feel as supported as it is important to you?` });
+    }
+    if (c.unimportant(o) && c.moreSupported(o))
+      add({ rule: "priority.quiet-supported", family: "strength", areas: [o], evidence: [c.ev(`${o}.importance`), ...hi.slice(0, 2).map(c.ev)], sufficiency: "comparative", wording: "suggest", valence: "strength", relevance: 0.42,
+        destinations: ["card.support"],
+        text: `You don't rate ${N(o)} as a priority right now, yet it's one of the places your answers describe as well supported. Some things work quietly, without needing much of your attention.`,
+        clause: `${N(o)} works quietly in the background` });
+    if (c.unimportant(o) && c.lessSupported(o))
+      add({ rule: "priority.quiet-choice", family: "allocation", areas: [o], evidence: [c.ev(`${o}.importance`), ...lo.slice(0, 2).map(c.ev)], sufficiency: "comparative", wording: "wonder", valence: "neutral", relevance: 0.28,
+        destinations: ["card.overview"],
+        text: `${N(o)} isn't a priority for you right now, and your answers suggest it feels less supported. That may be a conscious allocation of your attention in this season. Low importance doesn't mean it needs fixing.`,
+        clause: `${N(o)} is, for now, a conscious allocation` });
+  }
+
+  // ── Energy ────────────────────────────────────────────────────────────────
+  if (D && S && D === S)
+    add({ rule: "energy.same", family: "asks-gives", areas: [D], evidence: [c.ev("interconnections.01"), c.ev("interconnections.02"), c.ev(`${D}.energy`)], sufficiency: "explicit", wording: "state", valence: "mixed", relevance: 0.74,
+      destinations: ["opening", "card.energy"],
+      alternatives: ["That combination often shows up where something matters deeply. Its cost can also be easy to overlook, precisely because it gives so much back."],
+      text: `You named ${N(D)} both as the area that takes the most of your time and energy and as the one that gives you the most energy back. It asks a lot, and it gives a lot.`,
+      clause: `${N(D)} asks the most of you and gives the most back`,
+      question: `What does ${N(D)} give you that makes its demands worthwhile, and does the exchange still feel like one you're choosing?` });
+  if (D && S && D !== S)
+    add({ rule: "energy.exchange", family: "energy", areas: [D, S], evidence: [c.ev("interconnections.01"), c.ev("interconnections.02")], sufficiency: "explicit", wording: "suggest", valence: "neutral", relevance: 0.42,
+      destinations: ["card.energy"],
+      text: `Between ${N(D)} and ${N(S)}, your energy seems to move in two directions: one asks, the other restores. Neither is good or bad in itself. What matters is whether the exchange feels sustainable and chosen.`,
+      clause: `${N(D)} asks and ${N(S)} restores`,
+      question: `What exactly is ${N(D)} asking of you right now: time, effort, emotion or attention?` });
+  {
+    const md = orbits.filter((o) => c.important(o) && c.takes(o) && o !== D);
+    if (md.length) {
+      const one = md.length === 1;
+      add({ rule: "energy.meaningful-demand", family: "energy", areas: md, evidence: md.flatMap((o) => [c.ev(`${o}.importance`), c.ev(`${o}.energy`)]), sufficiency: "corroborated", wording: "suggest", valence: "mixed", relevance: 0.5,
+        destinations: ["card.energy", "opening"],
+        alternatives: ["An area can be demanding and deeply meaningful at the same time."],
+        text: one
+          ? `${N(md[0])} matters to you, and you also said it ${energyWords(c.energy(md[0]))}. An area can be demanding and deeply meaningful at the same time.`
+          : `${list(md.map(N))} matter to you, and you also said each takes more energy than it gives. An area can be demanding and deeply meaningful at the same time.`,
+        clause: `${list(md.map(N))} ${one ? "matters" : "matter"} to you and also ${one ? "asks" : "ask"} a lot of your energy`,
+        question: `What would make ${N(md[0])} feel less costly to sustain, while keeping what it means to you?` });
+    }
+  }
+  {
+    const giving = orbits.filter(c.gives), taking = orbits.filter(c.takes);
+    if (giving.length || taking.length)
+      add({ rule: "energy.balance", family: "energy", areas: [...giving, ...taking], evidence: [...giving, ...taking].map((o) => c.ev(`${o}.energy`)), sufficiency: "explicit", wording: "state", valence: "neutral", relevance: 0.3,
+        destinations: ["map", "card.energy"],
+        text: [
+          giving.length ? `${list(giving.map(N))} ${giving.length > 1 ? "give" : "gives"} you energy.` : "",
+          taking.length ? `${list(taking.map(N))} ${taking.length > 1 ? "take" : "takes"} more than ${taking.length > 1 ? "they give" : "it gives"}.` : "None of your Orbits is marked as taking more energy than it gives.",
+        ].filter(Boolean).join(" "),
+        clause: giving.length ? `${list(giving.map(N))} ${giving.length > 1 ? "give" : "gives"} you energy` : `${list(taking.map(N))} ${taking.length > 1 ? "take" : "takes"} more energy than ${taking.length > 1 ? "they give" : "it gives"}` });
+  }
+  if (S && c.takes(S))
+    add({ rule: "energy.source-takes", family: "mixed", areas: [S], evidence: [c.ev("interconnections.02"), c.ev(`${S}.energy`)], sufficiency: "explicit", wording: "wonder", valence: "mixed", relevance: 0.56,
+      destinations: ["card.energy"],
+      text: `You chose ${N(S)} as the area that gives you the most energy, and also said it ${energyWords(c.energy(S))}. Both can be true at different moments. It may be worth noticing which feels closer to an ordinary week.`,
+      clause: `${N(S)} both energises and costs you` });
+
+  // ── Alignment ─────────────────────────────────────────────────────────────
+  if (P) {
+    const quiet = c.unimportant(P);
+    add({ rule: "alignment.priority-gap", family: "priority-gap", areas: [P], evidence: [c.ev("interconnections.05"), ...(quiet ? [c.ev(`${P}.importance`)] : [])], sufficiency: "explicit", wording: "state", valence: quiet ? "mixed" : "tension", relevance: 0.72,
+      destinations: ["opening", "card.tension", "card.begin"],
+      alternatives: ["The reason matters more than the label: it may be time, energy, circumstance or something you're still deciding."],
+      text: `You named ${N(P)} as something that matters to you but gets less of your time and energy than you would like.${quiet ? ` You also rated it "${c.impLabel(P)}", so it may matter in a way the importance question didn't capture.` : ""}`,
+      clause: `${N(P)} matters more to you than the time it currently gets`,
+      question: `What gets in the way of giving ${N(P)} the time and energy it deserves, and is that something you'd want to change or accept for now?` });
+  }
+  if (E) {
+    const k = c.keyed(`${E}.congruence`);
+    const lowC = k !== null && k <= 0.25, highC = k !== null && k >= 0.75;
+    add({ rule: "alignment.expectations", family: "expectations", areas: [E], evidence: [c.ev("interconnections.06"), ...(k !== null ? [c.ev(`${E}.congruence`)] : [])], sufficiency: lowC || highC ? "corroborated" : "explicit", wording: "state", valence: lowC ? "tension" : highC ? "mixed" : "neutral", relevance: 0.55 + (lowC ? 0.17 : 0),
+      destinations: ["card.tension", "opening"],
+      alternatives: ["Being influenced by others isn't the same as living someone else's life. Some expectations are ones you share."],
+      text: `You named ${N(E)} as the area most influenced by other people's expectations or social standards.${lowC ? ` You also said the way you live it doesn't fully reflect what genuinely matters to you. Those two answers may be related.` : highC ? " Even so, you said the way you live it reflects what genuinely matters to you. Influence and choice can sit side by side." : " That's useful to notice, and it isn't evidence that your choices are wrong."}`,
+      clause: `${N(E)} is the area most shaped by others' expectations`,
+      question: `Which parts of ${N(E)} feel like choices you've made, and which feel like choices you've inherited?` });
+  }
+  {
+    const lowLived = orbits.filter((o) => c.important(o) && o !== E && c.low(`${o}.congruence`));
+    for (const o of lowLived.slice(0, 2))
+      add({ rule: "alignment.lived-values-low", family: "priority-gap", areas: [o], evidence: [c.ev(`${o}.importance`), c.ev(`${o}.congruence`)], sufficiency: "explicit", wording: "state", valence: "tension", relevance: 0.54,
+        destinations: ["card.tension"],
+        text: `Asked whether the way you live ${N(o)} reflects what genuinely matters to you, you answered "${c.label(`${o}.congruence`)}". It's one answer, so hold it lightly, but it may point to a difference between what you value and how this area currently runs.`,
+        clause: `how you live ${N(o)} doesn't fully reflect what matters to you`,
+        question: `If ${N(o)} reflected what genuinely matters to you, what would be different in an ordinary week?` });
+    const highLived = orbits.filter((o) => c.important(o) && c.high(`${o}.congruence`));
+    if (highLived.length)
+      add({ rule: "alignment.lived-values-high", family: "strength", areas: highLived, evidence: highLived.flatMap((o) => [c.ev(`${o}.importance`), c.ev(`${o}.congruence`)]), sufficiency: "explicit", wording: "state", valence: "strength", relevance: 0.44,
+        destinations: ["card.support"],
+        text: `You said the way you live ${list(highLived.map(N))} reflects what genuinely matters to you, not what you feel you should do. That's not a small thing.`,
+        clause: `${list(highLived.map(N))} ${highLived.length > 1 ? "are" : "is"} lived in line with what matters to you` });
+  }
+
+  // ── Relationship with yourself ────────────────────────────────────────────
+  const PAIRS: { a: string; b: string; text: string; clause: string; question: string }[] = [
+    { a: "sun.02", b: "sun.03", text: "You can admit to yourself when something isn't right. Being honest with yourself without being cruel to yourself feels less available, though. Seeing clearly and being gentle with what you see are two different skills.", clause: "you see clearly what isn't right, while being gentle with yourself about it feels harder", question: "How do you speak to yourself when you notice something isn't right?" },
+    { a: "sun.01", b: "sun.06", text: "You know what you truly want, even when others expect something different. Standing by your needs when it might disappoint someone feels less true right now. Knowing and acting on what you know don't necessarily move together.", clause: "you know what you want, while standing by it when it might disappoint someone feels harder", question: "Where does knowing what you want stop, and acting on it begin to feel costly?" },
+    { a: "sun.04", b: "sun.08", text: "You trust yourself with important decisions, while following through on the promises you make to yourself feels less true. Confidence in your judgment and consistency with yourself may be asking for different kinds of support.", clause: "you trust your judgment, while keeping promises to yourself feels harder", question: "Which promises to yourself are hardest to keep, and what tends to come first instead?" },
+    { a: "sun.11", b: "sun.10", text: "You have a sense of what gives your life meaning. Keeping your own wellbeing a priority when life gets difficult feels less true, though. Meaning can keep you going; it doesn't always look after you.", clause: "you have a sense of meaning, while your own wellbeing slips under pressure", question: "When life gets difficult, what is usually the first thing you let go of?" },
+    { a: "sun.05", b: "sun.06", text: "You set boundaries that respect your needs, though holding them when it might disappoint someone feels harder. A boundary that's clear on paper can still be costly in the moment.", clause: "you set boundaries, while holding them under disappointment feels harder", question: "Whose disappointment is hardest for you to sit with?" },
+  ];
+  const pair = PAIRS.find((p) => c.high(p.a) && c.low(p.b));
+  if (pair)
+    add({ rule: "self.contrast", family: "self", areas: ["sun"], evidence: [c.ev(pair.a), c.ev(pair.b)], sufficiency: "corroborated", wording: "suggest", valence: "mixed", relevance: 0.66,
+      destinations: ["self", "opening"],
+      alternatives: ["Neither answer is a flaw. The relationship with yourself is built in parts, and the parts don't all develop at the same pace."],
+      text: pair.text, clause: pair.clause, question: pair.question });
+  {
+    const used = pair ? [pair.a, pair.b] : [];
+    const hi = his("sun").filter((i) => !used.includes(i)), lo = los("sun").filter((i) => !used.includes(i));
+    if (hi.length >= 2)
+      add({ rule: "self.strengths", family: "self", areas: ["sun"], evidence: hi.slice(0, 3).map(c.ev), sufficiency: "corroborated", wording: "suggest", valence: "strength", relevance: 0.48,
+        destinations: ["self"],
+        text: `${v("self.str", ["Some parts of this relationship appear well established. You describe", "There's something steady here. You describe"])} ${list(hi.slice(0, 3).map(c.capOf))}.`,
+        clause: `you describe ${list(hi.slice(0, 2).map(c.capOf))}` });
+    if (lo.length >= 2)
+      add({ rule: "self.quieter", family: "self", areas: ["sun"], evidence: lo.slice(0, 2).map(c.ev), sufficiency: "corroborated", wording: "suggest", valence: "tension", relevance: 0.46,
+        destinations: ["self"],
+        alternatives: ["These may be parts of the relationship that are still being built, rather than something missing."],
+        text: `${cap(c.lowPhrase(lo.slice(0, 2)))}. These may be parts of the relationship that are still being built, rather than something missing.`,
+        clause: c.lowPhrase(lo.slice(0, 2)) });
+    if (!pair && hi.length < 2 && lo.length < 2 && c.result.sun.confidence !== "insufficient")
+      add({ rule: "self.even", family: "self", areas: ["sun"], evidence: c.statements("sun").filter(c.answered).slice(0, 3).map(c.ev), sufficiency: "single", wording: "wonder", valence: "neutral", relevance: 0.15,
+        destinations: ["self"],
+        text: "Your answers about your relationship with yourself sit mostly in the middle, not strongly one way or the other. That can mean things feel steady, or that some of these questions are still open for you.",
+        clause: "your relationship with yourself sits mostly in the middle" });
+  }
+  {
+    const o = orbits.find((x) => c.important(x) && c.low(`${x}.congruence`));
+    if (o && c.high("sun.01"))
+      add({ rule: "self.values-living", family: "self", areas: ["sun", o], evidence: [c.ev("sun.01"), c.ev(`${o}.importance`), c.ev(`${o}.congruence`)], sufficiency: "corroborated", wording: "wonder", valence: "mixed", relevance: 0.58,
+        destinations: ["self"],
+        text: `You describe knowing what you truly want. In ${N(o)}, though, you said the way you live it doesn't fully reflect what genuinely matters to you. That isn't a contradiction so much as a place where knowing and living may not yet line up.`,
+        clause: `knowing what you want and how you live ${N(o)} may not yet line up`,
+        question: "Where does what you already know about yourself show up in how you live, and where doesn't it yet?" });
+  }
+
+  // ── Feelings (wording only; never scored) ─────────────────────────────────
+  for (const o of orbits) {
+    const t = c.tones(o);
+    const names = c.by[o].emotions.map((e) => e.label);
+    if (!names.length) continue;
+    const evE = [c.ev(`${o}.emotion`)];
+    if (t.expansive.length && (t.strained.length || t.ambivalent.length))
+      add({ rule: "emotion.mixed", family: "emotion", areas: [o], evidence: evE, sufficiency: "explicit", wording: "state", valence: "mixed", relevance: 0.36,
+        destinations: ["orbit", "card.energy"],
+        text: `You chose ${list(names)} to describe ${N(o)}. These states can coexist, often when something matters and is also stretching you.`,
+        clause: `${N(o)} brings ${list(names.map((x) => x.toLowerCase()))} at the same time` });
+    else if (t.strained.length >= 2 && !t.expansive.length)
+      add({ rule: "emotion.strained", family: "emotion", areas: [o], evidence: evE, sufficiency: "explicit", wording: "suggest", valence: "tension", relevance: 0.4,
+        destinations: ["orbit", "card.energy"],
+        text: `The feelings you chose for ${N(o)} (${list(names.map((x) => x.toLowerCase()))}) suggest it is asking something of you right now.`,
+        clause: `${N(o)} brings ${list(names.map((x) => x.toLowerCase()))}` });
+    else if (t.expansive.length >= 2 && !t.strained.length)
+      add({ rule: "emotion.alive", family: "emotion", areas: [o], evidence: evE, sufficiency: "explicit", wording: "suggest", valence: "strength", relevance: 0.36,
+        destinations: ["orbit", "card.support"],
+        text: `You chose ${list(names.map((x) => x.toLowerCase()))} for ${N(o)}, which suggests it feels alive for you at the moment.`,
+        clause: `${N(o)} feels alive` });
+  }
+
+  // ── Life interconnections (≥2 responses or an explicit Interconnections answer) ──
+  if (C && D && C !== D)
+    add({ rule: "link.demand-crowded", family: "tradeoff", areas: [D, C], evidence: [c.ev("interconnections.04"), c.ev("interconnections.01")], sufficiency: "explicit", wording: "wonder", valence: "tension", relevance: 0.74, link: "stated-influence",
+      destinations: ["opening", "connections", "card.tension"],
+      alternatives: ["A trade-off can be temporary, deliberate and right for this season."],
+      text: `You said ${N(C)} receives less care because another part of your life demands so much, and you named ${N(D)} as what takes the most of your time and energy. These two answers may be describing the same trade-off.`,
+      clause: `${N(C)} seems to be making room for ${N(D)}`,
+      question: `Is the space ${N(C)} has right now a trade-off you'd choose again for this season?` });
+  {
+    const amb = (["growth", "social"] as OrbitId[]).filter((o) => (c.important(o) && !c.lessSupported(o)) || D === o);
+    const restFriction = c.low("restoration.02"); // reverse-keyed: endorsing "rest is sacrificed" → low keyed
+    const restLow = restFriction || c.lessSupported("restoration") || C === "restoration";
+    const restHigh = c.moreSupported("restoration") && !restFriction && C !== "restoration";
+    if (amb.length) {
+      const ambEv = amb.map((o) => (D === o ? c.ev("interconnections.01") : c.ev(`${o}.importance`)));
+      const restEv = restFriction ? [c.ev("restoration.02")] : C === "restoration" ? [c.ev("interconnections.04")] : c.supportEv("restoration").slice(0, 3);
+      const what = list(amb.map(N));
+      if (restLow)
+        add({ rule: "link.ambition-restoration", family: "ambition-restoration", areas: [...amb, "restoration"], evidence: [...ambEv, ...restEv], sufficiency: "corroborated", wording: "suggest", valence: "tension", relevance: 0.76, link: "co-occurrence",
+          destinations: ["opening", "connections"],
+          alternatives: ["That doesn't automatically mean you're doing too much. You may genuinely enjoy the pace you're moving at."],
+          text: `${what} ${amb.length > 1 ? "seem" : "seems"} to matter a great deal to you${amb.some((o) => o === D) ? ", and to receive a lot of your attention" : ""}. Your answers also suggest that ${restFriction ? "rest and personal care tend to be the first things you sacrifice when life gets busy" : C === "restoration" ? "Restoration is the area receiving less care because of other demands" : "Restoration hasn't been receiving the same space"}.`,
+          clause: `${what} ${amb.length > 1 ? "are" : "is"} getting a lot of your energy while restoration gets less`,
+          question: "What would change if you gave the same attention to your recovery that you give to your ambitions?" });
+      else if (restHigh)
+        add({ rule: "link.ambition-restoration", family: "strength", areas: [...amb, "restoration"], evidence: [...ambEv, ...c.supportEv("restoration").slice(0, 2)], sufficiency: "corroborated", wording: "suggest", valence: "strength", relevance: 0.52, link: "co-occurrence",
+          destinations: ["connections", "card.support"],
+          text: `${what} ${amb.length > 1 ? "matter" : "matters"} a lot to you, and Restoration also appears well supported in your answers. Ambition and recovery don't easily sit together; in your answers they seem to be making room for each other.`,
+          clause: "ambition and recovery seem to be making room for each other" });
+    }
+  }
+  {
+    const tired = c.low("body.01");
+    const mindStrain = c.low("mind.04") || c.low("mind.05") || c.tones("mind").ids.includes("fatigue");
+    if (tired && mindStrain) {
+      const mEv = c.low("mind.04") ? "mind.04" : c.low("mind.05") ? "mind.05" : "mind.emotion";
+      const mText = mEv === "mind.04" ? "knowing what helps you feel calm and grounded when overwhelmed feels less available" : mEv === "mind.05" ? "overthinking, comparison or worry take more of your attention than you want" : "fatigue is one of the feelings you chose for Mind";
+      add({ rule: "link.body-mind", family: "body-mind", areas: ["body", "mind"], evidence: [c.ev("body.01"), c.ev(mEv)], sufficiency: "corroborated", wording: "wonder", valence: "tension", relevance: 0.58, link: "co-occurrence",
+        destinations: ["connections"],
+        text: `Two answers sit side by side: having enough physical energy for everyday demands feels less true right now, and ${mText}. Body and mind often affect each other, though your answers alone can't say which way it runs.`,
+        clause: "low physical energy and mental strain appear together",
+        question: "When your body has more energy, what changes in your mind, and the other way round?" });
+    } else if (c.high("body.01") && c.high("mind.04"))
+      add({ rule: "link.body-mind", family: "strength", areas: ["body", "mind"], evidence: [c.ev("body.01"), c.ev("mind.04")], sufficiency: "corroborated", wording: "suggest", valence: "strength", relevance: 0.38, link: "co-occurrence",
+        destinations: ["connections"],
+        text: "You describe having enough physical energy for everyday demands, and knowing what helps you feel calm and grounded when things get overwhelming. Body and mind seem to be supporting each other.",
+        clause: "body and mind seem to support each other" });
+  }
+  {
+    const st = c.by.social.subthemes;
+    if (st && st.career !== null && st.community !== null && Math.abs(st.career - st.community) >= 0.35) {
+      const workUp = st.career > st.community;
+      add({ rule: "link.career-community", family: "career-belonging", areas: ["social"], evidence: ["social.04", "social.02", "social.06"].filter(c.answered).map(c.ev), sufficiency: "corroborated", wording: "suggest", valence: "mixed", relevance: 0.52, link: "co-occurrence",
+        destinations: ["connections"],
+        text: workUp
+          ? "Within Social World, work and community read differently: your answers about work are more positive than your answers about belonging and being seen. One part of this Orbit may be carrying the other."
+          : "Within Social World, community and work read differently: you describe more belonging and connection than ease with the time and energy you give to work.",
+        clause: workUp ? "work feels steadier than belonging" : "belonging feels steadier than work",
+        question: workUp ? "Where, outside work, do you feel most like yourself among other people?" : "What would make the time and energy you give to work feel right for the life you want?" });
+    }
+  }
+  if (c.low("restoration.06") && c.low("joy.02"))
+    add({ rule: "link.permission", family: "permission", areas: ["restoration", "joy"], evidence: [c.ev("restoration.06"), c.ev("joy.02")], sufficiency: "corroborated", wording: "suggest", valence: "tension", relevance: 0.64, link: "co-occurrence",
+      destinations: ["opening", "connections"],
+      alternatives: ["It may be a pattern, or simply what this season allows."],
+      text: "Resting without guilt and enjoying pleasure without feeling you need to earn it both feel less true for you right now. Together, they raise a question about how much permission you give yourself simply to receive.",
+      clause: "rest and pleasure both seem to need earning first",
+      question: "What would rest or pleasure feel like if you didn't have to earn it first?" });
+  if (c.low("sun.10") && (c.low("restoration.05") || c.low("restoration.02"))) {
+    const perfect = c.low("restoration.05");
+    add({ rule: "link.standards-care", family: "standards", areas: ["sun", "restoration"], evidence: [c.ev("sun.10"), c.ev(perfect ? "restoration.05" : "restoration.02")], sufficiency: "corroborated", wording: "wonder", valence: "tension", relevance: 0.6, link: "co-occurrence",
+      destinations: ["opening", "connections"],
+      text: perfect
+        ? "Keeping your wellbeing a priority when life gets difficult feels less true for you, and self-care can feel like another thing to do perfectly. Together, these answers may describe a high bar, where caring for yourself becomes one more thing to get right."
+        : "Keeping your wellbeing a priority when life gets difficult feels less true for you, and rest tends to be the first thing to go when life gets busy. Under pressure, your own care may be what gives way first.",
+      clause: "your own care gives way first under pressure",
+      question: "What happens to your own care when the pressure rises, and what would you want to keep, no matter what?" });
+  }
+  {
+    const loveLow = ["love.01", "love.02"].find((i) => c.answered(i) && c.low(i));
+    const voiceLow = ["sun.06", "social.03"].find(c.low);
+    if (loveLow && voiceLow)
+      add({ rule: "link.voice", family: "self-expression", areas: ["love", voiceLow.startsWith("sun") ? "sun" : "social"], evidence: [c.ev(loveLow), c.ev(voiceLow)], sufficiency: "corroborated", wording: "wonder", valence: "tension", relevance: 0.55, link: "co-occurrence",
+        destinations: ["connections"],
+        text: `${cap(c.capOf(loveLow))} feels less true right now, and so does ${c.capOf(voiceLow)}. Expressing what you need may be a thread running through more than one part of your life.`,
+        clause: "expressing what you need feels harder in more than one place",
+        question: "Where is it easiest for you to say what you need, and what makes it easier there?" });
+  }
+  if (c.low("resources.06") && (c.high("growth.05") || c.important("growth")))
+    add({ rule: "link.room-to-grow", family: "resources-freedom", areas: ["resources", "growth"], evidence: [c.ev("resources.06"), c.high("growth.05") ? c.ev("growth.05") : c.ev("growth.importance")], sufficiency: "corroborated", wording: "wonder", valence: "mixed", relevance: 0.5, link: "co-occurrence",
+      destinations: ["connections"],
+      text: `${c.high("growth.05") ? "You describe growing into the person you want to become" : "Growth matters a great deal to you"}, while having enough freedom and room to grow in your financial and living situation feels less true. Your inner direction and your practical circumstances may be moving at different speeds.`,
+      clause: "your inner direction and practical room to grow are moving at different speeds",
+      question: "What would a little more room, practically, make possible for you?" });
+  if (c.low("resources.05") && c.low("growth.06"))
+    add({ rule: "link.familiar", family: "status-quo", areas: ["resources", "growth"], evidence: [c.ev("resources.05"), c.ev("growth.06")], sufficiency: "corroborated", wording: "wonder", valence: "tension", relevance: 0.62, link: "co-occurrence",
+      destinations: ["opening", "connections", "card.begin"],
+      alternatives: ["Staying with what's familiar can also be wise. Not every change is the right one, or the right one now."],
+      text: "You describe staying in familiar financial or living circumstances because change feels uncertain, and knowing what would help you grow but putting it off. Both answers touch on how change feels to you right now.",
+      clause: "change, in more than one area, feels uncertain right now",
+      question: "What are you protecting by keeping things as they are, and what might you be ready to explore?" });
+  if ((c.important("growth") || D === "growth") && (c.low("joy.02") || c.low("joy.04")) && !(c.low("restoration.06") && c.low("joy.02"))) {
+    const j = c.low("joy.04") ? "joy.04" : "joy.02";
+    add({ rule: "link.growth-joy", family: "growth-joy", areas: ["growth", "joy"], evidence: [D === "growth" ? c.ev("interconnections.01") : c.ev("growth.importance"), c.ev(j)], sufficiency: "corroborated", wording: "wonder", valence: "tension", relevance: 0.5, link: "co-occurrence",
+      destinations: ["connections"],
+      text: `Growth matters a lot to you, while ${j === "joy.04" ? "making time for what makes you feel alive" : "enjoying pleasure or rest without needing to earn it"} feels less true right now. Growth and joy can feed each other, or one can quietly take the other's place.`,
+      clause: "growth may be taking some of joy's space",
+      question: "Which parts of your growth feel joyful, and which feel like obligation?" });
+  }
+  if (L) {
+    const less = c.lessSupported(L), same = L === P;
+    add({ rule: "link.leverage", family: "leverage", areas: [L], evidence: [c.ev("interconnections.03"), ...(same ? [c.ev("interconnections.05")] : [])], sufficiency: "explicit", wording: "state", valence: "neutral", relevance: 0.58 + (less || same ? 0.08 : 0),
+      destinations: ["card.begin", "connections"],
+      text: `You chose ${N(L)} as the area where improvement could positively influence the rest of your life.${less ? " It's also one of the less supported areas in your answers, which may be part of why it feels like a lever." : ""}${same ? " It's also what you said gets less of your time than you'd like." : ""}`,
+      clause: `you see ${N(L)} as the area that could lift the rest`,
+      question: `If ${N(L)} improved even a little, what would you notice first in the rest of your life?` });
+  }
+  if (ic.overallSupport) {
+    const v7 = ic.overallSupport.value;
+    add({ rule: "link.overall", family: "system", areas: [], evidence: [c.ev("interconnections.07")], sufficiency: "explicit", wording: "state", valence: v7.includes("compete") ? "tension" : v7.includes("support") ? "strength" : "mixed", relevance: 0.34,
+      destinations: ["connections", "card.overview"],
+      text: v7 === "mix"
+        ? "Asked whether the areas of your life mostly help each other or compete, you said it's a mix of both."
+        : `Asked whether the areas of your life mostly help each other or compete, you said they ${ic.overallSupport.label.replace(/^They /, "").toLowerCase()}.`,
+      clause: v7 === "mix" ? "your areas of life both help and compete" : `the areas of your life ${ic.overallSupport.label.replace(/^They /, "").toLowerCase()}` });
+  }
+
+  // ── Whole-Map patterns ────────────────────────────────────────────────────
+  const lower = orbits.filter((o) => c.by[o].supportConfidence === "sufficient" && (c.by[o].responseSupportIndex ?? 1) <= 0.4);
+  if (lower.length >= 4) {
+    const byImp = [...lower].sort((a, b) => (c.imp(b) ?? 0) - (c.imp(a) ?? 0)).slice(0, 3);
+    add({ rule: "pattern.several", family: "several", areas: byImp, evidence: byImp.flatMap((o) => c.supportEv(o).slice(0, 2)), sufficiency: "corroborated", wording: "suggest", valence: "tension", relevance: 0.85,
+      destinations: ["opening"],
+      alternatives: ["That's a lot to carry, and it may help to look at it one piece at a time rather than all at once."],
+      text: `Your answers describe a season in which several parts of life are asking for care at the same time, among them ${list(byImp.map(N))}.`,
+      clause: "several parts of life are asking for care at once" });
+  }
+  const allGood = c.sufficient.length >= 6 && c.sufficient.every((o) => o.responseSupportIndex! >= 0.6) && !P && !C;
+  if (allGood) {
+    const best = c.top.length ? c.top : c.mostImportant;
+    add({ rule: "pattern.well-supported", family: "well-supported", areas: best, evidence: c.sufficient.flatMap((o) => c.supportEv(o.orbit).slice(0, 1)), sufficiency: "corroborated", wording: "suggest", valence: "strength", relevance: 0.68,
+      destinations: ["opening", "card.overview"],
+      alternatives: ["A Map like this isn't a reason to look for a problem."],
+      text: `Across your answers, most areas of your life appear well supported${best.length ? `, with ${list(best.map(N))} standing out` : ""}.`,
+      clause: "most areas of your life appear well supported",
+      question: "What is making your life work right now, and how would you protect it if things became busier?" });
+  }
+
+  return out.sort((a, b) => b.relevance - a.relevance || a.id.localeCompare(b.id));
+}

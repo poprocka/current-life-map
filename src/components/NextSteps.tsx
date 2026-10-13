@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import type { LifeMapResult } from "@/engine/compute";
 
 /** Set NEXT_PUBLIC_BOOKING_ENABLED=1 once Calendly is connected. Until then the button says so honestly. */
 const BOOKING_ENABLED = process.env.NEXT_PUBLIC_BOOKING_ENABLED === "1";
@@ -8,14 +7,11 @@ const BOOKING_ENABLED = process.env.NEXT_PUBLIC_BOOKING_ENABLED === "1";
 type SendState = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind: "error"; message: string };
 
 /**
- * Optional next steps after the results (spec §7.7):
- *  - receive the PDF by email (real delivery only; never a simulated "sent")
- *  - book the 60-minute Life Map Deep Dive ($125)
- * Each links to the Privacy & Data Use Notice, which explains how the email or booking details are used.
+ * Optional next steps (spec §7.7), now two separate cards (Jana, 2026-10-13):
+ *  - DeepDiveCard: book the Life Map Deep Dive — placed directly below the Map
+ *  - PdfCard: receive the PDF by email (real delivery only; never a simulated "sent") — at the end, after the reflections
  */
-export function NextSteps({ result, token }: { result: LifeMapResult; token?: string }) {
-  const [email, setEmail] = useState("");
-  const [state, setState] = useState<SendState>({ kind: "idle" });
+export function DeepDiveCard({ token }: { token?: string }) {
   const [booking, setBooking] = useState<{ kind: "idle" | "working" } | { kind: "error"; message: string }>({ kind: "idle" });
 
   /** The server creates a one-time link token for this Map, then we open the scheduler. No answers leave this site. */
@@ -40,6 +36,42 @@ export function NextSteps({ result, token }: { result: LifeMapResult; token?: st
     }
   }
 
+  return (
+    <section id="deep-dive" className="mt-8 scroll-mt-8" aria-label="Life Map Deep Dive">
+      {/* Deep Dive */}
+      <div className="grid gap-6 rounded-[28px] bg-burgundy p-8 text-linen sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-16">
+        <div>
+        <p className="text-[10.5px] uppercase tracking-eyebrow text-linen/70">Life Map Deep Dive</p>
+        <h2 className="mt-3 font-serif text-[30px] font-light leading-tight">Explore your Map with Jana</h2>
+        <p className="mt-3 max-w-[640px] text-[13.5px] leading-relaxed text-linen/85">
+          A private 60-minute session to look closely at your present reality: what your Map shows, how the areas of your
+          life affect one another, and what it means for you right now.
+        </p>
+        </div>
+        <div className="lg:text-right">
+        {BOOKING_ENABLED ? (
+          <>
+            <button type="button" onClick={book} disabled={booking.kind === "working"}
+              className="inline-block rounded-full bg-linen px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-white disabled:opacity-70">
+              {booking.kind === "working" ? "Opening…" : "Book Your Session"}
+            </button>
+            {booking.kind === "error" && <p role="status" className="mt-3 text-[12.5px] text-linen">{booking.message}</p>}
+          </>
+        ) : (
+          <span aria-disabled="true" className="inline-block cursor-not-allowed rounded-full bg-linen/30 px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen/80">
+            Booking opens soon
+          </span>
+        )}
+      </div>
+      </div>
+    </section>
+  );
+}
+
+export function PdfCard({ token }: { token?: string }) {
+  const [email, setEmail] = useState("");
+  const [state, setState] = useState<SendState>({ kind: "idle" });
+
   async function send(e: React.FormEvent) {
     e.preventDefault();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -63,14 +95,17 @@ export function NextSteps({ result, token }: { result: LifeMapResult; token?: st
   }
 
   return (
-    <section className="mt-6 grid gap-6 lg:grid-cols-2" aria-label="Next steps">
+    <section className="mt-6" aria-label="Receive your results as a PDF">
       {/* PDF by email */}
-      <div className="rounded-[28px] border hairline p-8 sm:p-10">
+      <div className="grid gap-6 rounded-[28px] border hairline p-8 sm:p-10 lg:grid-cols-[1fr_1.1fr] lg:items-center lg:gap-16">
+        <div>
         <p className="eyebrow">Keep your Map</p>
         <h2 className="mt-3 font-serif text-[30px] font-light leading-tight">Receive your results as a PDF</h2>
         <p className="mt-3 text-[13.5px] leading-relaxed text-mahogany/75">
           We’ll email you a copy of your Current Life Map and interpretation.
         </p>
+        </div>
+        <div>
         <form onSubmit={send} className="mt-6 flex flex-col gap-3 sm:flex-row" noValidate>
           <label htmlFor="pdf-email" className="sr-only">Email address</label>
           <input
@@ -92,28 +127,6 @@ export function NextSteps({ result, token }: { result: LifeMapResult; token?: st
           {state.kind === "error" && <span className="text-burgundy">{state.message}</span>}
         </p>
       </div>
-
-      {/* Deep Dive */}
-      <div className="rounded-[28px] bg-burgundy p-8 text-linen sm:p-10">
-        <p className="text-[10.5px] uppercase tracking-eyebrow text-linen/70">Life Map Deep Dive</p>
-        <h2 className="mt-3 font-serif text-[30px] font-light leading-tight">Explore your Map with Jana</h2>
-        <p className="mt-3 text-[13.5px] leading-relaxed text-linen/85">
-          A private 60-minute session to look closely at your present reality: what your Map shows, how the areas of your
-          life affect one another, and what it means for you right now.
-        </p>
-        {BOOKING_ENABLED ? (
-          <>
-            <button type="button" onClick={book} disabled={booking.kind === "working"}
-              className="mt-6 inline-block rounded-full bg-linen px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-white disabled:opacity-70">
-              {booking.kind === "working" ? "Opening…" : "Book Your Session"}
-            </button>
-            {booking.kind === "error" && <p role="status" className="mt-3 text-[12.5px] text-linen">{booking.message}</p>}
-          </>
-        ) : (
-          <span aria-disabled="true" className="mt-6 inline-block cursor-not-allowed rounded-full bg-linen/30 px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen/80">
-            Booking opens soon
-          </span>
-        )}
       </div>
     </section>
   );

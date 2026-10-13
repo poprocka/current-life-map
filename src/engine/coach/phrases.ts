@@ -72,7 +72,7 @@ export const PHRASES: Record<string, Phrase> = {
   "resources.05": { cap: "openness to changing financial or living circumstances", friction: "staying in familiar financial or living circumstances because change feels uncertain" },
   "resources.06": { cap: "enough freedom and room to grow in their financial and living situation" },
   // Joy
-  "joy.01": { cap: "regularly doing things simply because they bring joy" },
+  "joy.01": { cap: "regularly doing things purely for the joy of it" },
   "joy.02": { cap: "enjoying pleasure or rest without needing to earn it" },
   "joy.03": { cap: "room for creativity, beauty, play or meaningful experiences" },
   "joy.04": { cap: "making time for what makes them feel alive" },

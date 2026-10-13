@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ResultsView } from "@/components/ResultsView";
-import { NextSteps } from "@/components/NextSteps";
+import { DeepDiveCard, PdfCard } from "@/components/NextSteps";
 import { OptionalReflections } from "@/components/OptionalReflections";
 import { readStored } from "@/lib/useInterview";
 import { computeLifeMap, type LifeMapResult } from "@/engine/compute";
@@ -35,11 +35,10 @@ export default function Results() {
     );
 
   return (
-    <ResultsView result={result} insights={generateResultInsights(result, answers)}>
-      {/* Optional reflections, expandable, directly above the PDF and Deep Dive cards (Jana, 2026-10-12) */}
-      <OptionalReflections token={token} />
-      {/* Next steps — PDF by email and Life Map Deep Dive */}
-      <NextSteps result={result} token={token} />
+    <ResultsView result={result} insights={generateResultInsights(result, answers)} afterMap={<DeepDiveCard token={token} />}>
+      {/* Optional reflections: one visible, "Show all" for the rest (Jana, 2026-10-13); then the PDF card */}
+      <OptionalReflections token={token} result={result} />
+      <PdfCard token={token} />
     </ResultsView>
   );
 }
