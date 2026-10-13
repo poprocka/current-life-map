@@ -34,18 +34,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
           {insights.opening.paragraphs.slice(2).map((p, i) => (
             <p key={i} className="mt-6 text-left font-serif text-[19px] italic leading-relaxed text-burgundy">{p.text}</p>
           ))}
-          {/* What you shared: the answers behind the central theme, in plain words (approved 13 Oct) */}
-          {insights.opening.major && (
-            <details className="group mt-6 text-left">
-              <summary className="cursor-pointer list-none text-[11px] uppercase tracking-[0.16em] text-taupe hover:text-burgundy">
-                What this is based on <span aria-hidden className="inline-block transition group-open:rotate-90">›</span>
-              </summary>
-              <ul className="mt-4 space-y-1.5 border-t hairline pt-4 text-[12.5px] leading-relaxed text-mahogany/80">
-                {insights.opening.major.shared.map((x, i) => <li key={i}>{x}</li>)}
-              </ul>
-              <p className="mt-3 text-[11.5px] text-taupe">Your answers are the authority here. If this doesn't fit, trust what you know.</p>
-            </details>
-          )}
+          {/* "What this is based on" removed from the page (Jana, 2026-10-13); the answers behind the theme stay in the stored record. */}
         </section>
       )}
 

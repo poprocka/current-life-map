@@ -88,11 +88,7 @@ export async function buildClientPdf(result: LifeMapResult, opts: PdfOptions = {
     // A. Opening — the same personalised reflection as the results page
     text(`${n.opening.title}.`, { font: serif, size: 26, gap: 8 });
     n.opening.paragraphs.forEach((p, i) => (i === n.opening.paragraphs.length - 1 ? text(p.text, { font: serif, size: 12.5, color: BURGUNDY, gap: 8 }) : para(p.text)));
-    if (n.opening.major) {
-      text("WHAT THIS IS BASED ON", { font: sansBold, size: 7, color: TAUPE, gap: 2 });
-      for (const x of n.opening.major.shared) text(`- ${x}`, { size: 8.5, color: TAUPE, gap: 1 });
-      y -= 6;
-    }
+
     y -= 6;
     text(n.mapIntro, { font: serif, size: 14, gap: 4 });
   } else {
