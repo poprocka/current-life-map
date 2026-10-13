@@ -18,6 +18,7 @@ export function PersonalInsights({ insights }: { insights: ResultInsights }) {
       <p className="mt-3 max-w-[640px] text-[13.5px] leading-relaxed text-mahogany/75">
         Interpretations of the answers you gave, including the places that support you and the patterns that may deserve attention.
       </p>
+      <p className="mt-2 max-w-[640px] text-[11.5px] leading-relaxed text-taupe">{INSIGHT_DISCLAIMER}</p>
       <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {cards.map((c, i) => (
           <button key={c.key} onClick={() => setOpen(i)}
@@ -101,7 +102,8 @@ function InsightDialog({ insights, index, onIndex, onClose }: { insights: Result
           </div>
         </div>
         <div className="mt-10 grid gap-6 lg:mt-8 [@media(min-width:1024px)_and_(max-height:940px)]:mt-5 lg:grid-cols-2 lg:items-center lg:gap-14">
-          <p className="text-[11.5px] leading-relaxed text-taupe">{INSIGHT_DISCLAIMER}</p>
+          {/* Disclaimer removed from the popups (Jana, 2026-10-13); it appears once under the section intro */}
+          <span aria-hidden className="hidden lg:block" />
           <button onClick={() => (next ? onIndex(index + 1) : onClose())}
             className="flex w-full items-center justify-between rounded-[16px] border hairline bg-white px-6 py-4 [@media(min-width:1024px)_and_(max-height:940px)]:py-3 text-left transition hover:border-burgundy/40">
             <span><span className="block text-[11px] text-taupe">{next ? "Next insight" : "Return to"}</span>
