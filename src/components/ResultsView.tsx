@@ -24,16 +24,20 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
 
       {/* A. Opening — a personalised reflection before any numbers (brief §4A) */}
       {insights && (
-        <section className="mx-auto mt-10 max-w-[720px] text-center lg:mt-14" aria-labelledby="open-h">
-          <p className="eyebrow">Your Current Life Map</p>
-          <h1 id="open-h" className="mt-3 font-serif text-[32px] font-light leading-[1.1] [text-wrap:balance] sm:text-[40px]">{insights.opening.title}.</h1>
-          <div className="mt-6 space-y-4 text-left text-[15px] leading-[1.8] text-mahogany/85 [text-wrap:pretty] sm:text-center">
-            {insights.opening.paragraphs.map((p, i) => <p key={i} className={i === insights.opening.paragraphs.length - 1 ? "font-serif text-[19px] italic leading-relaxed text-burgundy" : ""}>{p.text}</p>)}
+        <section className="mx-auto mt-10 max-w-[1000px] lg:mt-14" aria-labelledby="open-h">
+          <p className="eyebrow text-center">Your Current Life Map</p>
+          <h1 id="open-h" className="mt-3 text-center font-serif text-[32px] font-light leading-[1.1] [text-wrap:balance] sm:text-[40px]">{insights.opening.title}.</h1>
+          {/* Two paragraphs side by side, left-aligned (Jana, 2026-10-13); the closing line of the reflection sits beneath */}
+          <div className="mt-8 grid gap-6 text-left text-[15px] leading-[1.8] text-mahogany/85 [text-wrap:pretty] md:grid-cols-2 md:gap-12">
+            {insights.opening.paragraphs.slice(0, 2).map((p, i) => <p key={i}>{p.text}</p>)}
           </div>
+          {insights.opening.paragraphs.slice(2).map((p, i) => (
+            <p key={i} className="mt-6 text-left font-serif text-[19px] italic leading-relaxed text-burgundy">{p.text}</p>
+          ))}
           {/* What you shared: the answers behind the central theme, in plain words (approved 13 Oct) */}
           {insights.opening.major && (
-            <details className="group mx-auto mt-6 max-w-[620px] text-left">
-              <summary className="cursor-pointer list-none text-center text-[11px] uppercase tracking-[0.16em] text-taupe hover:text-burgundy">
+            <details className="group mt-6 text-left">
+              <summary className="cursor-pointer list-none text-[11px] uppercase tracking-[0.16em] text-taupe hover:text-burgundy">
                 What this is based on <span aria-hidden className="inline-block transition group-open:rotate-90">›</span>
               </summary>
               <ul className="mt-4 space-y-1.5 border-t hairline pt-4 text-[12.5px] leading-relaxed text-mahogany/80">
