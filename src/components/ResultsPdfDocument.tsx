@@ -64,12 +64,13 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
         </div>
       </section>
 
-      {/* ── What the Map shows ── */}
+      {/* ── Map interpretation: the table (beside the Map on the page) and the written reading (behind a button there),
+          both printed open here, the table across the full width so it reads easily in A4 ── */}
       <section className="mt-10">
         <p className="eyebrow pdf-with-next">Your Map</p>
-        <h2 className={h2}>What stands out on your Map</h2>
-        {insights && <div className={`mt-4 space-y-3 ${body}`}>{insights.mapReading.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>}
-        <div className="pdf-keep mt-7 rounded-[20px] border hairline px-6 pb-3 pt-5"><MapTable result={result} /></div>
+        <h2 className={h2}>Map interpretation</h2>
+        <div className="pdf-keep mt-5 rounded-[20px] border hairline px-6 pb-3 pt-5"><MapTable result={result} wide /></div>
+        {insights && <div className={`mt-6 space-y-3 ${body}`}>{insights.mapReading.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>}
       </section>
 
       {/* ── Reality Snapshot ── */}
@@ -172,12 +173,7 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
         </section>
       )}
 
-      <footer className="pdf-keep mt-14 border-t hairline pt-6 text-center">
-        <p className="font-serif text-[20px] font-light text-mahogany">Questions or feedback?</p>
-        <p className="mt-1 text-[13.5px] text-mahogany/80">
-          Write to <a href={`mailto:${CONTACT_EMAIL}`} className="text-burgundy underline underline-offset-4">{CONTACT_EMAIL}</a>
-        </p>
-      </footer>
+      {/* Contact: "Questions or feedback? hello@jasia.design" is in the footer of every page */}
     </main>
   );
 }
