@@ -1,4 +1,5 @@
 "use client";
+import { CONTACT_EMAIL, CONTACT_INVITE } from "@/content/contact";
 import { MapLegend, PersonalMap } from "@/components/PersonalMap";
 import { ORBIT_TINT } from "@/components/LifeSystem";
 import type { LifeMapResult } from "@/engine/compute";
@@ -38,13 +39,16 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
         <section className="mx-auto mt-10 max-w-[1000px] lg:mt-14" aria-labelledby="open-h">
           <p className="eyebrow text-center">Your Current Life Map</p>
           <h1 id="open-h" className="mt-3 text-center font-serif text-[32px] font-light leading-[1.1] [text-wrap:balance] sm:text-[40px]">{insights.opening.title}.</h1>
-          {/* Two paragraphs side by side, left-aligned (Jana, 2026-10-13); the closing line of the reflection sits beneath */}
+          {/* Two paragraphs side by side, left-aligned; the closing question sits in the second column under its paragraph (Jana, 2026-10-13) */}
           <div className="mt-8 grid gap-6 text-left text-[14px] leading-[1.75] text-mahogany/85 [text-wrap:pretty] md:grid-cols-2 md:gap-12">
-            {insights.opening.paragraphs.slice(0, 2).map((p, i) => <p key={i}>{p.text}</p>)}
+            <p>{insights.opening.paragraphs[0]?.text}</p>
+            <div>
+              {insights.opening.paragraphs[1] && <p>{insights.opening.paragraphs[1].text}</p>}
+              {insights.opening.paragraphs.slice(2).map((p, i) => (
+                <p key={i} className="mt-6 font-serif text-[19px] italic leading-relaxed text-burgundy [text-wrap:pretty]">{p.text}</p>
+              ))}
+            </div>
           </div>
-          {insights.opening.paragraphs.slice(2).map((p, i) => (
-            <p key={i} className="mt-8 text-center font-serif text-[19px] italic leading-relaxed text-burgundy [text-wrap:balance] lg:[text-wrap:wrap]" /* one line where it fits, never wider than the two paragraphs (Jana, 2026-10-13) */>{p.text}</p>
-          ))}
           {/* "What this is based on" removed from the page (Jana, 2026-10-13); the answers behind the theme stay in the stored record. */}
         </section>
       )}
@@ -142,7 +146,9 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
 
       {/* "Where attention may matter most" removed from the client view (Jana, 2026-10-12); still in the Coach Report and script */}
       {children}
-      {reference && <p className="mt-16 text-center text-[11px] text-taupe">Reference {reference} · the same reference appears on your PDF</p>}
+      {/* Same friendly line as the PDF footer (Jana, 2026-10-13) */}
+      <p className="mt-16 text-center text-[12.5px] text-mahogany/75">{CONTACT_INVITE} <a href={`mailto:${CONTACT_EMAIL}`} className="text-burgundy underline decoration-burgundy/30 underline-offset-4 hover:decoration-burgundy">{CONTACT_EMAIL}</a></p>
+      {reference && <p className="mt-2 text-center text-[11px] text-taupe">Reference {reference}</p>}
     </Root>
   );
 }

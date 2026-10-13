@@ -61,11 +61,14 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
           <>
             <h1 className="mt-3 font-serif text-[40px] font-light leading-[1.1]">{insights.opening.title}.</h1>
             <div className={`mt-5 grid grid-cols-2 gap-10 ${body}`}>
-              {insights.opening.paragraphs.slice(0, 2).map((p, i) => <p key={i}>{p.text}</p>)}
+              <p>{insights.opening.paragraphs[0]?.text}</p>
+              <div>
+                {insights.opening.paragraphs[1] && <p>{insights.opening.paragraphs[1].text}</p>}
+                {insights.opening.paragraphs.slice(2).map((p, i) => (
+                  <p key={i} className="mt-4 font-serif text-[18px] italic leading-relaxed text-burgundy">{p.text}</p>
+                ))}
+              </div>
             </div>
-            {insights.opening.paragraphs.slice(2).map((p, i) => (
-              <p key={i} className="mt-5 text-center font-serif text-[19px] italic leading-relaxed text-burgundy [text-wrap:balance]">{p.text}</p>
-            ))}
           </>
         ) : <h1 className="mt-3 font-serif text-[40px] font-light leading-[1.1]">Your reality, as it is right now.</h1>}
       </section>
@@ -187,7 +190,7 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
         </section>
       )}
 
-      {/* Contact: "Questions or feedback? hello@jasia.design" is in the footer of every page */}
+      {/* Contact: the friendly contact line is in the footer of every page */}
     </main>
   );
 }

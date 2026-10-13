@@ -85,7 +85,7 @@ Attachments on client profiles (session plans, homework, notes, profile files) a
 ## The emailed PDF: headless Chromium (Oct 13)
 
 The PDF is the results page itself, printed by headless Chromium on the server (every insight open, every Orbit
-expanded, no buttons; footer: "Questions or feedback? hello@jasia.design"). The HTML is rendered from the frozen
+expanded, no buttons; footer: "Questions or feedback? We'd love to hear from you. hello@jasia.design"). The HTML is rendered from the frozen
 snapshot and handed to Chromium with all network requests blocked, so nothing about the person leaves the server.
 
 - **Vercel / serverless:** `npm install @sparticuz/chromium@^138` (a Chromium build that fits a function). The renderer
