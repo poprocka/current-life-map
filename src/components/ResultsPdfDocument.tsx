@@ -139,7 +139,7 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
                 </p>
                 <div className="mt-2 space-y-1.5 pl-5 text-[13.5px] leading-relaxed text-mahogany/85">
                   {o.paragraphs.map((p, k) => <p key={k}>{p}</p>)}
-                  <QuestionBlock size="sm" className="!mt-3" label="A question to ask yourself">{o.question}</QuestionBlock>
+                  <QuestionBlock size="sm" className="!mt-3">{o.question}</QuestionBlock>
                 </div>
               </li>
             ))}

@@ -47,7 +47,7 @@ export function PersonalInsights({ insights }: { insights: ResultInsights }) {
                 </summary>
                 <div className="mt-3 max-w-[760px] space-y-2 pl-5 text-[13.5px] leading-relaxed text-mahogany/85">
                   {o.paragraphs.map((p, i) => <p key={i}>{p}</p>)}
-                  <QuestionBlock className="!mt-4" label="A question to ask yourself">{o.question}</QuestionBlock>
+                  <QuestionBlock className="!mt-4">{o.question}</QuestionBlock>
                 </div>
               </details>
             </li>
@@ -114,10 +114,8 @@ export function InsightBody({ c }: { c: ResultInsights["cards"][number] }) {
           <h3 className="font-serif text-[21px] font-normal">Why it may matter</h3>
           <p className="mt-2 text-[14.5px] leading-[1.75] text-mahogany/85 [@media(min-width:1024px)_and_(max-height:940px)]:text-[14px] [@media(min-width:1024px)_and_(max-height:940px)]:leading-[1.65]">{c.why}</p>
         </section>
-        <section>
-          <h3 className="font-serif text-[21px] font-normal">A question to consider</h3>
-          <QuestionBlock className="mt-2">{c.question}</QuestionBlock>
-        </section>
+        {/* One consistent label inside every question block (Jana, 2026-10-13) */}
+        <QuestionBlock>{c.question}</QuestionBlock>
       </div>
     </div>
   );
