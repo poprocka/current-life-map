@@ -456,11 +456,6 @@ function NotesTab({ data, actions }: { data: WorkspaceData; actions: WorkspaceAc
           <button className={`${btnPrimary} mt-3 w-full`} onClick={save}>Save notes</button>
           {status && <p role="status" className="mt-2 text-[11.5px] text-mahogany/80">{status}</p>}
         </Card>
-        <Card title="Later assessments by this client">
-          {data.relatedAssessments.length ? <ul className="space-y-1 text-[12px]">{data.relatedAssessments.map((a) => (
-            <li key={a.id}><Link className="font-mono text-burgundy underline-offset-4 hover:underline" href={`/admin/assessments/${a.id}`}>{shortId(a.id)}</Link> · {fmtDate(a.created_at)} <Badge v={a.status} /></li>
-          ))}</ul> : <p className="text-[12px] text-taupe">None linked.</p>}
-        </Card>
       </aside>
     </div>
   );
