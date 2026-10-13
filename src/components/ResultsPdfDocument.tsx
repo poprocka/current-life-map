@@ -17,6 +17,20 @@ import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
  */
 const body = "text-[13px] leading-[1.65] text-mahogany/85"; // smaller paragraph text for print (Jana, 2026-10-13)
 const h2 = "mt-2 font-serif text-[30px] font-light leading-tight";
+const h3 = "mt-2 font-serif text-[23px] font-light leading-tight";
+
+/** Every major section opens the same way: a rule, the navigation label as eyebrow, then the title (clear hierarchy). */
+function SectionHead({ eyebrow, title }: { eyebrow: string; title: string }) {
+  return (
+    // outer padding keeps the rule clear of the page edge when a section starts a new page
+    <div className="pdf-keep pdf-with-next pt-1">
+      <div className="border-t hairline pt-6">
+        <p className="eyebrow">{eyebrow}</p>
+        <h2 className={h2}>{title}</h2>
+      </div>
+    </div>
+  );
+}
 
 export function ResultsPdfDocument({ result, insights, reflections = [], generatedAt, reference }: {
   result: LifeMapResult;
@@ -65,87 +79,84 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
         </div>
       </section>
 
-      {/* ── Map interpretation: the table (beside the Map on the page) and the written reading (behind a button there),
-          both printed open here, the table across the full width so it reads easily in A4 ── */}
-      <section className="mt-10">
-        <p className="eyebrow pdf-with-next">Your Map</p>
-        <h2 className={h2}>Map interpretation</h2>
-        <div className="pdf-keep mt-5 rounded-[20px] border hairline px-6 pb-3 pt-5"><MapTable result={result} wide /></div>
+      {/* ── Your Life Map: the table and the written interpretation, printed open ── */}
+      <section className="mt-12">
+        <SectionHead eyebrow="Your Life Map" title="Map interpretation" />
+        <div className="pdf-keep mt-5 pt-1"><div className="rounded-[18px] border hairline bg-linen-deep/40 px-6 pb-2 pt-4"><MapTable result={result} wide /></div></div>
         {insights && <div className={`mt-6 space-y-3 ${body}`}>{insights.mapReading.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>}
       </section>
 
-      {/* ── Reality Snapshot ── */}
+      {/* ── What Stands Out: the Reality Snapshot. Every cell draws its own four lines (collapsed by -1px margins), so the
+          grid keeps all its lines even where it continues onto a new page (Jana, 2026-10-13) ── */}
       <section className="mt-12">
-        <p className="eyebrow pdf-with-next">Reality Snapshot</p>
-        <h2 className={h2}>{insights?.standsOut.title ?? "Where your life stands today"}</h2>
+        <SectionHead eyebrow="What Stands Out" title={insights?.standsOut.title ?? "Where your life stands today"} />
         {insights && <div className={`mt-4 space-y-3 ${body}`}>{insights.standsOut.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>}
-        <div className="pdf-keep mt-6 grid grid-cols-3 border-l border-t hairline">
+        <div className="pdf-keep mt-4 pt-2">
+        <div className="grid grid-cols-3 pl-px pt-px">
           {snapshot.map((s) => (
-            <article key={s.key} className="border-b border-r hairline p-5">
+            <article key={s.key} className="-ml-px -mt-px border border-linen-line p-5">
               <p className="eyebrow">{s.label}</p>
-              <p className="mt-2 font-serif text-[24px] font-light leading-tight">{s.orbits.map((id) => byId[id].name).join(" · ")}</p>
-              <p className="mt-2 text-[12.5px] leading-relaxed text-mahogany/75">{s.body}</p>
+              <p className="mt-2 font-serif text-[22px] font-light leading-tight">{s.orbits.map((id) => byId[id].name).join(" · ")}</p>
+              <p className="mt-2 text-[12px] leading-relaxed text-mahogany/75">{s.body}</p>
             </article>
           ))}
         </div>
+        </div>
       </section>
 
-      {/* ── Your Life System: the Sun, Life Interconnections and the eight Orbits, grouped as on the page ── */}
+      {/* ── How It Connects: the Sun, Life Interconnections and the eight Orbits ── */}
       {insights && (
         <section className="mt-12">
-          <p className="eyebrow pdf-with-next">Your Life System</p>
-          <h2 className={h2}>How the parts of your life connect</h2>
+          <SectionHead eyebrow="How It Connects" title="How the parts of your life connect" />
           <div className="mt-6 grid grid-cols-2 gap-10">
-          <section className="pdf-keep">
-            <p className="eyebrow">The Sun</p>
-            <h2 className={h2}>{insights.self.title}</h2>
-            <div className={`mt-4 space-y-3 ${body}`}>{insights.self.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
-            {insights.self.question && <QuestionBlock size="sm" className="mt-4">{insights.self.question}</QuestionBlock>}
-          </section>
-          <section className="pdf-keep">
-            <p className="eyebrow">Life Interconnections</p>
-            <h2 className={h2}>{insights.connections.title}</h2>
-            <div className={`mt-4 space-y-3 ${body}`}>{insights.connections.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
-          </section>
-        </div>
-          <div className="mt-10">
-          <p className="eyebrow pdf-with-next">Your Orbits, one by one</p>
-          <ul className="mt-4 border-t hairline">
-            {insights.orbits.map((o) => (
-              <li key={o.orbit} className="pdf-keep border-b hairline py-4">
-                <p className="flex items-center gap-3 font-serif text-[21px] font-light">
-                  <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: ORBIT_TINT[o.orbit] }} />{o.name}
-                </p>
-                <div className="mt-2 space-y-1.5 pl-5 text-[13.5px] leading-relaxed text-mahogany/85">
-                  {o.paragraphs.map((p, k) => <p key={k}>{p}</p>)}
-                  <QuestionBlock size="sm" className="!mt-3">{o.question}</QuestionBlock>
-                </div>
-              </li>
-            ))}
-          </ul>
+            <section className="pdf-keep">
+              <p className="eyebrow">The Sun</p>
+              <h3 className={h3}>{insights.self.title}</h3>
+              <div className={`mt-3 space-y-3 ${body}`}>{insights.self.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
+              {insights.self.question && <QuestionBlock size="sm" className="mt-4">{insights.self.question}</QuestionBlock>}
+            </section>
+            <section className="pdf-keep">
+              <p className="eyebrow">Life Interconnections</p>
+              <h3 className={h3}>{insights.connections.title}</h3>
+              <div className={`mt-3 space-y-3 ${body}`}>{insights.connections.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
+            </section>
           </div>
-
+          <div className="mt-10">
+            <p className="eyebrow pdf-with-next">Your Orbits, one by one</p>
+            <ul className="mt-3">
+              {insights.orbits.map((o) => (
+                <li key={o.orbit} className="pdf-keep pt-1"><div className="border-t hairline py-4">
+                  <p className="flex items-center gap-3 font-serif text-[20px] font-light">
+                    <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ background: ORBIT_TINT[o.orbit] }} />{o.name}
+                  </p>
+                  <div className={`mt-2 space-y-1.5 pl-5 ${body}`}>
+                    {o.paragraphs.map((p, k) => <p key={k}>{p}</p>)}
+                    <QuestionBlock size="sm" className="!mt-3">{o.question}</QuestionBlock>
+                  </div>
+                </div></li>
+              ))}
+            </ul>
+          </div>
         </section>
       )}
 
-      {/* ── Personal insights: printed open, no cards — rules, type and spacing keep them organised and avoid gaps ── */}
+      {/* ── Personal Insights: printed open, separated by rules; type and spacing carry the structure ── */}
       {insights && (
         <section className="mt-12">
-          <p className="eyebrow pdf-with-next">Personal insights</p>
-          <h2 className={h2}>A closer look at your reality</h2>
+          <SectionHead eyebrow="Personal Insights" title="A closer look at your reality" />
           <p className={`mt-3 ${body}`}>
             Interpretations of the answers you gave, including the places that support you and the patterns that may deserve attention.
           </p>
           <p className="mt-1 text-[11px] leading-relaxed text-taupe">{INSIGHT_DISCLAIMER}</p>
           <div className="pdf-insights">
             {insights.cards.map((c) => (
-              <article key={c.key} className="mt-8 border-t hairline pt-6">
+              <article key={c.key} className="mt-7 pt-1"><div className="border-t hairline pt-5">
                 <div className="pdf-keep pdf-with-next">
-                  <h3 className="font-serif text-[26px] font-light leading-tight">{c.title}</h3>
+                  <h3 className={h3.replace("mt-2 ", "")}>{c.title}</h3>
                   <p className={`mt-1.5 ${body} text-mahogany/70`}>{c.lead}</p>
                 </div>
-                <div className="mt-5"><InsightBody c={c} /></div>
-              </article>
+                <div className="mt-4"><InsightBody c={c} /></div>
+              </div></article>
             ))}
           </div>
         </section>
@@ -161,7 +172,7 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
 
       {written.length > 0 && (
         <section className="pdf-keep mt-14 rounded-[22px] border hairline px-10 py-8">
-          <p className="eyebrow">Your reflections</p>
+          <p className="eyebrow">Reflections</p>
           <h2 className={h2}>In your own words</h2>
           {layer && <p className="mt-2 text-[12.5px] leading-relaxed text-taupe">{layer.note}</p>}
           <div className="mt-5 space-y-5">

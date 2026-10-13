@@ -52,8 +52,8 @@ export async function buildResultsPdf(result: LifeMapResult, opts: PdfOptions = 
       margin: { top: "12mm", bottom: "16mm", left: "0", right: "0" },
       displayHeaderFooter: true,
       // Header and footer bands painted linen so the page margins match the page (Chromium leaves them white otherwise)
-      headerTemplate: `<style>html,body{margin:0;padding:0;-webkit-print-color-adjust:exact}</style><div style="position:absolute;top:-1mm;left:0;right:0;height:14mm;background:#F5EDE2"></div>`,
-      footerTemplate: `<style>html,body{margin:0;padding:0;-webkit-print-color-adjust:exact}</style><div style="position:absolute;bottom:-1mm;left:0;right:0;height:18mm;background:#F5EDE2"></div><div style="position:relative;width:100%;font-family:Helvetica,Arial,sans-serif;font-size:7.5px;color:#9C8A7A;display:flex;justify-content:space-between;padding:0 14mm 4mm">
+      headerTemplate: `<style>html,body{margin:0;padding:0;-webkit-print-color-adjust:exact}</style><div style="position:absolute;top:-1mm;left:0;right:0;height:13.2mm;background:#F5EDE2"></div>`,
+      footerTemplate: `<style>html,body{margin:0;padding:0;-webkit-print-color-adjust:exact}</style><div style="position:absolute;bottom:-1mm;left:0;right:0;height:17.2mm;background:#F5EDE2"></div><div style="position:relative;width:100%;font-family:Helvetica,Arial,sans-serif;font-size:7.5px;color:#9C8A7A;display:flex;justify-content:space-between;padding:0 14mm 4mm">
         <span>Questions or feedback? ${CONTACT_EMAIL}</span>
         <span>The Current Life Map · page <span class="pageNumber"></span> of <span class="totalPages"></span> · reference ${ref}</span></div>`,
     });
