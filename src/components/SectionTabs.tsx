@@ -6,10 +6,11 @@ import { useBooking } from "@/lib/useBooking";
  * Tabs that jump to each section of the results page, plus the two actions (Jana, 2026-10-13). They stay at the top
  * while scrolling and show which section you're in. Only sections present on the page are listed.
  */
+// Navigation labels only (Jana, 2026-10-13); section titles and content are unchanged
 const SECTIONS = [
-  { id: "your-map", label: "Your Map" },
-  { id: "reality-snapshot", label: "Reality Snapshot" },
-  { id: "life-system", label: "Your Life System" },
+  { id: "your-map", label: "Your Life Map" },
+  { id: "reality-snapshot", label: "What Stands Out" },
+  { id: "life-system", label: "How It Connects" },
   { id: "personal-insights", label: "Personal Insights" },
   { id: "reflections", label: "Reflections" },
 ];
