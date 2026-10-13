@@ -6,6 +6,7 @@ import type { ResultInsights } from "@/engine/insights";
 import { PersonalInsights } from "@/components/PersonalInsights";
 import { QuestionBlock } from "@/components/QuestionBlock";
 import { ENERGY_SHORT, IMPORTANCE_SHORT } from "@/lib/pdf/model";
+import { useState } from "react";
 
 /**
  * Exactly what the respondent sees (results page) — also rendered read-only in the coach workspace
@@ -56,11 +57,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap }: 
           <div className="min-w-0 border-t hairline pt-6 lg:col-start-1 lg:row-start-2 lg:self-start"><MapLegend distancePending={distancePending} columns={2} /></div>
           {/* The interpretation sits above the table, beside the Map (Jana, 2026-10-13) */}
           <div className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start lg:pt-[64px]">{/* offset matches the space above the Map's top label, so both start on one line (Jana, 2026-10-13) */}
-            {insights && insights.mapReading.paragraphs.length > 0 && (
-              <div className="mb-8 space-y-3 text-[14px] leading-[1.75] text-mahogany/85">
-                {insights.mapReading.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}
-              </div>
-            )}
+            {insights && insights.mapReading.paragraphs.length > 0 && <MapReading paragraphs={insights.mapReading.paragraphs} />}
             {/* Visible title removed (Jana, 2026-10-12); the table keeps an accessible name */}
             <MapTable result={result} />
           </div>
@@ -158,6 +155,25 @@ export function MapTable({ result }: { result: LifeMapResult }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/** The Map interpretation, folded behind a button until the person asks for it (Jana, 2026-10-13). Always open in the PDF. */
+function MapReading({ paragraphs }: { paragraphs: { text: string }[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mb-8">
+      <button type="button" aria-expanded={open} aria-controls="map-reading" onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-2 rounded-full border border-linen-line px-6 py-2.5 text-[11.5px] uppercase tracking-[0.16em] text-burgundy transition hover:border-burgundy">
+        {open ? "Hide Map interpretation" : "Show Map interpretation"}
+        <svg aria-hidden width="11" height="11" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className={`transition ${open ? "rotate-45" : ""}`}><path d="M11 2v18M2 11h18" /></svg>
+      </button>
+      {open && (
+        <div id="map-reading" className="mt-5 space-y-3 text-[14px] leading-[1.75] text-mahogany/85">
+          {paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}
+        </div>
+      )}
     </div>
   );
 }
