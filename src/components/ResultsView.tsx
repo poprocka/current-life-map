@@ -36,8 +36,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
 
       {/* A. Opening — a personalised reflection before any numbers (brief §4A) */}
       {insights && (
-        <div className="xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36">{/* 30% wider opening, 1000 → 1300px (Jana, 2026-10-13); may extend to the Map card width */}
-        <section className="mx-auto mt-10 max-w-[1300px] lg:mt-14" aria-labelledby="open-h">
+        <section className="mx-auto mt-10 max-w-[1000px] lg:mt-14" aria-labelledby="open-h">
           <p className="eyebrow text-center">Your Current Life Map</p>
           <h1 id="open-h" className="mt-3 text-center font-serif text-[32px] font-light leading-[1.1] [text-wrap:balance] sm:text-[40px]">{insights.opening.title}.</h1>
           {/* Two paragraphs side by side, left-aligned; the closing question sits in the second column under its paragraph (Jana, 2026-10-13) */}
@@ -52,7 +51,6 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
           </div>
           {/* "What this is based on" removed from the page (Jana, 2026-10-13); the answers behind the theme stay in the stored record. */}
         </section>
-        </div>
       )}
 
       {/* Section tabs: anchor links to every section below (Jana, 2026-10-13); not in the coach view */}
