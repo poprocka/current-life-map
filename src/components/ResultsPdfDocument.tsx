@@ -15,11 +15,13 @@ import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
  * buttons). Order: the opening and the Map · what the Map shows · the narrative, insights, Orbits, the closing question,
  * the person's reflections and how to reach Jana. Printed by Chromium at 900 CSS px (server/pdf/render.ts).
  */
-const body = "text-[14px] leading-[1.7] text-mahogany/85";
+const body = "text-[13px] leading-[1.65] text-mahogany/85"; // smaller paragraph text for print (Jana, 2026-10-13)
 const h2 = "mt-2 font-serif text-[30px] font-light leading-tight";
 
-export function ResultsPdfDocument({ result, insights, reflections = [], generatedAt }: {
+export function ResultsPdfDocument({ result, insights, reflections = [], generatedAt, reference }: {
   result: LifeMapResult;
+  /** First 12 characters of the snapshot fingerprint — the same reference the results page shows. */
+  reference?: string;
   insights?: ResultInsights;
   reflections?: { prompt: string; text: string }[];
   generatedAt?: Date;
@@ -39,7 +41,7 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
       <section className="pt-2">
         <div className="flex items-baseline justify-between">
           <p className="eyebrow">Your Current Life Map</p>
-          {generatedAt && <p className="text-[11px] text-taupe">{generatedAt.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>}
+          <p className="text-[11px] text-taupe">{generatedAt ? generatedAt.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : ""}{reference ? `${generatedAt ? " · " : ""}Reference ${reference}` : ""}</p>
         </div>
         {insights ? (
           <>
@@ -58,9 +60,10 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
         <h2 className="text-center font-serif text-[22px] font-light leading-snug [text-wrap:balance]">
           {insights?.mapIntro ?? "Here's how the different parts of your life look together, based on what you've shared."}
         </h2>
-        <div className="mt-2 grid grid-cols-[1.35fr_1fr] items-center gap-8">
+        {/* Bigger Map, smaller legend (Jana, 2026-10-13) */}
+        <div className="mt-2 grid grid-cols-[2fr_1fr] items-center gap-6">
           <PersonalMap result={result} still />
-          <MapLegend distancePending={distancePending} columns={1} />
+          <MapLegend distancePending={distancePending} columns={1} compact />
         </div>
       </section>
 
@@ -127,23 +130,23 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
         </section>
       )}
 
-      {/* ── Personal insights: each printed open ── */}
+      {/* ── Personal insights: printed open, no cards — rules, type and spacing keep them organised and avoid gaps ── */}
       {insights && (
-        <section className="pdf-break-before">
-          <p className="eyebrow">Personal insights</p>
+        <section className="mt-12">
+          <p className="eyebrow pdf-with-next">Personal insights</p>
           <h2 className={h2}>A closer look at your reality</h2>
-          <p className="mt-3 text-[13.5px] leading-relaxed text-mahogany/75">
+          <p className={`mt-3 ${body}`}>
             Interpretations of the answers you gave, including the places that support you and the patterns that may deserve attention.
           </p>
-          <p className="mt-1 text-[11.5px] leading-relaxed text-taupe">{INSIGHT_DISCLAIMER}</p>
-          <div className="mt-6 space-y-5">
-            {insights.cards.map((c, i) => (
-              <article key={c.key} className="pdf-keep rounded-[22px] border hairline bg-[#F7F1EA] px-10 pb-8 pt-6">
-                <p className="eyebrow">Your personal insights</p>
-                <h3 className="mt-1 font-serif text-[28px] font-light leading-tight">{c.title}</h3>
-                <p className="mt-2 text-[14.5px] leading-relaxed text-mahogany/70">{c.lead}</p>
-                <div aria-hidden className="my-5 h-px w-full bg-[#D9C3A8]/70" />
-                <InsightBody c={c} />
+          <p className="mt-1 text-[11px] leading-relaxed text-taupe">{INSIGHT_DISCLAIMER}</p>
+          <div className="pdf-insights">
+            {insights.cards.map((c) => (
+              <article key={c.key} className="mt-8 border-t hairline pt-6">
+                <div className="pdf-keep pdf-with-next">
+                  <h3 className="font-serif text-[26px] font-light leading-tight">{c.title}</h3>
+                  <p className={`mt-1.5 ${body} text-mahogany/70`}>{c.lead}</p>
+                </div>
+                <div className="mt-5"><InsightBody c={c} /></div>
               </article>
             ))}
           </div>
@@ -166,8 +169,8 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
           <div className="mt-5 space-y-5">
             {written.map((r, i) => (
               <div key={i}>
-                <p className="text-[14px] leading-snug text-mahogany">{r.prompt}</p>
-                <p className="mt-1.5 whitespace-pre-wrap text-[14px] leading-relaxed text-mahogany/80">{r.text}</p>
+                <p className="text-[13px] leading-snug text-mahogany/80">{r.prompt}</p>
+                <p className="mt-1.5 whitespace-pre-wrap font-serif text-[17px] italic leading-relaxed text-mahogany">{r.text}</p>{/* their words in italic, for contrast with the prompt (Jana, 2026-10-13) */}
                 {alongside(r.prompt) && <p className="mt-1.5 text-[12.5px] italic leading-relaxed text-mahogany/70">{alongside(r.prompt)!.text}</p>}
               </div>
             ))}

@@ -24,6 +24,11 @@ const print = `
 html,body{background:#F5EDE2;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .pdf-keep{break-inside:avoid;page-break-inside:avoid}
 .pdf-break-before{break-before:page;page-break-before:always}
+.pdf-insights section{break-inside:avoid;page-break-inside:avoid}
+.pdf-insights article{break-before:auto}
+.pdf-insights article > .mt-5 > div > div:first-child > section:first-child{break-before:avoid}
+.pdf-insights p:not(.eyebrow):not(.font-serif){font-size:13px!important;line-height:1.65!important}
+.pdf-insights li{font-size:12px!important}
 section,article,li{orphans:3;widows:3}
 h1,h2,h3,.pdf-with-next{break-after:avoid;page-break-after:avoid}
 a{text-decoration-skip-ink:auto}

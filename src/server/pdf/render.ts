@@ -39,8 +39,8 @@ async function launch() {
 }
 
 export async function buildResultsPdf(result: LifeMapResult, opts: PdfOptions = {}): Promise<Uint8Array> {
-  const html = renderResultsHtml({ result, insights: opts.insights, reflections: opts.reflections, generatedAt: opts.generatedAt?.toISOString() });
   const ref = (await snapshotFingerprint(result)).slice(0, 12);
+  const html = renderResultsHtml({ result, insights: opts.insights, reflections: opts.reflections, generatedAt: opts.generatedAt?.toISOString(), reference: ref });
   const browser = await launch();
   try {
     const page = await browser.newPage({ viewport: { width: LAYOUT_WIDTH, height: 1400 } });

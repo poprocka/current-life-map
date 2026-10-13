@@ -13,11 +13,12 @@ export interface PdfHtmlInput {
   insights?: ResultInsights;
   reflections?: { prompt: string; text: string }[];
   generatedAt?: string;
+  reference?: string;
 }
 
-export function renderResultsHtml({ result, insights, reflections, generatedAt }: PdfHtmlInput): string {
+export function renderResultsHtml({ result, insights, reflections, generatedAt, reference }: PdfHtmlInput): string {
   const body = renderToStaticMarkup(
-    <ResultsPdfDocument result={result} insights={insights} reflections={reflections} generatedAt={generatedAt ? new Date(generatedAt) : undefined} />,
+    <ResultsPdfDocument result={result} insights={insights} reflections={reflections} generatedAt={generatedAt ? new Date(generatedAt) : undefined} reference={reference} />,
   );
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Your Current Life Map</title><style>${PRINT_CSS}</style></head><body>${body}</body></html>`;
 }

@@ -246,12 +246,12 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
  * Legend distinguishes active, proxy and pending indicators (spec §7.1).
  * distancePending: no Orbit has a distance (an earlier scoring version, or no congruence answers), so all sit on one ring.
  */
-export function MapLegend({ distancePending = true, columns = 3 }: { distancePending?: boolean; columns?: 1 | 2 | 3 }) {
+export function MapLegend({ distancePending = true, columns = 3, compact = false }: { distancePending?: boolean; columns?: 1 | 2 | 3; compact?: boolean }) {
   const item = "flex items-start gap-3";
   // Wording by Jana (2026-10-12). Full width of the Map card: three columns, two rows (2026-10-13):
   // energy in | energy out | steady  /  brightness | distance | size.
   return (
-    <div className={`grid gap-x-8 gap-y-4 text-[12.5px] leading-snug text-mahogany/80 ${columns === 1 ? "" : "sm:grid-cols-2"} ${columns === 3 ? "lg:grid-cols-3" : ""}`}>
+    <div className={`grid gap-x-8 ${compact ? "gap-y-2.5 text-[10.5px]" : "gap-y-4 text-[12.5px]"} leading-snug text-mahogany/80 ${columns === 1 ? "" : "sm:grid-cols-2"} ${columns === 3 ? "lg:grid-cols-3" : ""}`}>
       <div className={item}><Swatch><FlowSwatch color={IN} inward /></Swatch>
         <span><b className="font-normal text-mahogany">Energy in</b> — This Orbit gives you energy. It gathers as a glow around the Sun.</span></div>
       <div className={item}><Swatch><FlowSwatch color={OUT} /></Swatch>

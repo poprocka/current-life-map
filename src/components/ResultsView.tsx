@@ -7,7 +7,8 @@ import { OrbitList, PersonalInsights } from "@/components/PersonalInsights";
 import { QuestionBlock } from "@/components/QuestionBlock";
 import { SectionTabs } from "@/components/SectionTabs";
 import { ENERGY_SHORT, IMPORTANCE_SHORT } from "@/lib/pdf/model";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { snapshotFingerprint } from "@/lib/stable";
 
 /**
  * Exactly what the respondent sees (results page) — also rendered read-only in the coach workspace
@@ -21,6 +22,9 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
   // "Show Map interpretation" opens the written reading under the table (Jana, 2026-10-13)
   const [readingOpen, setReadingOpen] = useState(false);
   const hasReading = !!insights && insights.mapReading.paragraphs.length > 0;
+  // The same reference is printed on the PDF, so the page and the PDF can be matched (Jana, 2026-10-13)
+  const [reference, setReference] = useState<string | null>(null);
+  useEffect(() => { let on = true; snapshotFingerprint(result).then((f) => on && setReference(f.slice(0, 12))).catch(() => undefined); return () => { on = false; }; }, [result]);
 
   return (
     <Root className="mx-auto max-w-[1180px] px-6 pb-24 sm:px-10">
@@ -137,6 +141,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
 
       {/* "Where attention may matter most" removed from the client view (Jana, 2026-10-12); still in the Coach Report and script */}
       {children}
+      {reference && <p className="mt-16 text-center text-[11px] text-taupe">Reference {reference} · the same reference appears on your PDF</p>}
     </Root>
   );
 }
