@@ -25,7 +25,7 @@ export function reportModel(result: LifeMapResult) {
     intro: MAP_INTRO,
     legend: [
       "Size - How important this Orbit is to you at this stage of your life.",
-      "Brightness - How supported and fulfilling this Orbit feels in your current life, based on your answers.",
+      "Brightness - How supported and fulfilling this Orbit feels in your current life.",
       `Distance from the Sun - How closely the way you live in this Orbit reflects what genuinely matters to you.${result.orbits.every((o) => o.distanceBand == null) ? " Not shown on this Map: every Orbit sits at the same distance." : ""}`,
     ],
     table: result.orbits.map((o) => ({
