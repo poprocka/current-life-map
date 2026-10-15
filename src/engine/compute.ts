@@ -341,7 +341,7 @@ export function computeLifeMap(answers: Answers, cfg: ScoringConfig = CURRENT_SC
     });
     snapshot.push({
       key: "needsAttention", label: "Needs more attention", orbits: differs ? bottom : [], available: differs, evidenceType: "derived",
-      body: differs ? `Your answers about ${listNames(bottom)} describe the least support right now. This is a place to look, not a verdict.` : "",
+      body: differs ? `Your answers about ${listNames(bottom)} describe the least support right now. ${bottom.length > 1 ? "These may be the areas" : "It may be the area"} most worth a closer look.` : "", // rephrased (Jana, 2026-10-15)
       evidence: bottom.map((id) => ({ questionId: `${id}.*`, answer: String(by[id].responseSupportIndex), kind: "derived" as const })),
     });
   }
