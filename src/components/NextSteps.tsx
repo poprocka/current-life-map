@@ -30,7 +30,7 @@ export function DeepDiveCard({ token }: { token?: string }) {
           <>
             <button type="button" onClick={book} disabled={booking.kind === "working"}
               className="inline-block rounded-full bg-linen px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-white disabled:opacity-70">
-              {booking.kind === "working" ? "Opening…" : "Book Your Session"}
+              {booking.kind === "working" ? "Opening…" : "Book a Deep Dive session"}
             </button>
             {booking.kind === "error" && <p role="status" className="mt-3 text-[12.5px] text-linen">{booking.message}</p>}
           </>

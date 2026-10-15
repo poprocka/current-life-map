@@ -197,14 +197,14 @@ function MapReading({ paragraphs, open, onToggle }: { paragraphs: { text: string
   );
 }
 
-/** "Explore your Map with Jana" under the closing question: opens Calendly directly, like the other Book buttons. */
+/** "Book a Deep Dive session" (Jana, 2026-10-15) under the closing question: opens Calendly directly, like the other Book buttons. */
 function ClosingBookButton({ token }: { token?: string }) {
   const { state, book } = useBooking(token);
   return (
     <>
       <button type="button" onClick={book} disabled={state.kind === "working"}
         className="mt-6 inline-block rounded-full bg-burgundy px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany disabled:opacity-70">
-        {state.kind === "working" ? "Opening…" : "Explore your Map with Jana"}
+        {state.kind === "working" ? "Opening…" : "Book a Deep Dive session"}
       </button>
       {state.kind === "error" && <p role="status" className="mt-3 text-[12.5px] text-burgundy">{state.message}</p>}
     </>
