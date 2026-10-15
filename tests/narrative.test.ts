@@ -1,3 +1,4 @@
+import { CONGRUENCE_ITEMS } from "@/engine/congruence";
 /**
  * Results interpretation engine — QA scenarios (brief §10) and automated checks for unsupported claims,
  * missing data, repetition and personalisation (deliverable 9).
@@ -260,6 +261,16 @@ describe("distance from the Sun (F4, approved 13 Oct)", () => {
     expect(mapText(a)).toMatch(/Growth[^.]* further out: the way you're currently living in this area may not fully reflect what matters to you\./);
     expect(orbitText(a, "joy")).toContain("This area of your life appears to reflect what matters to you.");
     expect(run(a).mapReading.paragraphs.some((p) => p.evidence.some((e) => e.questionId === "growth.congruence"))).toBe(true);
+  });
+  it("leads with the Map's shape when one Orbit stands apart (15 Oct)", () => {
+    const set = (o: string, v: string) => Object.fromEntries([`${o}.congruence`, ...CONGRUENCE_ITEMS[o as keyof typeof CONGRUENCE_ITEMS].map((it) => it.id)].map((id) => [id, v]));
+    const orbits = Object.keys(CONGRUENCE_ITEMS);
+    const a: Raw = { ...EXAMPLE_WORKING, ...Object.assign({}, ...orbits.map((o) => set(o, o === "resources" ? "0" : "4"))), "growth.06": "0" }; // growth.06 is reverse-keyed
+    const t = mapText(a);
+    expect(t).toContain("On your Map, Resources stands apart: it sits furthest from the Sun, while the other seven Orbits sit close together near it.");
+    expect(t).toContain("Resources is where the way you're currently living may not fully reflect it.");
+    const b: Raw = { ...EXAMPLE_WORKING, ...Object.assign({}, ...orbits.map((o) => set(o, "4"))), "growth.06": "0" };
+    expect(mapText(b)).toContain("All of your Orbits sit close to the Sun");
   });
   it("a large Orbit far from the Sun keeps both signals and isn't framed as a problem", () => {
     const a: Raw = { ...EXAMPLE_WORKING, "love.importance": "4", "love.congruence": "0", "love.01": "0", "love.05": "0", "love.02": "0" };

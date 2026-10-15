@@ -257,9 +257,33 @@ function composeDistance(c: Ctx): Para | null {
   const parts: string[] = [];
   const ev: Evidence[] = [];
   const are = (xs: OrbitId[]) => (xs.length > 1 ? "sit" : "sits");
-  if (close.length) { parts.push(`${list(close.map(c.name))} ${are(close)} close to the Sun: ${close.length > 1 ? "these areas of your life appear" : "this area of your life appears"} to reflect what matters to you.`); ev.push(...close.map((o) => c.ev(`${o}.congruence`))); }
-  if (far.length) { parts.push(`${list(far.map(c.name))} ${are(far)} further out: the way you're currently living in ${far.length > 1 ? "these areas" : "this area"} may not fully reflect what matters to you.`); ev.push(...far.map((o) => c.ev(`${o}.congruence`))); }
-  if (!close.length && !far.length && middle.length) { parts.push(`${middle.length === orbits.length ? "All of your Orbits sit" : `${list(middle.map(c.name))} ${are(middle)}`} at a middle distance: ${middle.length > 1 ? "they reflect" : "it reflects"} some of what matters to you, while other parts may still be finding their place.`); ev.push(...middle.map((o) => c.ev(`${o}.congruence`))); }
+  const N = ["no", "one", "two", "three", "four", "five", "six", "seven", "eight"];
+  const all = (xs: OrbitId[]) => xs.length === orbits.length;
+  const one = (xs: OrbitId[], single: string, plural: string) => (xs.length > 1 ? plural : single);
+  // Read the Map's shape first (Jana, 2026-10-15): when one or two Orbits stand apart from the rest, say so plainly
+  // rather than listing every band. The band statements stay the approved ones.
+  if (all(close)) {
+    parts.push("All of your Orbits sit close to the Sun: across your life, the way you're living appears to reflect what matters to you.");
+    ev.push(...close.map((o) => c.ev(`${o}.congruence`)));
+  } else if (all(far)) {
+    parts.push("All of your Orbits sit further out from the Sun: across much of your life, the way you're currently living may not fully reflect what matters to you.");
+    ev.push(...far.map((o) => c.ev(`${o}.congruence`)));
+  } else if (far.length >= 1 && far.length <= 2 && close.length >= 4) {
+    const restAllClose = close.length + far.length === orbits.length;
+    parts.push(`On your Map, ${list(far.map(c.name))} ${one(far, "stands", "stand")} apart: ${one(far, "it sits", "they sit")} furthest from the Sun, while ${restAllClose ? `the other ${N[close.length]} Orbits sit close together near it` : "most of the other Orbits sit close to it"}. Most areas of your life appear to reflect what matters to you. ${list(far.map(c.name))} ${one(far, "is", "are")} where the way you're currently living may not fully reflect it.`);
+    if (middle.length) parts.push(`${list(middle.map(c.name))} ${are(middle)} at a middle distance: ${one(middle, "it reflects", "they reflect")} some of what matters to you, while other parts may still be finding their place.`);
+    ev.push(...[...far, ...close, ...middle].map((o) => c.ev(`${o}.congruence`)));
+  } else if (close.length >= 1 && close.length <= 2 && far.length >= 4) {
+    const restAllFar = close.length + far.length === orbits.length;
+    parts.push(`On your Map, ${list(close.map(c.name))} ${one(close, "stands", "stand")} apart: ${one(close, "it sits", "they sit")} closest to the Sun, while ${restAllFar ? `the other ${N[far.length]} Orbits sit further out` : "most of the other Orbits sit further out"}. ${list(close.map(c.name))} ${one(close, "appears", "appear")} to reflect what matters to you most clearly. In much of the rest of your life, the way you're currently living may not fully reflect it.`);
+    if (middle.length) parts.push(`${list(middle.map(c.name))} ${are(middle)} at a middle distance: ${one(middle, "it reflects", "they reflect")} some of what matters to you, while other parts may still be finding their place.`);
+    ev.push(...[...close, ...far, ...middle].map((o) => c.ev(`${o}.congruence`)));
+  } else {
+    if (close.length) { parts.push(`${list(close.map(c.name))} ${are(close)} close to the Sun: ${close.length > 1 ? "these areas of your life appear" : "this area of your life appears"} to reflect what matters to you.`); ev.push(...close.map((o) => c.ev(`${o}.congruence`))); }
+    if (far.length) { parts.push(`${list(far.map(c.name))} ${are(far)} further out: the way you're currently living in ${far.length > 1 ? "these areas" : "this area"} may not fully reflect what matters to you.`); ev.push(...far.map((o) => c.ev(`${o}.congruence`))); }
+    if (middle.length && (close.length || far.length)) { parts.push(`${list(middle.map(c.name))} ${are(middle)} at a middle distance: ${one(middle, "it reflects", "they reflect")} some of what matters to you, while other parts may still be finding their place.`); ev.push(...middle.map((o) => c.ev(`${o}.congruence`))); }
+    if (!close.length && !far.length && middle.length) { parts.push(`${all(middle) ? "All of your Orbits sit" : `${list(middle.map(c.name))} ${are(middle)}`} at a middle distance: ${middle.length > 1 ? "they reflect" : "it reflects"} some of what matters to you, while other parts may still be finding their place.`); ev.push(...middle.map((o) => c.ev(`${o}.congruence`))); }
+  }
   // A large, important Orbit far from the Sun: both signals kept, never framed as a problem.
   const bigFar = far.filter((o) => c.important(o));
   if (bigFar.length) parts.push(`${bigFar.length > 1 ? `${list(bigFar.map(c.name))} are also among your largest Orbits` : `${c.name(bigFar[0])} is also one of your largest Orbits`}: ${bigFar.length > 1 ? "they matter" : "it matters"} a great deal to you. That pairing can be worth noticing. It may reflect a conscious trade-off, practical circumstances or a time of change.`);
