@@ -94,7 +94,7 @@ export interface OrbitResult {
 }
 
 export interface SnapshotItem {
-  key: "energyOut" | "energyIn" | "largestPlace" | "mostSupported" | "needsAttention" | "externalInfluence";
+  key: "energyOut" | "energyIn" | "largestPlace" | "mostSupported" | "needsAttention" | "furthest" | "externalInfluence";
   label: string;
   orbits: OrbitId[];
   available: boolean;
@@ -345,12 +345,29 @@ export function computeLifeMap(answers: Answers, cfg: ScoringConfig = CURRENT_SC
       evidence: bottom.map((id) => ({ questionId: `${id}.*`, answer: String(by[id].responseSupportIndex), kind: "derived" as const })),
     });
   }
-  const ext = inter.externalInfluence;
-  snapshot.push({
-    key: "externalInfluence", label: "Most shaped by expectations", orbits: ext ? [ext] : [], available: !!ext, evidenceType: "direct",
-    body: ext ? `You identified ${nameOf(ext)} as most influenced by other people’s expectations or social standards.` : "",
-    evidence: ext ? [{ questionId: "interconnections.06", answer: ext, kind: "direct" }] : [],
-  });
+  // Furthest from the Sun (Jana, 2026-10-15): the Orbit(s) in the outermost occupied distance band, using the approved
+  // band wording. When nothing clearly stands further out (every Orbit in one band, or more than three in the outer band),
+  // "Most shaped by expectations" shows instead.
+  const banded = orbits.filter((o) => o.distanceBand);
+  const outer = banded.some((o) => o.distanceBand === "far") ? "far" : banded.some((o) => o.distanceBand === "middle") ? "middle" : null;
+  const furthest = outer ? banded.filter((o) => o.distanceBand === outer).map((o) => o.orbit) : [];
+  if (furthest.length && furthest.length <= 3 && furthest.length < banded.length) {
+    const many = furthest.length > 1;
+    snapshot.push({
+      key: "furthest", label: "Furthest from the Sun", orbits: furthest, available: true, evidenceType: "derived",
+      body: outer === "far"
+        ? `On your Map, ${listNames(furthest)} ${many ? "sit" : "sits"} furthest from the Sun: the way you're currently living in ${many ? "these areas" : "this area"} may not fully reflect what matters to you.`
+        : `On your Map, ${listNames(furthest)} ${many ? "sit" : "sits"} furthest from the Sun, at a middle distance: ${many ? "they reflect" : "it reflects"} some of what matters to you, while other parts may still be finding their place.`,
+      evidence: furthest.map((id) => ({ questionId: `${id}.congruence`, answer: String(by[id].congruence), kind: "derived" as const })),
+    });
+  } else {
+    const ext = inter.externalInfluence;
+    snapshot.push({
+      key: "externalInfluence", label: "Most shaped by expectations", orbits: ext ? [ext] : [], available: !!ext, evidenceType: "direct",
+      body: ext ? `You identified ${nameOf(ext)} as most influenced by other people’s expectations or social standards.` : "",
+      evidence: ext ? [{ questionId: "interconnections.06", answer: ext, kind: "direct" }] : [],
+    });
+  }
 
   // ── Insights (evidence → rule → template) ───────────────────────────────
   const insights: Insight[] = [];

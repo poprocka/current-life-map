@@ -281,6 +281,14 @@ describe("distance from the Sun (F4, approved 13 Oct)", () => {
     const b: Raw = { ...EXAMPLE_WORKING, ...Object.assign({}, ...orbits.map((o) => set(o, "4"))), "growth.06": "0" };
     expect(mapText(b)).toContain("All of your Orbits sit close to the Sun");
   });
+  it("the snapshot shows Furthest from the Sun when one Orbit stands further out (15 Oct)", () => {
+    const set = (o: string, v: string) => Object.fromEntries([`${o}.congruence`, ...CONGRUENCE_ITEMS[o as keyof typeof CONGRUENCE_ITEMS].map((it) => it.id)].map((id) => [id, v]));
+    const a: Raw = { ...EXAMPLE_WORKING, ...Object.assign({}, ...Object.keys(CONGRUENCE_ITEMS).map((o) => set(o, o === "resources" ? "0" : "4"))), "growth.06": "0" };
+    const six = computeLifeMap(a).snapshot.at(-1)!;
+    expect(six.label).toBe("Furthest from the Sun");
+    expect(six.orbits).toEqual(["resources"]);
+    expect(six.body).toBe("On your Map, Resources sits furthest from the Sun: the way you're currently living in this area may not fully reflect what matters to you.");
+  });
   it("a large Orbit far from the Sun keeps both signals and isn't framed as a problem", () => {
     const a: Raw = { ...EXAMPLE_WORKING, "love.importance": "4", "love.congruence": "0", "love.01": "0", "love.05": "0", "love.02": "0" };
     const t = mapText(a);

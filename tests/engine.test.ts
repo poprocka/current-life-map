@@ -101,9 +101,14 @@ describe("unapproved metrics stay inactive (spec §5.3–5.6)", () => {
     expect(r.attention.mode).toBe("qualitative_pending_approval");
     expect(r.attention.rankedOrbits).toEqual([]);
   });
-  it("there is no Least connected card; external influence is shown under its own label", () => {
+  it("there is no Least connected card; the sixth item is Furthest from the Sun, or expectations when nothing stands further out (15 Oct)", () => {
     expect(r.snapshot.map((s) => s.key)).not.toContain("leastConnected");
-    expect(r.snapshot.find((s) => s.key === "externalInfluence")!.label).toBe("Most shaped by expectations");
+    const six = r.snapshot[r.snapshot.length - 1];
+    if (six.key === "furthest") {
+      expect(six.label).toBe("Furthest from the Sun");
+      for (const o of six.orbits) expect(r.orbits.find((x) => x.orbit === o)!.distanceBand).not.toBe("close");
+      expect(six.body).not.toMatch(/disconnected|distant from yourself|problem/i);
+    } else expect(six.label).toBe("Most shaped by expectations");
   });
   it("Sun index is an interim unweighted mean and never treated as an Orbit", () => {
     expect(r.sun.responseIndex).toBe(0.75);
