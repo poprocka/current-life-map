@@ -11,7 +11,7 @@ import { CHAPTERS } from "@/content/v10/chapters";
 import { QUESTION_BANK, QUESTION_BANK_VERSION, questionById } from "@/content/v10/question-bank";
 import { NOT_APPLICABLE } from "@/content/types";
 import { ResultsView } from "@/components/ResultsView";
-import { generateResultInsights } from "@/engine/insights";
+import { engineForTemplate, generateResultInsights } from "@/engine/insights";
 import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
 import { Badge, Card, btn, btnPrimary, fmtDate, input, shortId } from "./ui";
 import { CoachReportView } from "./CoachReportView";
@@ -275,7 +275,7 @@ function MapTab({ data, pdfHref }: { data: WorkspaceData; pdfHref: string | null
       </div>
       <p className="mt-3 font-serif text-[17px] italic text-mahogany/80">Public Current Life Map: “Here’s what your answers reveal about the life you’re living.” Exactly what they read.</p>
       <div className="mt-2 rounded-[24px] border hairline bg-linen">
-        <ResultsView result={data.result.snapshot} insights={generateResultInsights(data.result.snapshot, Object.fromEntries(data.answers.map((a) => [a.question_id, a.value ?? undefined])))} embedded />
+        <ResultsView result={data.result.snapshot} insights={generateResultInsights(data.result.snapshot, Object.fromEntries(data.answers.map((a) => [a.question_id, a.value ?? undefined])), { engine: engineForTemplate(data.result.narrative_version) })} embedded />
       </div>
     </div>
   );

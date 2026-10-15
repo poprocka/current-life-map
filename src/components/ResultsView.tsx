@@ -39,7 +39,12 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
         <section className="mx-auto mt-10 max-w-[1000px] lg:mt-14" aria-labelledby="open-h">
           <p className="eyebrow text-center">Your Current Life Map</p>
           <h1 id="open-h" className="mt-3 text-center font-serif text-[32px] font-light leading-[1.1] [text-wrap:balance] sm:text-[40px]">{insights.opening.title}.</h1>
-          {/* Opening text removed from the page (Jana, 2026-10-15): the sections below cover it. The summary stays in the stored narrative. */}
+          {/* Short personalized opening restored (Jana, 2026-10-15, Decision 7): 2–3 sentences from the central thread */}
+          {insights.opening.paragraphs.length > 0 && (
+            <div className="mx-auto mt-6 max-w-[720px] space-y-3 text-center text-[15px] leading-[1.75] text-mahogany/85 [text-wrap:pretty]">
+              {insights.opening.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}
+            </div>
+          )}
           {/* "What this is based on" removed from the page (Jana, 2026-10-13); the answers behind the theme stay in the stored record. */}
         </section>
       )}

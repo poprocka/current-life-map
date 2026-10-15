@@ -3,7 +3,7 @@ import type { AnswerValue } from "@/content/types";
 import { NOT_APPLICABLE } from "@/content/types";
 import { ACTIVE_QUESTIONS, ASSESSMENT_VERSION, QUESTION_BANK_VERSION, questionById } from "@/content/v10/question-bank";
 import { CHAPTERS } from "@/content/v10/chapters";
-import { generateNarrative } from "@/engine/narrative";
+import { generateResultInsights } from "@/engine/insights";
 import { attachInviteAssessment, clientForInvite } from "./clients";
 import { computeLifeMap, type LifeMapResult } from "@/engine/compute";
 import { isComplete, validate } from "@/engine/navigation";
@@ -109,13 +109,13 @@ export async function loadAnswers(sql: Sql, assessmentId: string, opts: { includ
   return out;
 }
 
-export interface FrozenResult { id: string; assessmentId: string; snapshot: LifeMapResult; sha256: string; generatedAt: Date }
+export interface FrozenResult { id: string; assessmentId: string; snapshot: LifeMapResult; sha256: string; generatedAt: Date; narrativeVersion: string | null }
 
 export async function frozenResult(sql: Sql, assessmentId: string): Promise<FrozenResult | null> {
-  const r = await sql.query<{ id: string; snapshot: LifeMapResult; snapshot_sha256: string; generated_at: Date }>(
-    `select id, snapshot, snapshot_sha256, generated_at from assessment_results where assessment_id = $1 order by generated_at desc limit 1`, [assessmentId]);
+  const r = await sql.query<{ id: string; snapshot: LifeMapResult; snapshot_sha256: string; generated_at: Date; narrative_version: string | null }>(
+    `select id, snapshot, snapshot_sha256, generated_at, evidence->'narrative'->>'templateVersion' as narrative_version from assessment_results where assessment_id = $1 order by generated_at desc limit 1`, [assessmentId]);
   const x = r.rows[0];
-  return x ? { id: x.id, assessmentId, snapshot: x.snapshot, sha256: x.snapshot_sha256, generatedAt: new Date(x.generated_at) } : null;
+  return x ? { id: x.id, assessmentId, snapshot: x.snapshot, sha256: x.snapshot_sha256, generatedAt: new Date(x.generated_at), narrativeVersion: x.narrative_version } : null;
 }
 
 /**
@@ -135,7 +135,7 @@ export async function completeAssessment(db: Db, token: string): Promise<{ ok: t
     const sha = await snapshotFingerprint(result);
     const metrics = { sun: { responseIndex: result.sun.responseIndex, coverage: result.sun.coverage }, orbits: result.orbits.map(({ items: _i, ...o }) => o) };
     // Versioned public narrative with evidence provenance (brief §7 step 12): what the person read, and why.
-    const narrative = generateNarrative(result, scored);
+    const narrative = generateResultInsights(result, scored);
     const evidence = {
       insights: result.insights.map((i) => ({ id: i.id, evidence: i.evidence })), snapshot: result.snapshot.map((s) => ({ key: s.key, evidence: s.evidence })),
       narrative: {
@@ -143,7 +143,10 @@ export async function completeAssessment(db: Db, token: string): Promise<{ ok: t
         centralTheme: narrative.centralTheme,
         rendered: { opening: narrative.opening, mapReading: narrative.mapReading, standsOut: narrative.standsOut, self: narrative.self, connections: narrative.connections, cards: narrative.cards, orbits: narrative.orbits, closingQuestion: narrative.closingQuestion },
         observations: narrative.observations.map((o) => ({ id: o.id, rule: o.rule, areas: o.areas, evidence: o.evidence.map((e) => e.questionId), sufficiency: o.sufficiency, wording: o.wording, relevance: o.relevance, usedIn: o.usedIn, meaning: o.meaning, alternatives: o.alternatives })),
-        validationIssues: narrative.validationIssues,
+        validationIssues: narrative.validationIssues ?? [],
+        engine: narrative.engine ?? "legacy", fallback: !!narrative.fallback, mode: narrative.mode ?? null,
+        // Interpretation records (schema v1): what each reading rests on, its alternatives and where it was used.
+        records: narrative.records ?? [], validation: narrative.validation ?? null,
       },
     };
     const ins = await sql.query<{ generated_at: Date }>(

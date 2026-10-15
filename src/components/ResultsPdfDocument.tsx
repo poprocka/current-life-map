@@ -60,7 +60,8 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
         {insights ? (
           <>
             <h1 className="mt-3 font-serif text-[40px] font-light leading-[1.1]">{insights.opening.title}.</h1>
-            {/* Opening text removed (Jana, 2026-10-15), as on the page */}
+            {/* Short personalized opening (Jana, 2026-10-15, Decision 7), as on the page */}
+            {insights.opening.paragraphs.length > 0 && <div className={`mt-4 max-w-[680px] space-y-2 ${body}`}>{insights.opening.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>}
           </>
         ) : <h1 className="mt-3 font-serif text-[40px] font-light leading-[1.1]">Your reality, as it is right now.</h1>}
       </section>

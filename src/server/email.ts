@@ -4,7 +4,7 @@ import { buildResultsPdf as buildClientPdf } from "@/server/pdf/render";
 import type { Db } from "./db";
 import { frozenResult, loadAnswers, resolveToken } from "./assessments";
 import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
-import { generateResultInsights } from "@/engine/insights";
+import { engineForTemplate, generateResultInsights } from "@/engine/insights";
 import { audit } from "./audit";
 import { hmacB64, safeEqual } from "./crypto";
 
@@ -96,7 +96,7 @@ export async function requestPdfEmail(db: Db, token: string, email: string): Pro
     const reflections = POST_MAP_REFLECTIONS.questions
       .filter((q) => typeof stored[q.id] === "string" && (stored[q.id] as string).trim())
       .map((q) => ({ prompt: q.prompt, text: stored[q.id] as string }));
-    const insights = generateResultInsights(frozen.snapshot, stored);
+    const insights = generateResultInsights(frozen.snapshot, stored, { engine: engineForTemplate(frozen.narrativeVersion) });
     return { assessmentId: a.id, requestId: req.rows[0].id, frozen, email: normalized, reflections, insights };
   });
   if ("error" in prep) return { ok: false, error: prep.error! };
@@ -149,7 +149,7 @@ export async function downloadPdf(db: Db, token: string): Promise<{ ok: true; pd
       .filter((q) => typeof stored[q.id] === "string" && (stored[q.id] as string).trim())
       .map((q) => ({ prompt: q.prompt, text: stored[q.id] as string }));
     await audit(sql, null, "pdf.downloaded", "assessment", a.id, {});
-    return { frozen, reflections, insights: generateResultInsights(frozen.snapshot, stored) };
+    return { frozen, reflections, insights: generateResultInsights(frozen.snapshot, stored, { engine: engineForTemplate(frozen.narrativeVersion) }) };
   });
   if ("error" in prep) return { ok: false, error: prep.error! };
   const pdf = await buildClientPdf(prep.frozen.snapshot, { generatedAt: prep.frozen.generatedAt, reflections: prep.reflections, insights: prep.insights });

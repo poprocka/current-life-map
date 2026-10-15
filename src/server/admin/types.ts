@@ -32,7 +32,7 @@ export interface NoteView {
 export interface WorkspaceData {
   assessment: { id: string; status: string; created_at: string; completed_at: string | null; sections_completed: number; assessment_version: string; question_bank_version: string; last_activity_at: string };
   answers: AnswerRow[];
-  result: { snapshot: LifeMapResult; sha256: string; generated_at: string; scoring_version: string } | null;
+  result: { snapshot: LifeMapResult; sha256: string; generated_at: string; scoring_version: string; narrative_version?: string | null } | null;
   coachReport: { id: string; content: CoachReport; review_state: string; template_version: string; created_at: string; kind?: string } | null;
   /** All versions, newest first: the generated original and every coach edit. */
   coachReports?: { id: string; content: CoachReport; kind: string; created_at: string }[];

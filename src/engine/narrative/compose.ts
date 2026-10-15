@@ -343,7 +343,7 @@ export function composeConnections(c: Ctx, A: Allocation): NarrativeSection {
 }
 
 // ── F · Five cards ───────────────────────────────────────────────────────────
-const CARD_META: Record<InsightCard["key"], { title: string; purpose: string; why: string; fallbackLead: string; fallbackText: string; fallbackQuestion: string }> = {
+export const CARD_META: Record<InsightCard["key"], { title: string; purpose: string; why: string; fallbackLead: string; fallbackText: string; fallbackQuestion: string }> = {
   overview: { title: "Your Life in Perspective", purpose: "The Bigger Picture",
     why: "Seeing the season as a whole can help you separate what you've chosen from what has simply accumulated.",
     fallbackLead: "A portrait of the life you described, not a verdict about who you are.",
@@ -476,7 +476,7 @@ function leadFor(key: InsightCard["key"], picks: Observation[], c: Ctx) {
 }
 
 // ── G · Eight Orbits ────────────────────────────────────────────────────────
-const ORBIT_Q: Record<OrbitId, string> = {
+export const ORBIT_Q: Record<OrbitId, string> = {
   mind: "What occupies your mind most often right now, and how much of it feels chosen?",
   body: "What does caring for your body look like in an ordinary week, and what gets in the way?",
   restoration: "What would recovery look like if you didn't have to earn it first?",

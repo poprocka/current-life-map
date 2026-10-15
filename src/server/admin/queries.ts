@@ -62,9 +62,9 @@ export async function loadWorkspace(sql: Sql, viewer: WorkspaceData["viewer"], i
   const answers = (await q<{ question_id: string; question_version: string; response_status: string; raw_ordinal: number | null; raw_value: unknown; text_ciphertext: string | null; answered_at: string }>(
     `select question_id, question_version, response_status, raw_ordinal, raw_value, text_ciphertext, answered_at from assessment_answers where assessment_id = $1`))
     .map(({ raw_value, text_ciphertext, ...r }) => ({ ...r, value: (raw_value as string | string[] | null) ?? decryptOr(text_ciphertext) }));
-  const result = (await q<{ snapshot: never; snapshot_sha256: string; generated_at: string; scoring_version: string }>(
-    `select snapshot, snapshot_sha256, generated_at, scoring_version from assessment_results where assessment_id = $1 order by generated_at desc limit 1`))
-    .map((r) => ({ snapshot: r.snapshot, sha256: r.snapshot_sha256, generated_at: r.generated_at, scoring_version: r.scoring_version }))[0] ?? null;
+  const result = (await q<{ snapshot: never; snapshot_sha256: string; generated_at: string; scoring_version: string; narrative_version: string | null }>(
+    `select snapshot, snapshot_sha256, generated_at, scoring_version, evidence->'narrative'->>'templateVersion' as narrative_version from assessment_results where assessment_id = $1 order by generated_at desc limit 1`))
+    .map((r) => ({ snapshot: r.snapshot, sha256: r.snapshot_sha256, generated_at: r.generated_at, scoring_version: r.scoring_version, narrative_version: r.narrative_version }))[0] ?? null;
   const coachReport = (await q<WorkspaceData["coachReport"] & Record<string, unknown>>(
     `select id, content, review_state, template_version, created_at from coach_reports where assessment_id = $1 order by created_at desc limit 1`))[0] ?? null;
   const coachReports = await q<never>(`select id, content, kind, created_at from coach_reports where assessment_id = $1 order by created_at desc`);
