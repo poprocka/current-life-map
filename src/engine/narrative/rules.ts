@@ -190,7 +190,7 @@ export function buildObservations(c: Ctx): Observation[] {
         ? `${N(a1)} matters to you and feels well supported. You describe ${list(his(a1).slice(0, 2).map(c.capOf))}.`
         : `${list(strongOrbits.map(N))} matter to you and feel well supported. In ${N(a1)}, you describe ${list(his(a1).slice(0, 2).map(c.capOf))}; in ${N(a2)}, ${list(his(a2).slice(0, 2).map(c.capOf))}.`,
       clause: `${list(strongOrbits.map(N))} ${one ? "matters" : "matter"} to you and ${one ? "feels" : "feel"} well supported`,
-      question: `What are you already doing in ${N(a1)} that you'd want to protect?` });
+      question: `What are you already doing in your ${N(a1)} Orbit that you'd want to protect?` });
   }
   {
     const covered = new Set([...strongOrbits]);
@@ -206,7 +206,7 @@ export function buildObservations(c: Ctx): Observation[] {
       destinations: ["card.support"],
       text: `You named ${N(S)} as the area that gives you the most energy or makes you feel most alive. Notice what is different about the way you experience it.`,
       clause: `${N(S)} gives you the most energy`,
-      question: `What about ${N(S)} makes you feel more alive, steady or resourced?` });
+      question: `What about your ${N(S)} Orbit makes you feel more alive, steady or resourced?` });
 
   for (const o of orbits) {
     const hi = his(o), lo = los(o);
@@ -221,7 +221,7 @@ export function buildObservations(c: Ctx): Observation[] {
           `You rated ${N(o)} as "${c.impLabel(o)}". Your answers also suggest that ${c.lowPhrase(l2)}.`,
         ]),
         clause: `${N(o)} matters a great deal to you and feels less supported right now`,
-        question: `What would it take for ${N(o)} to feel as supported as it is important to you?` });
+        question: `What would it take for your ${N(o)} Orbit to feel as supported as it is important to you?` });
     }
     if (c.unimportant(o) && c.moreSupported(o))
       add({ rule: "priority.quiet-supported", family: "strength", areas: [o], evidence: [c.ev(`${o}.importance`), ...hi.slice(0, 2).map(c.ev)], sufficiency: "comparative", wording: "suggest", valence: "strength", relevance: 0.42,
@@ -242,13 +242,13 @@ export function buildObservations(c: Ctx): Observation[] {
       alternatives: ["It may also simply be a season of full engagement that you're enjoying."],
       text: `You named ${N(D)} both as the area that takes the most of your time and energy and as the one that gives you the most energy back. It asks a lot, and it gives a lot.`,
       clause: `${N(D)} asks the most of you and gives the most back`,
-      question: `What does ${N(D)} give you that makes its demands worthwhile, and does the exchange still feel like one you're choosing?` });
+      question: `What does your ${N(D)} Orbit give you that makes its demands worthwhile, and does the exchange still feel like one you're choosing?` });
   if (D && S && D !== S)
     add({ rule: "energy.exchange", family: "energy", areas: [D, S], evidence: [c.ev("interconnections.01"), c.ev("interconnections.02")], sufficiency: "explicit", wording: "suggest", valence: "neutral", relevance: 0.42,
       destinations: ["card.energy"],
       text: `Between ${N(D)} and ${N(S)}, your energy seems to move in two directions: one asks, the other restores. Neither is good or bad in itself. What matters is whether the exchange feels sustainable and chosen.`,
       clause: `${N(D)} asks and ${N(S)} restores`,
-      question: `What exactly is ${N(D)} asking of you right now: time, effort, emotion or attention?` });
+      question: `What exactly is your ${N(D)} Orbit asking of you right now: time, effort, emotion or attention?` });
   {
     const md = orbits.filter((o) => c.important(o) && c.takes(o) && o !== D);
     if (md.length) {
@@ -260,7 +260,7 @@ export function buildObservations(c: Ctx): Observation[] {
           ? `${N(md[0])} matters to you, and you also said it ${energyWords(c.energy(md[0]))}. An area can be demanding and deeply meaningful at the same time.`
           : `${list(md.map(N))} matter to you, and you also said each takes more energy than it gives. An area can be demanding and deeply meaningful at the same time.`,
         clause: `${list(md.map(N))} ${one ? "matters" : "matter"} to you and also ${one ? "asks" : "ask"} a lot of your energy`,
-        question: `What would make ${N(md[0])} feel less costly to sustain, while keeping what it means to you?` });
+        question: `What would make your ${N(md[0])} Orbit feel less costly to sustain, while keeping what it means to you?` });
     }
   }
   {
@@ -288,7 +288,7 @@ export function buildObservations(c: Ctx): Observation[] {
       alternatives: ["The reason matters more than the label: it may be time, energy, circumstance or something you're still deciding."],
       text: `You named ${N(P)} as something that matters to you but gets less of your time and energy than you would like.${quiet ? ` You also rated it "${c.impLabel(P)}", so it may matter in a way the importance question didn't capture.` : ""}`,
       clause: `${N(P)} matters more to you than the time it currently gets`,
-      question: `What gets in the way of giving ${N(P)} the time and energy it deserves, and is that something you'd want to change or accept for now?` });
+      question: `What gets in the way of giving your ${N(P)} Orbit the time and energy it deserves, and is that something you'd want to change or accept for now?` });
   }
   if (E) {
     const k = c.keyed(`${E}.congruence`);
@@ -298,7 +298,7 @@ export function buildObservations(c: Ctx): Observation[] {
       alternatives: ["Being influenced by others isn't the same as living someone else's life. Some expectations are ones you share."],
       text: `You named ${N(E)} as the area most influenced by other people's expectations or social standards.${lowC ? ` You also said the way you live it doesn't fully reflect what genuinely matters to you. Those two answers may be related.` : highC ? " Even so, you said the way you live it reflects what genuinely matters to you. Influence and choice can sit side by side." : " That's useful to notice, and it isn't evidence that your choices are wrong."}`,
       clause: `${N(E)} is the area most shaped by others' expectations`,
-      question: `Which parts of ${N(E)} feel like choices you've made, and which feel like choices you've inherited?` });
+      question: `Which parts of your ${N(E)} Orbit feel like choices you've made, and which feel like choices you've inherited?` });
   }
   {
     const lowLived = orbits.filter((o) => c.important(o) && o !== E && c.low(`${o}.congruence`));
@@ -307,7 +307,7 @@ export function buildObservations(c: Ctx): Observation[] {
         destinations: ["card.tension"],
         text: `Asked whether the way you live ${N(o)} reflects what genuinely matters to you, you answered "${c.label(`${o}.congruence`)}". It's one answer, so hold it lightly, but it may point to a difference between what you value and how this area currently runs.`,
         clause: `how you live ${N(o)} doesn't fully reflect what matters to you`,
-        question: `If ${N(o)} reflected what genuinely matters to you, what would be different in an ordinary week?` });
+        question: `If your ${N(o)} Orbit reflected what genuinely matters to you, what would be different in an ordinary week?` });
     const highLived = orbits.filter((o) => c.important(o) && c.high(`${o}.congruence`));
     if (highLived.length)
       add({ rule: "alignment.lived-values-high", family: "strength", areas: highLived, evidence: highLived.flatMap((o) => [c.ev(`${o}.importance`), c.ev(`${o}.congruence`)]), sufficiency: "explicit", wording: "state", valence: "strength", relevance: 0.44,
@@ -373,14 +373,14 @@ export function buildObservations(c: Ctx): Observation[] {
         destinations: ["card.energy", "orbit"],
         text: `You described ${N(o)} with ${desc}${c.gives(o) ? ` and said it ${energyWords(c.energy(o))}` : ""}, while your answers about how it's set up sit ${c.lessSupported(o) ? "lower" : "in the middle"}. How it feels and how it's built into your life may not quite match.`,
         clause: `${N(o)} feels better than the statements about it suggest`,
-        question: `What would it take for ${N(o)} to be built into your weeks, not only felt in moments?` });
+        question: `What would it take for your ${N(o)} Orbit to be built into your weeks, not only felt in moments?` });
     } else if (t.strained.length >= 2 && !t.expansive.length && c.moreSupported(o)) {
       contrasted.add(o);
       add({ rule: "contrast.feelings-statements", family: "mixed", areas: [o], evidence: [c.ev(`${o}.emotion`), ...his(o).slice(0, 2).map(c.ev)], sufficiency: "corroborated", wording: "wonder", valence: "tension", relevance: 0.55,
         destinations: ["card.energy", "orbit"],
         text: `You described ${N(o)} with ${desc}, even though your answers describe it as well supported. How it looks and how it feels may not quite match.`,
         clause: `${N(o)} looks supported but feels heavy`,
-        question: `What does ${N(o)} cost you that doesn't show from the outside?` });
+        question: `What does your ${N(o)} Orbit cost you that doesn't show from the outside?` });
     }
   }
 
@@ -417,7 +417,7 @@ export function buildObservations(c: Ctx): Observation[] {
       alternatives: ["A trade-off can be temporary, deliberate and right for this season."],
       text: `You said ${N(C)} receives less care because another part of your life demands so much, and you named ${N(D)} as what takes the most of your time and energy. These two answers may be describing the same trade-off.${competes ? " It also fits what you said about your life overall: the areas compete for your time and energy." : ""}`,
       clause: `${N(C)} seems to be making room for ${N(D)}`,
-      question: `Is the space ${N(C)} has right now a trade-off you'd choose again for this season?` });
+      question: `Is the space your ${N(C)} Orbit has right now a trade-off you'd choose again for this season?` });
   {
     const amb = (["growth", "social"] as OrbitId[]).filter((o) => (c.important(o) && !c.lessSupported(o)) || D === o);
     const restFriction = c.low("restoration.02"); // reverse-keyed: endorsing "rest is sacrificed" → low keyed
@@ -524,14 +524,14 @@ export function buildObservations(c: Ctx): Observation[] {
       destinations: ["card.begin"],
       text: `You chose ${N(L)} as the area where improvement could positively influence the rest of your life, and it's already one of the better supported areas in your answers.`,
       clause: `you see ${N(L)}, already a strength, as the area that could lift the rest`,
-      question: `What would "even better" look like in ${N(L)}, and what would it change elsewhere?` });
+      question: `What would "even better" look like in your ${N(L)} Orbit, and what would it change elsewhere?` });
   else if (L) {
     const less = c.lessSupported(L), same = L === P;
     add({ rule: "link.leverage", family: "leverage", areas: [L], evidence: [c.ev("interconnections.03"), ...(same ? [c.ev("interconnections.05")] : [])], sufficiency: "explicit", wording: "state", valence: "neutral", relevance: 0.58 + (less || same ? 0.08 : 0),
       destinations: ["card.begin", "connections"],
       text: `You chose ${N(L)} as the area where improvement could positively influence the rest of your life.${less ? " It's also one of the less supported areas in your answers, which may be part of why it feels like a lever." : ""}${same ? " It's also what you said gets less of your time than you'd like." : ""}`,
       clause: `you see ${N(L)} as the area that could lift the rest`,
-      question: `If ${N(L)} improved even a little, what would you notice first in the rest of your life?` });
+      question: `If your ${N(L)} Orbit improved even a little, what would you notice first in the rest of your life?` });
   }
   if (ic.overallSupport && !(competes && C && D && C !== D)) {
     const v7 = ic.overallSupport.value;
@@ -560,7 +560,7 @@ export function buildObservations(c: Ctx): Observation[] {
       destinations: ["opening", "card.tension"],
       text: `${N(o)} seems to sit at the centre of your life right now. It's ${list([...(c.important(o) ? [`what you rated "${c.impLabel(o)}"`] : []), ...roles.map((r) => r.text)])}${crowd ? `, and ${N(crowd)} is receiving less care in the meantime` : ""}.${c.takes(o) ? ` You said it ${energyWords(c.energy(o))}${t.strained.length ? `, and described it with ${c.feelings(o)}` : ""}.` : ""}`,
       clause: `${N(o)} sits at the centre of your life right now`,
-      question: `If ${N(o)} asked a little less of you, where would that energy go first?` });
+      question: `If your ${N(o)} Orbit asked a little less of you, where would that energy go first?` });
   }
 
   // ── A crowded-out area rated unimportant (approved 13 Oct) ────────────────
@@ -569,7 +569,7 @@ export function buildObservations(c: Ctx): Observation[] {
       destinations: ["card.tension"],
       text: `You said ${N(C)} receives less care because of other demands, and you also rated it "${c.impLabel(C)}".`,
       clause: `${N(C)} gets less care, and you rated it "${c.impLabel(C)}"`,
-      question: `Is the space ${N(C)} has right now one you're at peace with?` });
+      question: `Is the space your ${N(C)} Orbit has right now one you're at peace with?` });
 
   // ── Strengths that reinforce each other (approved 13 Oct) ─────────────────
   {
