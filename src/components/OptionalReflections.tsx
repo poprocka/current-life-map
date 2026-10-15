@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { POST_MAP_REFLECTIONS as R } from "@/content/v10/reflections";
 import type { LifeMapResult } from "@/engine/compute";
 import { generateReflectionLayer } from "@/engine/insights";
@@ -16,8 +16,9 @@ function writeLocal(v: Record<string, string>) {
 
 /**
  * Optional reflections, after the interpretation and above the PDF card.
- * One question is visible; "Show all" reveals the rest (Jana, 2026-10-13). Each reflection has its own Save button,
- * shown only while that field is active (Jana, 2026-10-15). Saving stores the replies encrypted against this assessment (CMS) so they appear in the Coach Report and
+ * One question is visible; "Show all" reveals the rest (Jana, 2026-10-13). Autosave (Jana, 2026-10-15): when a field
+ * loses focus after a change, the reflections are saved to the server; no button or "Saved" status is shown, only an
+ * honest note if saving fails. Saving stores the replies encrypted against this assessment (CMS) so they appear in the Coach Report and
  * the emailed PDF. Drafts are kept on the device as the person types.
  *
  * After saving, a separate "read alongside" note may appear under a reflection — only where the question shares its
@@ -33,6 +34,19 @@ export function OptionalReflections({ token, result }: { token?: string; result?
     const v = readLocal();
     setValues(v);
     if (R.questions.slice(1).some((q) => v[q.id]?.trim())) setShowAll(true);
+  }, []);
+
+  // If the page is closed while a field still has unsaved changes, send them once (keepalive lets the request finish).
+  const latest = useRef({ values, status, token });
+  latest.current = { values, status, token };
+  useEffect(() => {
+    const flush = () => {
+      const { values: v, status: m, token: t } = latest.current;
+      if (!t || !Object.values(m).some((st) => st === "dirty" || st === "error")) return;
+      void fetch("/api/assessments/reflections", { method: "PUT", keepalive: true, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: t, reflections: v }) }).catch(() => undefined);
+    };
+    window.addEventListener("pagehide", flush);
+    return () => window.removeEventListener("pagehide", flush);
   }, []);
 
   const saved = Object.values(status).some((st) => st === "saved" || st === "device");
@@ -63,26 +77,14 @@ export function OptionalReflections({ token, result }: { token?: string; result?
       <div id="reflections-list" className="mt-8 space-y-7">
         {visible.map((q) => {
           const st = status[q.id] ?? "idle";
-          const done = st === "saved" || st === "device";
           return (
-            // The Save button shows only while this field (or the button itself) has focus
-            <div key={q.id} className="group">
+            <div key={q.id}>
               <label htmlFor={q.id} className="block text-[14px] leading-snug text-mahogany">{q.prompt}</label>
               <textarea id={q.id} rows={3} maxLength={R.maxLength} placeholder={R.placeholder} value={values[q.id] ?? ""}
                 onChange={(e) => { const next = { ...values, [q.id]: e.target.value }; setValues(next); writeLocal(next); setOne(q.id, "dirty"); }}
+                onBlur={() => { if (st === "dirty" || st === "error") void save(q.id); }}
                 className="mt-3 w-full resize-y rounded-[16px] border border-linen-line bg-linen/60 px-4 py-3 text-[14px] leading-relaxed placeholder:text-taupe/70 focus:border-burgundy focus:outline-none" />
-              <div className="mt-2 flex min-h-0 flex-wrap items-center gap-3">
-                {/* mousedown keeps focus in the field, so the button doesn't disappear before the click lands */}
-                {!done && <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => save(q.id)} disabled={st === "saving" || !values[q.id]?.trim()}
-                  className="hidden rounded-full bg-burgundy px-6 py-2.5 text-[11.5px] uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany disabled:opacity-50 group-focus-within:inline-block">
-                  {st === "saving" ? "Saving…" : "Save"}
-                </button>}
-                <p role="status" className="text-[12px] text-taupe">
-                  {/* Just "Saved" with a small check (Jana, 2026-10-15) */}
-                  {done && <span className="inline-flex items-center gap-1.5 text-mahogany/75"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="text-burgundy"><path d="M2.5 6.3l2.3 2.3 4.7-5" /></svg>Saved</span>}
-                  {st === "error" && "We couldn't save just now. Your words are kept on this device. Please try again."}
-                </p>
-              </div>
+              {st === "error" && <p role="status" className="mt-2 text-[12px] text-burgundy">We couldn't save this just now. Your words are kept on this device, and we'll try again when you leave the field.</p>}
               {alongside(q.id) && <p className="mt-2 text-[12.5px] italic leading-relaxed text-mahogany/70">{alongside(q.id)!.text}</p>}
             </div>
           );
