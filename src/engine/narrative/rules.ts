@@ -1,3 +1,4 @@
+import { SUPPORT_COMPETE_READING } from "@/content/v10/scales";
 /**
  * Library of evidence-backed interpretation rules.
  *
@@ -536,9 +537,7 @@ export function buildObservations(c: Ctx): Observation[] {
     const v7 = ic.overallSupport.value;
     add({ rule: "link.overall", family: "system", areas: [], evidence: [c.ev("interconnections.07")], sufficiency: "explicit", wording: "state", valence: v7.includes("compete") ? "tension" : v7.includes("support") ? "strength" : "mixed", relevance: 0.34,
       destinations: ["connections", "card.overview"],
-      text: v7 === "mix"
-        ? "Asked whether the areas of your life mostly help each other or compete, you said it's a mix of both."
-        : `Asked whether the areas of your life mostly help each other or compete, you said they ${ic.overallSupport.label.replace(/^They /, "").toLowerCase()}.`,
+      text: SUPPORT_COMPETE_READING[v7] ?? `You described the parts of your life this way: ${ic.overallSupport.label.toLowerCase()}.`,
       clause: v7 === "mix" ? "your areas of life both help and compete" : `the areas of your life ${ic.overallSupport.label.replace(/^They /, "").toLowerCase()}` });
   }
 

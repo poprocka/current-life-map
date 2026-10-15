@@ -1,3 +1,4 @@
+import { SUPPORT_COMPETE_READING } from "@/content/v10/scales";
 /**
  * Current Life Map — scoring & interpretation engine, scoring versions "provisional-1" and "provisional-2" (distance from congruence).
  * Implements the 12 Oct 2026 backend spec. Pure and deterministic.
@@ -410,7 +411,7 @@ export function computeLifeMap(answers: Answers, cfg: ScoringConfig = CURRENT_SC
   }
   if (inter.overallSupport) {
     add({ templateId: "system_support", title: "How your areas relate", orbits: [], evidenceType: "direct", hypothesis: false, strength: "moderate",
-      body: `Asked whether the areas of your life mostly help each other or compete, you answered: “${inter.overallSupport.label}.”`,
+      body: SUPPORT_COMPETE_READING[inter.overallSupport.value] ?? `You described the parts of your life this way: ${inter.overallSupport.label.toLowerCase()}.`,
       caveat: "Whole-system perception, not a measured network.",
       evidence: [{ questionId: "interconnections.07", answer: inter.overallSupport.value, kind: "direct" }] });
   }
