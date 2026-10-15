@@ -115,19 +115,31 @@ export function InsightBody({ c }: { c: ResultInsights["cards"][number] }) {
   );
 }
 
+/**
+ * One insight, told as a short story (Jana, 2026-10-15): the answers it rests on, then the pattern, what it may say about
+ * you and another way to see it, flowing as prose rather than labelled steps. The answers stand out; the reading follows.
+ */
 function InsightBlock({ s, major }: { s: ResultInsights["cards"][number]["sections"][number]; major?: ResultInsights["cards"][number]["major"] }) {
+  const prose = "text-[14.5px] leading-[1.75] text-mahogany/85 [@media(min-width:1024px)_and_(max-height:1100px)]:text-[14px] [@media(min-width:1024px)_and_(max-height:1100px)]:leading-[1.65]";
   return (
     <section>
       <h3 className="font-serif text-[21px] font-normal">{s.heading}</h3>
       {major ? (
-        <div className="mt-3 space-y-4 text-[14.5px] leading-[1.75] text-mahogany/85 [@media(min-width:1024px)_and_(max-height:1100px)]:space-y-3 [@media(min-width:1024px)_and_(max-height:1100px)]:text-[14px] [@media(min-width:1024px)_and_(max-height:1100px)]:leading-[1.65]">
+        <div className={`mt-3 space-y-4 ${prose} [@media(min-width:1024px)_and_(max-height:1100px)]:space-y-3`}>
           <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">What you shared</p>
             <ul className="mt-1 space-y-1.5 text-[13px] text-mahogany/75">{major.shared.map((x, k) => <SharedAnswer key={k} text={x} />)}</ul></div>
-          <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">What stands out</p><p className="mt-1">{major.pattern}</p></div>
-          {major.meaning && <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">What it might mean</p><p className="mt-1">{major.meaning}</p></div>}
-          {major.alternative && <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">It could also be</p><p className="mt-1">{major.alternative}</p></div>}
+          <div className="space-y-3">
+            <p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">Reading between the lines</p>
+            <p className="!mt-1">{major.pattern}</p>
+            {(major.meaning || major.alternative) && <p>{[major.meaning, major.alternative].filter(Boolean).join(" ")}</p>}
+          </div>
         </div>
-      ) : <p className="mt-2 text-[14.5px] leading-[1.75] text-mahogany/85 [@media(min-width:1024px)_and_(max-height:1100px)]:text-[14px] [@media(min-width:1024px)_and_(max-height:1100px)]:leading-[1.65]">{s.text}</p>}
+      ) : (
+        <div className={`mt-2 space-y-3 ${prose}`}>
+          <p>{s.text}</p>
+          {s.meaning && <p>{s.meaning}</p>}
+        </div>
+      )}
     </section>
   );
 }

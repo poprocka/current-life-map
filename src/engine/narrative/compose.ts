@@ -434,7 +434,7 @@ export function composeCards(c: Ctx, A: Allocation, closingText: () => string, t
     picks = picks.filter((o, i) => i === 0 || o.relevance >= 0.4).slice(0, 3);
     if (picks.length === 3 && picks[2].relevance < 0.5) picks = picks.slice(0, 2);
     for (const o of picks) A.take(o, dest);
-    const sections: InsightSection[] = picks.map((o) => ({ id: o.id, observationId: o.id, heading: (HEADINGS[o.rule] ?? (() => cap(o.clause)))(o, c), text: o.text, evidence: o.evidence, claim: claimOf(o) }));
+    const sections: InsightSection[] = picks.map((o) => ({ id: o.id, observationId: o.id, heading: (HEADINGS[o.rule] ?? (() => cap(o.clause)))(o, c), text: o.text, meaning: o.meaning, evidence: o.evidence, claim: claimOf(o) }));
     const fallback = !picks.length;
     const lead = fallback ? meta.fallbackLead : key === "overview" && theme ? `The thread running through your answers: ${theme.lead.clause}.` : leadFor(key, picks, c);
     built[key] = {

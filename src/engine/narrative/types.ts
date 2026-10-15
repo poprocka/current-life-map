@@ -63,7 +63,7 @@ export interface Para { text: string; observationIds: string[]; evidence: Eviden
 
 export interface NarrativeSection { key: string; title: string; paragraphs: Para[]; fallback: boolean }
 
-export interface InsightSection { id: string; heading: string; text: string; evidence: Evidence[]; claim: "direct" | "derived" | "tentative"; observationId?: string }
+export interface InsightSection { id: string; heading: string; text: string; meaning?: string; evidence: Evidence[]; claim: "direct" | "derived" | "tentative"; observationId?: string }
 /** The five steps of a major insight (approved 13 Oct). */
 export interface MajorInsight { shared: string[]; pattern: string; meaning: string; alternative: string; question: string; observationId: string }
 

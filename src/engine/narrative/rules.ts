@@ -77,51 +77,69 @@ export const energyWords = (n: number | null) => (n === null ? null : ENERGY_WOR
  * "What it might mean" for each rule (approved 13 Oct): tentative, about lived experience, limited to what the
  * rule's evidence supports. No causes, diagnoses or personal history.
  */
-const MEANING: Record<string, (d: Draft, n: (a: Area) => string) => string> = {
-  "priority.top": () => "What you rate as important shows where your care is going in this season.",
-  "support.similar": () => "No single area seems to be carrying, or draining, the rest.",
-  "support.contrast": () => "The fuller areas may be part of what is holding things together right now.",
-  "support.top": () => "These areas may be quietly giving you more than you notice.",
-  "priority.gap": (d, n) => `${n(d.areas[0])} may be asking for more than your current routines give it.`,
-  "priority.strength": () => "These areas may be resources you can lean on when other parts of life ask more of you.",
-  "priority.quiet-supported": (d, n) => `Something about how ${n(d.areas[0])} is set up may already be working without much effort.`,
-  "priority.quiet-choice": (d, n) => `Letting ${n(d.areas[0])} rest for now may be part of how you're making room for what matters more.`,
-  "energy.same": (d, n) => `${n(d.areas[0])} may be both your engine and your fuel. When something gives this much back, its cost can be easy to overlook.`,
-  "energy.exchange": (d, n) => `Your energy may depend on ${n(d.areas[1])} more than you notice, especially when ${n(d.areas[0])} asks a lot.`,
-  "energy.source": (d, n) => `${n(d.areas[0])} may be one of the ways you refill, and worth protecting when life gets full.`,
-  "energy.meaningful-demand": (d) => `Part of what makes ${d.areas.length > 1 ? "these areas" : "this area"} tiring may be how much ${d.areas.length > 1 ? "they matter" : "it matters"} to you.`,
-  "energy.balance": () => "Knowing where your energy comes from can help you protect it when demands rise.",
-  "energy.source-takes": (d, n) => `${n(d.areas[0])} may give you energy in some moments and cost you in others.`,
-  "alignment.priority-gap": () => "Something that still matters to you may be waiting for space you haven't yet been able to give it.",
-  "alignment.expectations": (d, n) => d.valence === "tension" ? `Some of how you live ${n(d.areas[0])} may be shaped more by others than by you.` : `You may be holding other people's expectations and your own values in ${n(d.areas[0])} at the same time.`,
-  "alignment.lived-values-low": (d, n) => `${n(d.areas[0])} may be running more on "should" than on what you want.`,
-  "alignment.lived-values-high": () => "Living these areas by your own values may be a source of steadiness for you.",
-  "alignment.crowded-unimportant": (d, n) => `${n(d.areas[0])} may matter more to you than the rating suggests, or the trade-off may genuinely sit well with you.`,
-  "self.strengths": () => "These may be the parts of yourself you can rely on when things get harder.",
-  "self.quieter": () => "These may be the places where being on your own side is still being learned.",
-  "self.values-living": (d, n) => `Knowing what you want may be ahead of what your circumstances in ${n(d.areas[1])} currently allow.`,
-  "self.even": () => "Some of these questions may still be open for you.",
-  "emotion.mixed": (d, n) => `${n(d.areas[0])} may be meaningful and demanding at once.`,
-  "emotion.strained": (d, n) => `${n(d.areas[0])} may be costing you more than it gives right now.`,
-  "emotion.alive": (d, n) => `${n(d.areas[0])} may be one of the places where you come back to yourself.`,
-  "contrast.feelings-statements": (d, n) => d.valence === "strength" ? `${n(d.areas[0])} may feel better in the moment than the routines around it suggest, or be present in moments rather than built in.` : `${n(d.areas[0])} may look steady from the outside while asking a lot of you inside.`,
-  "link.demand-crowded": (d, n) => `${n(d.areas[1])} may be what quietly pays for the demands of ${n(d.areas[0])}.`,
-  "link.ambition-restoration": (d) => d.valence === "strength" ? "You may have found a rhythm where ambition and recovery support each other." : "Rest may feel like something earned once the important things are done, rather than part of how you do them.",
-  "link.body-mind": (d) => d.valence === "strength" ? "Your body and mind may be giving each other a steady base." : "Low physical energy and a busy mind may be keeping each other going.",
-  "link.career-community": () => "One part of your social world may be carrying the other.",
-  "link.permission": () => "Rest and pleasure may feel like rewards to be earned rather than needs.",
-  "link.standards-care": () => "Caring for yourself may be the first thing to slip when you hold yourself to a high standard.",
-  "link.voice": () => "Saying what you need may feel risky in more than one kind of relationship.",
-  "link.room-to-grow": () => "Your circumstances may not yet have caught up with who you are becoming.",
-  "link.familiar": () => "Staying with what's familiar may feel safer than change, even when it costs you.",
-  "link.growth-joy": () => "Growth may be taking up some of the space where joy used to live.",
-  "link.leverage": () => "You may already sense where a small change could make a large difference.",
-  "link.lever-strong": (d, n) => `The next step in ${n(d.areas[0])} may be about going further rather than fixing something.`,
-  "link.overall": (d) => d.valence === "tension" ? "When areas compete, it can feel as though every choice costs something." : "When areas support each other, effort in one can carry into the others.",
-  "strength.reinforcing": () => "These strengths may be making each other easier, which is a resource worth knowing you have.",
-  "centre.roles": (d, n) => `Much of your energy may be going into holding ${n(d.areas[0])} steady, which can leave less for the rest of your life.`,
-  "pattern.several": () => "This may be a season of carrying a lot at once.",
-  "pattern.well-supported": () => "What you've built may deserve as much care as anything you'd want to change.",
+const MEANING: Record<string, (d: Draft, n: (a: Area) => string, k: number) => string> = {
+  // Deeper, conversational readings (Jana, 2026-10-15). They draw on ideas from depth psychology, values work, relationship
+  // psychology and coaching (the public persona, values as lived priorities, action before motivation, self-compassion),
+  // without naming anyone or diagnosing. DRAFT for Jana's review.
+  "priority.top": () => "What we rate as important is a quiet statement of who we are trying to be right now. It shows where your care is going in this season.",
+  "support.similar": () => "No single area seems to be carrying, or draining, the rest. That kind of evenness can be a strength in itself.",
+  "support.contrast": () => "The fuller areas may be part of what is holding everything else together right now, often without much credit.",
+  "support.top": () => "Strengths tend to become invisible to the people who have them. What we don't notice, we rarely protect.",
+  // k = how many times this rule has already appeared for this person, so two Orbits never get the same reading
+  "priority.gap": (d, n, k) => [
+    `What we call important and what our weeks are built around can be two different things. A value only becomes real when it gets time, attention and a place in your days; until then it stays a wish. ${n(d.areas[0])} may be asking to move from something you care about to something you live.`,
+    `It's possible to value something deeply and still give it the leftovers of your week, not because you don't care, but because caring alone doesn't build a routine. ${n(d.areas[0])} may be asking for a little structure, rather than more wanting.`,
+    `When something important keeps getting less than it needs, a quiet tension builds: a sense that life is slightly out of order. ${n(d.areas[0])} may be one of the places where that tension lives for you right now.`,
+  ][k % 3],
+  "priority.strength": () => "Strengths tend to become invisible to the people who have them. Naming what's working matters, because these are the places you can lean on when other parts of life ask more of you.",
+  "priority.quiet-supported": (d, n) => `Not everything needs your attention to thrive. Something about how ${n(d.areas[0])} is set up may already be working on its own, and that's worth knowing.`,
+  "priority.quiet-choice": (d, n) => `A full life is built on choices about what to care about, and what to let rest. Letting ${n(d.areas[0])} sit in the background may be part of how you're making room for what matters more.`,
+  "energy.same": (d, n) => `This is often where meaning lives: in what costs us and gives back in equal measure. ${n(d.areas[0])} may be both your engine and your fuel. The risk isn't the effort; it's that when something feeds us this much, we stop noticing what it takes, until our body or the people close to us notice first.`,
+  "energy.exchange": (d, n) => `Energy works less like a fixed budget and more like a current: some places draw it out, others bring it back. Your energy may depend on ${n(d.areas[1])} more than you notice, especially when ${n(d.areas[0])} asks a lot.`,
+  "energy.source": (d, n) => `The places that make us feel most alive are often where we are most ourselves, with nothing to prove. They also tend to be the first thing we cut when life gets busy, which is exactly when we need them most. ${n(d.areas[0])} may be one of yours.`,
+  "energy.meaningful-demand": (d) => `We tend to read tiredness as a sign that something is wrong. But what matters is often demanding; the effort is part of why it matters. The more useful question may be whether you're recovering from ${d.areas.length > 1 ? "these areas" : "this area"} as deliberately as you're giving to ${d.areas.length > 1 ? "them" : "it"}.`,
+  "energy.balance": () => "Knowing where your energy comes from, and where it goes, is one of the most practical forms of self-knowledge. It lets you protect your energy before demands rise, not after.",
+  "energy.source-takes": (d, n) => `Feeling alive and feeling at ease aren't the same thing. ${n(d.areas[0])} may light you up and wear you out, sometimes in the same week. The things we care about most are rarely the easiest.`,
+  "alignment.priority-gap": () => "We rarely drift from what matters through one big decision. It usually happens through many small, reasonable ones: next month, once things calm down. Something that still matters to you may be waiting for space you haven't yet been able to give it, and life rarely makes that space on its own.",
+  "alignment.expectations": (d, n) => d.valence === "tension"
+    ? `We all carry a version of ourselves shaped to meet other people's expectations: the face we show the world. It's useful, and often kind. But when it starts making the decisions, life can begin to feel slightly borrowed. Some of how you live ${n(d.areas[0])} may be shaped more by others than by you.`
+    : `We all carry a version of ourselves shaped to meet other people's expectations. The question isn't whether others influence you in ${n(d.areas[0])}, but whether you've chosen which influences to keep.`,
+  "alignment.lived-values-low": (d, n) => `When the way we live drifts from what we value, it rarely feels dramatic. It shows up as a low hum: going through the motions, doing what makes sense rather than what feels true. That hum is information. It may point to the part of ${n(d.areas[0])} that is running on "should", and wants to be more yours.`,
+  "alignment.lived-values-high": () => "Living by your own values doesn't make life easier, but it does make it feel like yours. That sense of authorship is one of the steadiest foundations a person can have.",
+  "alignment.crowded-unimportant": (d, n) => `Sometimes we rate something as unimportant because it hasn't had room in a while, not because it doesn't matter. ${n(d.areas[0])} may matter more to you than the rating suggests, or the trade-off may genuinely sit well with you.`,
+  "self.strengths": () => "The relationship with yourself is the one you live in every day; every other relationship is lived through it. These may be the parts of yourself you can rely on when things get harder.",
+  "self.quieter": () => "How we treat ourselves when no one is watching shapes everything else. These may be the places where being on your own side is still being learned, and that learning is possible at any point in life.",
+  "self.values-living": (d, n) => `Insight is the beginning, not the end. Knowing what you want and arranging a life around it are two different acts, and the second usually asks for courage more than clarity. In ${n(d.areas[1])}, what you know may be ahead of what your circumstances currently allow.`,
+  "self.even": () => "Some of these questions may still be open for you, and an open question can be a more honest place to stand than a quick answer.",
+  "emotion.mixed": (d, n) => `Feelings are signals, not verdicts. ${n(d.areas[0])} may be meaningful and demanding at once, and holding both without rushing to resolve them is a sign of emotional maturity, not confusion.`,
+  "emotion.strained": (d, n) => `Feelings are signals, not verdicts. ${n(d.areas[0])} may be costing you more than it gives right now, and the feeling may be pointing to a need that isn't being met yet.`,
+  "emotion.alive": (d, n) => `Feelings are signals, and this one points somewhere good. ${n(d.areas[0])} may be one of the places where you come back to yourself.`,
+  "contrast.feelings-statements": (d, n) => d.valence === "strength"
+    ? `What we feel and what we've built may not match. ${n(d.areas[0])} may feel better in the moment than the routines around it suggest: present in moments, rather than built into your life.`
+    : `What looks fine from the outside can still ask a lot on the inside. ${n(d.areas[0])} may look steady while quietly costing you, and that cost deserves to be taken seriously, even if no one else sees it.`,
+  "link.demand-crowded": (d, n) => `Every yes is also a no to something else. ${n(d.areas[1])} may be what quietly pays for the demands of ${n(d.areas[0])}. That trade-off may be the right one for now; it's worth making sure it's one you're choosing, not one that's choosing you.`,
+  "link.ambition-restoration": (d) => d.valence === "strength"
+    ? "Recovery isn't the opposite of ambition; it's what makes ambition last. You may have found a rhythm where the two support each other, and that's rarer than it sounds."
+    : "Many driven people treat rest as a reward for finishing, but the list doesn't end. Rest may feel like something earned once the important things are done, rather than part of how you do them. Recovery isn't the opposite of ambition; it's what makes it sustainable.",
+  "link.body-mind": (d) => d.valence === "strength"
+    ? "Body and mind are less separate than we treat them. Yours may be giving each other a steady base, which makes everything else a little easier."
+    : "Body and mind are less separate than we treat them. Low physical energy and a busy mind may be feeding each other, and a small change in one can sometimes ease the other.",
+  "link.career-community": () => "Achievement and belonging meet different needs. One part of your social world may be carrying the other, but neither can fully stand in for the other for long.",
+  "link.permission": () => "Needing to earn rest or pleasure often grows from a quiet belief that our worth lies in what we produce. Learning to receive, without first justifying it, can be one of the hardest and most freeing things a person does.",
+  "link.standards-care": () => "High standards can be a gift, until they turn inward and make even self-care one more thing to get right. Self-compassion isn't lowering the bar; it's what lets you keep reaching for it without breaking.",
+  "link.voice": () => "Not saying what we need often protects closeness in the short term and wears it down in the long term. Being close to someone asks us to be known, needs included.",
+  "link.room-to-grow": () => "Inner change often runs ahead of outer circumstances. That gap can feel frustrating, but it's also evidence that you've already started moving.",
+  "link.familiar": () => "The mind tends to prefer a known discomfort to an unknown possibility. Courage isn't the absence of that fear; it's taking a small step while you still feel it. Clarity and motivation usually follow action, rather than the other way round.",
+  "link.growth-joy": () => "Growth can quietly become another form of striving. Joy is a reminder that you are not only a project to improve, but a person to enjoy being.",
+  "link.leverage": () => "People often sense where the lever is before they can explain why. A small, steady change in one area can reshape a whole life more than a big push everywhere at once.",
+  "link.lever-strong": (d, n) => `Growth doesn't only come from fixing what's weak; it often comes from building on what's already strong. The next step in ${n(d.areas[0])} may be about going further rather than repairing something.`,
+  "link.overall": (d) => d.valence === "tension"
+    ? "When areas compete, every choice can feel like it costs something. Seeing the whole picture is what lets you choose the trade-offs, rather than simply absorb them."
+    : "When the parts of a life support each other, effort in one tends to carry into the rest. That's a quiet form of design, whether or not you planned it.",
+  "strength.reinforcing": () => "Strengths rarely work alone. These two may be making each other easier, which is a resource worth knowing you have.",
+  "centre.roles": (d, n) => `When one area becomes the centre of gravity, everything else starts to orbit it, sometimes without us choosing it. Much of your energy may be going into holding ${n(d.areas[0])} steady. That can be exactly what a season requires; it can also quietly become an identity, the role you play. Noticing it is the first step to deciding whether it's still yours to carry this way.`,
+  "pattern.several": () => "When many things ask for care at once, it's natural to feel scattered, or to feel you should tend to everything. You don't have to. Awareness comes first; then you can choose one place to begin.",
+  "pattern.well-supported": () => "When life is working, it's easy to take it for granted. What you've built may deserve as much care and attention as anything you'd want to change.",
 };
 const ALT_DEFAULT = "This may reflect this season rather than a lasting pattern.";
 const ALT: Record<string, string> = {
@@ -140,9 +158,11 @@ const ALT: Record<string, string> = {
 
 export function buildObservations(c: Ctx): Observation[] {
   const out: Observation[] = [];
+  const seenRule: Record<string, number> = {};
   const add = (d: Draft) => {
+    const k = (seenRule[d.rule] = (seenRule[d.rule] ?? -1) + 1);
     const weight = Math.max(0, ...d.areas.filter((a): a is OrbitId => a !== "sun").map((a) => c.imp(a) ?? 0));
-    const meaning = d.meaning ?? MEANING[d.rule]?.(d, (a) => (a === "sun" ? "your relationship with yourself" : c.name(a))) ?? "";
+    const meaning = d.meaning ?? MEANING[d.rule]?.(d, (a) => (a === "sun" ? "your relationship with yourself" : c.name(a)), k) ?? "";
     const alternatives = d.alternatives?.length ? d.alternatives : [ALT[d.rule] ?? ALT_DEFAULT];
     out.push({
       id: `${d.rule}:${d.areas.join("+") || "system"}`, counterEvidence: [], ...d, alternatives, meaning,
@@ -204,7 +224,7 @@ export function buildObservations(c: Ctx): Observation[] {
   if (S && D !== S && !c.takes(S))
     add({ rule: "energy.source", family: "strength", areas: [S], evidence: [c.ev("interconnections.02"), c.ev(`${S}.energy`)], sufficiency: "explicit", wording: "state", valence: "strength", relevance: 0.4,
       destinations: ["card.support"],
-      text: `You named ${N(S)} as the area that gives you the most energy or makes you feel most alive. Notice what is different about the way you experience it.`,
+      text: `${N(S)} is where your energy comes back. It's worth noticing what is different there: how you feel, who you are with, and what you stop worrying about.`,
       clause: `${N(S)} gives you the most energy`,
       question: `What about your ${N(S)} Orbit makes you feel more alive, steady or resourced?` });
 
@@ -217,8 +237,8 @@ export function buildObservations(c: Ctx): Observation[] {
         destinations: ["opening", "card.tension"],
         alternatives: ["That gap doesn't automatically mean something is wrong. It may reflect a demanding season, or a choice you've made for now.", "You may already know this, and be working on it in your own way."],
         text: v(`gap.${o}`, [
-          `${N(o)} matters a lot to you (you rated it "${c.impLabel(o)}"), and yet ${c.lowPhrase(l2)}.`,
-          `You rated ${N(o)} as "${c.impLabel(o)}". Your answers also suggest that ${c.lowPhrase(l2)}.`,
+          `There's a gap in ${N(o)} between how much it matters and how it's going. It's one of the things you care about most, and yet ${c.lowPhrase(l2)}.`,
+          `${N(o)} sits close to your heart, but the everyday support around it feels thinner: ${c.lowPhrase(l2)}.`,
         ]),
         clause: `${N(o)} matters a great deal to you and feels less supported right now`,
         question: `What would it take for your ${N(o)} Orbit to feel as supported as it is important to you?` });
@@ -286,7 +306,7 @@ export function buildObservations(c: Ctx): Observation[] {
     add({ rule: "alignment.priority-gap", family: "priority-gap", areas: [P], evidence: [c.ev("interconnections.05"), ...(quiet ? [c.ev(`${P}.importance`)] : [])], sufficiency: "explicit", wording: "state", valence: quiet ? "mixed" : "tension", relevance: 0.72,
       destinations: ["opening", "card.tension", "card.begin"],
       alternatives: ["The reason matters more than the label: it may be time, energy, circumstance or something you're still deciding."],
-      text: `You named ${N(P)} as something that matters to you but gets less of your time and energy than you would like.${quiet ? ` You also rated it "${c.impLabel(P)}", so it may matter in a way the importance question didn't capture.` : ""}`,
+      text: `${N(P)} is the area you'd give more of yourself to, if you could. It matters, and it isn't getting the time or energy you'd like to give it.${quiet ? ` You also rated it "${c.impLabel(P)}", so it may matter in a way the importance question didn't capture.` : ""}`,
       clause: `${N(P)} matters more to you than the time it currently gets`,
       question: `What gets in the way of giving your ${N(P)} Orbit the time and energy it deserves, and is that something you'd want to change or accept for now?` });
   }
@@ -296,7 +316,7 @@ export function buildObservations(c: Ctx): Observation[] {
     add({ rule: "alignment.expectations", family: "expectations", areas: [E], evidence: [c.ev("interconnections.06"), ...(k !== null ? [c.ev(`${E}.congruence`)] : [])], sufficiency: lowC || highC ? "corroborated" : "explicit", wording: "state", valence: lowC ? "tension" : highC ? "mixed" : "neutral", relevance: 0.55 + (lowC ? 0.17 : 0),
       destinations: ["card.tension", "opening"],
       alternatives: ["Being influenced by others isn't the same as living someone else's life. Some expectations are ones you share."],
-      text: `You named ${N(E)} as the area most influenced by other people's expectations or social standards.${lowC ? ` You also said the way you live it doesn't fully reflect what genuinely matters to you. Those two answers may be related.` : highC ? " Even so, you said the way you live it reflects what genuinely matters to you. Influence and choice can sit side by side." : " That's useful to notice, and it isn't evidence that your choices are wrong."}`,
+      text: `${N(E)} is where other people's voices are loudest for you: their expectations, and the standards around you.${lowC ? " It's also an area where the way you live doesn't fully feel like your own. Those two things may be connected." : highC ? " Even so, the way you live it still feels like yours. Influence and choice can sit side by side." : " Noticing that is useful in itself; it isn't a sign that your choices are wrong."}`,
       clause: `${N(E)} is the area most shaped by others' expectations`,
       question: `Which parts of your ${N(E)} Orbit feel like choices you've made, and which feel like choices you've inherited?` });
   }
@@ -305,7 +325,7 @@ export function buildObservations(c: Ctx): Observation[] {
     for (const o of lowLived.slice(0, 2))
       add({ rule: "alignment.lived-values-low", family: "priority-gap", areas: [o], evidence: [c.ev(`${o}.importance`), c.ev(`${o}.congruence`)], sufficiency: "explicit", wording: "state", valence: "tension", relevance: 0.54,
         destinations: ["card.tension"],
-        text: `Asked whether the way you live ${N(o)} reflects what genuinely matters to you, you answered "${c.label(`${o}.congruence`)}". It's one answer, so hold it lightly, but it may point to a difference between what you value and how this area currently runs.`,
+        text: `${N(o)} matters to you, and yet the way it runs day to day doesn't fully feel like yours. It's one answer, so hold it lightly, but it may point to a quiet distance between what you value and how this area currently works.`,
         clause: `how you live ${N(o)} doesn't fully reflect what matters to you`,
         question: `If your ${N(o)} Orbit reflected what genuinely matters to you, what would be different in an ordinary week?` });
     const highLived = orbits.filter((o) => c.important(o) && c.high(`${o}.congruence`));
