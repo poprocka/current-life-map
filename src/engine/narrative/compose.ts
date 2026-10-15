@@ -63,6 +63,41 @@ const CURIOSITY: Record<string, (o: Observation, c: Ctx) => string> = {
   neutral: () => "Sometimes the most interesting part of a Map isn't an extreme, but the places where things are quietly mixed.",
 };
 
+/** First sentence of an observation (the opening keeps only the core of the pattern). */
+const firstSentence = (t: string) => (t.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? t).trim();
+/** The pattern in one sentence; when its first sentence doesn't reach the area the Map sentence reads, the short clause does. */
+function patternSentence(o: Observation, area: string | undefined): string {
+  const first = firstSentence(o.text);
+  if (!area || area === "sun" || !o.clause || first.toLowerCase().includes(area.toLowerCase())) return first;
+  return `${o.clause.charAt(0).toUpperCase()}${o.clause.slice(1)}.`;
+}
+/**
+ * One sentence that reads the theme's Orbit on the Map: size, brightness, distance, energy (at most three).
+ * Opening summary rule (Jana, 2026-10-15): 2–3 sentences only — the pattern, how it shows on the Map, one question.
+ * The full picture follows in the sections below.
+ */
+function mapSummary(c: Ctx, area: string | undefined): string {
+  const orbits = ORBIT_IDS as OrbitId[];
+  if (area && (orbits as string[]).includes(area)) {
+    const o = area as OrbitId, d: string[] = [];
+    if (c.mostImportant.length === 1 && c.mostImportant[0] === o) d.push("is your largest Orbit");
+    else if (c.important(o)) d.push("is one of your largest Orbits");
+    if (c.lessSupported(o)) d.push("appears dimmer");
+    else if (c.moreSupported(o)) d.push("glows brightly");
+    const band = c.by[o].distanceBand;
+    const far = orbits.filter((x) => c.by[x].distanceBand === "far");
+    if (band === "far") d.push(far.length === 1 ? "sits furthest from the Sun" : "sits further from the Sun");
+    else if (band === "close") d.push("sits close to the Sun");
+    if (d.length < 3 && c.takes(o)) d.push("takes more energy than it gives");
+    else if (d.length < 3 && c.gives(o)) d.push("gives you energy back");
+    if (d.length) return `On your Map, ${c.name(o)} ${list(d.slice(0, 3))}.`;
+  }
+  const giving = orbits.filter(c.gives), taking = orbits.filter(c.takes);
+  if (giving.length && taking.length) return `On your Map, energy flows in from ${list(giving.map(c.name))} and out toward ${list(taking.map(c.name))}.`;
+  const m = c.mostImportant.slice(0, 3);
+  return m.length ? `On your Map, ${list(m.map(c.name))} ${m.length > 1 ? "are the largest Orbits" : "is the largest Orbit"}.` : "";
+}
+
 export function composeOpening(c: Ctx, A: Allocation): NarrativeSection & { lead: Observation | null } {
   const candidates = A.free("opening");
   const lead = candidates[0] ?? null;
@@ -73,50 +108,13 @@ export function composeOpening(c: Ctx, A: Allocation): NarrativeSection & { lead
     const text = [
       "Your answers don't point to one simple story, and that is useful in itself.",
       top.length ? `${list(top)} ${top.length > 1 ? "are" : "is"} what matters most to you right now${src ? `, and ${src} is where your energy comes back` : ""}.` : src ? `${src} is where your energy comes back.` : "",
-      "Other areas sit somewhere in between.",
-      CURIOSITY.neutral(null as never, c),
     ].filter(Boolean).join(" ");
-    return { key: "opening", title: "Your reality, as it is right now", paragraphs: [para(text, [], [...c.mostImportant.map((o) => c.ev(`${o}.importance`)), ...(c.ic.largestSource ? [c.ev("interconnections.02")] : [])])], fallback: true, lead: null };
+    return { key: "opening", title: "Your reality, as it is right now", paragraphs: [para(text, [], [...c.mostImportant.map((o) => c.ev(`${o}.importance`)), ...(c.ic.largestSource ? [c.ev("interconnections.02")] : [])]), para(CURIOSITY.neutral(null as never, c))], fallback: true, lead: null };
   }
-  A.take(lead, "opening");
-  const fam = lead.family;
-  const intro = pick(INTRO[fam] ?? INTRO.default, `${c.seed}#intro`);
-  const PREF = ["priority.strength", "alignment.lived-values-high", "link.ambition-restoration", "link.body-mind", "priority.quiet-supported", "self.strengths", "emotion.alive"];
-  const strengths = A.all.filter((o) => o.valence === "strength" && o.id !== lead.id && !areasOverlap(o, lead) && !A.used.has(o.id))
-    .sort((a, b) => (PREF.indexOf(a.rule) + 99) % 99 - (PREF.indexOf(b.rule) + 99) % 99 || b.relevance - a.relevance);
-  const S = c.ic.largestSource;
-  const sourceCounter = S && !lead.areas.includes(S) && c.ic.largestDemand !== S && !c.takes(S) ? `At the same time, ${c.name(S)} gives you the most energy.` : null;
-  const counter = strengths.find((o) => o.rule === "priority.strength" || o.rule === "alignment.lived-values-high") ?? (sourceCounter ? null : strengths[0]) ?? null;
-  const secondary = candidates.find((o) => o.id !== lead.id && !areasOverlap(o, lead) && o.valence !== "strength");
-  const nuance = lead.alternatives[0] ?? "";
-  const curiosity = (CURIOSITY[fam] ?? CURIOSITY.neutral)(lead, c);
-
-  const p1 = `${intro} ${lead.text}`;
-  let p2Parts = [nuance];
-  const refs: Observation[] = [lead];
-  if (fam !== "well-supported") {
-    if (counter) { p2Parts.push(`At the same time, ${counter.clause}.`); refs.push(counter); }
-    else if (sourceCounter) p2Parts.push(sourceCounter);
-  }
-  let paragraphs = [p1, p2Parts.filter(Boolean).join(" "), curiosity].filter(Boolean);
-  let total = words(paragraphs.join(" "));
-  if (total < 95 && fam === "several") {
-    p2Parts = [...p2Parts, "A demanding season says more about what life is asking of you than about who you are."];
-    paragraphs = [p1, p2Parts.filter(Boolean).join(" "), curiosity].filter(Boolean);
-    total = words(paragraphs.join(" "));
-  } else if (total < 95 && secondary) {
-    p2Parts = [...p2Parts, `Alongside that, ${secondary.clause}.`];
-    refs.push(secondary);
-    paragraphs = [p1, p2Parts.filter(Boolean).join(" "), curiosity].filter(Boolean);
-    total = words(paragraphs.join(" "));
-  }
-  if (total > 160 && p2Parts.some((x) => x.startsWith("At the same time"))) {
-    p2Parts = p2Parts.filter((x) => !x.startsWith("At the same time"));
-    if (counter) refs.splice(refs.indexOf(counter), 1);
-    paragraphs = [p1, p2Parts.filter(Boolean).join(" "), curiosity].filter(Boolean);
-  }
-  A.ref(refs.filter((o) => o !== lead), "opening");
-  return { key: "opening", title: "Your reality, as it is right now", paragraphs: paragraphs.map((t, i) => para(t, i === 0 ? [lead] : i === 1 ? refs.slice(1) : [])), fallback: false, lead };
+  A.ref([lead], "opening"); // summarised here; the full reading stays available to the sections below (15 Oct)
+  const curiosity = (CURIOSITY[lead.family] ?? CURIOSITY.neutral)(lead, c);
+  const summary = [patternSentence(lead, lead.areas[0]), mapSummary(c, lead.areas[0])].filter(Boolean).join(" ");
+  return { key: "opening", title: "Your reality, as it is right now", paragraphs: [para(summary, [lead]), para(curiosity)], fallback: false, lead };
 }
 
 
@@ -185,20 +183,17 @@ export function majorOf(c: Ctx, o: Observation, question: string, extra: Evidenc
 export function composeThemeOpening(c: Ctx, A: Allocation, t: Theme, closingQuestion: () => string): NarrativeSection & { lead: Observation; major: MajorInsight } {
   const { lead, support } = t;
   A.take(lead, "opening");
-  A.ref(support, "opening");
-  const intro = pick(INTRO[lead.family] ?? INTRO.default, `${c.seed}#intro`);
+  // Opening summary (Jana, 2026-10-15): the pattern in one sentence, how it shows on the Map, then one question.
+  const summary = [patternSentence(lead, t.anchor), mapSummary(c, t.anchor)].filter(Boolean).join(" ");
+  const p3 = (CURIOSITY[lead.family] ?? CURIOSITY.neutral)(lead, c);
   const clauses = support.map((o) => o.clause.replace(/^[A-Z](?=[a-z])/, (m) => (/^(Mind|Body|Restoration|Growth|Love|Social|Resources|Joy)/.test(o.clause) ? m : m.toLowerCase())));
   const sameWay = support.every((o) => o.valence === lead.valence || (lead.valence !== "strength" && o.valence !== "strength"));
   const supportLine = !clauses.length ? "" : sameWay
     ? ` ${clauses.length > 1 ? "Other answers point the same way" : "Another answer points the same way"}: ${clauses.join(", and ")}.`
     : ` Alongside this, ${clauses.join(", and ")}.`;
-  let p1 = `${intro} ${lead.text}${supportLine}`;
-  const p2 = [lead.meaning, lead.alternatives[0]].filter(Boolean).join(" ");
-  const p3 = (CURIOSITY[lead.family] ?? CURIOSITY.neutral)(lead, c);
-  if (words([p1, p2, p3].join(" ")) > 165 && clauses.length > 1) p1 = `${intro} ${lead.text}${sameWay ? " Another answer points the same way:" : " Alongside this,"} ${clauses[0]}.`;
   const major: MajorInsight = { observationId: lead.id, shared: t.responses.slice(0, 6).map(c.plain), pattern: [lead.text, supportLine.trim()].filter(Boolean).join(" "), meaning: lead.meaning, alternative: lead.alternatives[0] ?? "", question: closingQuestion() };
   return { key: "opening", title: "Your reality, as it is right now", fallback: false, lead, major,
-    paragraphs: [para(p1, [lead, ...support]), para(p2, [lead]), para(p3)].filter((x) => x.text) };
+    paragraphs: [para(summary, [lead]), para(p3)].filter((x) => x.text) };
 }
 
 // ── B · Map reading (visual relationships; distance is not interpreted while it is pending) ──
@@ -431,7 +426,8 @@ export function composeCards(c: Ctx, A: Allocation, closingText: () => string, t
     let picks = A.free(dest, extra);
     if (key === "begin" && !picks.length) picks = A.free("card.tension", (o) => !!o.question);
     // The bigger picture deepens the central theme: its supporting readings, each in full.
-    if (key === "overview" && theme) picks = [...theme.support.filter((o) => !A.used.has(o.id)), ...picks];
+    // The opening only summarises the theme (15 Oct), so its full reading opens the bigger picture.
+    if (key === "overview" && theme) picks = [theme.lead, ...theme.support.filter((o) => !A.used.has(o.id)), ...picks.filter((o) => o !== theme.lead)];
     // Less, but more meaningful: with a central theme, descriptive lines step back unless the card would be empty.
     if (hasTheme && picks.some((o) => !DESCRIPTIVE.has(o.rule))) picks = picks.filter((o) => !DESCRIPTIVE.has(o.rule));
     // Fewer, stronger observations (Jana, 13 Oct): up to three, and a third only when it is as strong as the rest.

@@ -39,13 +39,12 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
         <section className="mx-auto mt-10 max-w-[1000px] lg:mt-14" aria-labelledby="open-h">
           <p className="eyebrow text-center">Your Current Life Map</p>
           <h1 id="open-h" className="mt-3 text-center font-serif text-[32px] font-light leading-[1.1] [text-wrap:balance] sm:text-[40px]">{insights.opening.title}.</h1>
-          {/* Two paragraphs side by side, left-aligned; the closing question sits in the second column under its paragraph (Jana, 2026-10-13) */}
+          {/* Two paragraphs side by side, left-aligned; 2–3 sentence summary on the left, the question on the right (Jana, 2026-10-15) */}
           <div className="mt-8 grid gap-6 text-left text-[14px] leading-[1.75] text-mahogany/85 [text-wrap:pretty] md:grid-cols-2 md:gap-12">
             <p>{insights.opening.paragraphs[0]?.text}</p>
             <div>
-              {insights.opening.paragraphs[1] && <p>{insights.opening.paragraphs[1].text}</p>}
-              {insights.opening.paragraphs.slice(2).map((p, i) => (
-                <p key={i} className="mt-6 font-serif text-[19px] italic leading-relaxed text-burgundy [text-wrap:pretty]">{p.text}</p>
+              {insights.opening.paragraphs.slice(1).map((p, i) => (
+                <p key={i} className="font-serif text-[19px] italic leading-relaxed text-burgundy [text-wrap:pretty]">{p.text}</p>
               ))}
             </div>
           </div>

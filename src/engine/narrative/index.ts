@@ -23,7 +23,7 @@ import { Allocation, DEEP_DIVE_BRIDGE, MAP_INTRO_CONVERSATIONAL, buildTheme, cen
 import { dedupeSentences, filterValid } from "./validate";
 import type { ResultNarrative } from "./types";
 
-export const NARRATIVE_TEMPLATE_VERSION = "result-narrative-5"; // 5 = distance reading leads with the Map's shape (15 Oct); 4 = distance from the Sun in the Map interpretation and Orbits (F4, 13 Oct)
+export const NARRATIVE_TEMPLATE_VERSION = "result-narrative-6"; // 6 = 2–3 sentence opening summary, theme in full in the overview card (15 Oct); 5 = distance reading leads with the Map's shape (15 Oct); 4 = distance from the Sun in the Map interpretation and Orbits (F4, 13 Oct)
 export const INSIGHT_DISCLAIMER = "These are provisional interpretations based on your self-reported answers. They are invitations to reflect, not diagnoses or psychological assessments.";
 
 export function generateNarrative(result: LifeMapResult, answers: Answers): ResultNarrative & { validationIssues: { observationId: string; reason: string }[]; removedRepeats: string[] } {

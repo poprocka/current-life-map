@@ -63,9 +63,8 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
             <div className={`mt-5 grid grid-cols-2 gap-10 ${body}`}>
               <p>{insights.opening.paragraphs[0]?.text}</p>
               <div>
-                {insights.opening.paragraphs[1] && <p>{insights.opening.paragraphs[1].text}</p>}
-                {insights.opening.paragraphs.slice(2).map((p, i) => (
-                  <p key={i} className="mt-4 font-serif text-[18px] italic leading-relaxed text-burgundy">{p.text}</p>
+                {insights.opening.paragraphs.slice(1).map((p, i) => (
+                  <p key={i} className="font-serif text-[18px] italic leading-relaxed text-burgundy">{p.text}</p>
                 ))}
               </div>
             </div>

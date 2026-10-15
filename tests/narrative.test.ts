@@ -125,7 +125,7 @@ describe("central theme and five-step insights (approved 13 Oct)", () => {
     const n = run(a);
     expect(n.centralTheme?.anchor).toBe(anchor);
     expect(n.centralTheme!.responses.length).toBeGreaterThanOrEqual(3);
-    expect(n.opening.paragraphs[0].observationIds.length).toBeGreaterThanOrEqual(2); // the lead and at least one supporting reading
+    expect(n.opening.paragraphs[0].observationIds.length).toBeGreaterThanOrEqual(1); // the lead (supporting readings appear in the sections below)
   });
   it.each(FIXTURES)("%s: every major insight has all five steps", (_, a) => {
     const n = run(a);
@@ -219,12 +219,21 @@ describe("repetition and structure", () => {
     const texts = visibleTexts(n).map((t) => t.text);
     for (const o of n.observations) expect(texts.filter((t) => t.includes(o.text)).length, o.id).toBeLessThanOrEqual(1);
   });
-  it.each(FIXTURES)("%s: opening is a synthesis of about 100–150 words, not numbers or a list", (_, a) => {
+  it.each(FIXTURES)("%s: opening is a short summary of the Map — 2–3 sentences (15 Oct), not numbers or a list", (_, a) => {
     const t = run(a).opening.paragraphs.map((p) => p.text).join(" ");
-    const w = t.split(/\s+/).length;
-    expect(w).toBeGreaterThanOrEqual(70);
-    expect(w).toBeLessThanOrEqual(170);
+    const n = sentences(t).length;
+    expect(n).toBeGreaterThanOrEqual(2);
+    expect(n).toBeLessThanOrEqual(3);
+    expect(t.split(/\s+/).length).toBeLessThanOrEqual(80);
     expect(t).not.toMatch(/^\d|^(Mind|Body|Restoration|Growth|Love|Social World|Resources|Joy),/);
+  });
+  it.each([["ambition", EXAMPLE_AMBITION], ["working", EXAMPLE_WORKING], ["strain", EXAMPLE_STRAIN]] as const)("%s: the opening summarises the theme; its full reading opens the overview card (15 Oct)", (_, a) => {
+    const n = run(a);
+    const lead = n.observations.find((o) => o.id === n.opening.major!.observationId)!;
+    const card = n.cards.find((c) => c.key === "overview")!.sections[0].text;
+    expect(card.length).toBeGreaterThan(20);
+    expect(lead.text.endsWith(card)).toBe(true); // a sentence already said in the opening isn't repeated
+    expect(n.opening.paragraphs[0].text).toMatch(/On your Map, /);
   });
   it.each(FIXTURES)("%s: five cards in order, each with ≤3 observations, a why and a distinct question", (_, a) => {
     const n = run(a);
