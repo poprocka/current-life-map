@@ -73,13 +73,13 @@ export function OptionalReflections({ token, result }: { token?: string; result?
                 className="mt-3 w-full resize-y rounded-[16px] border border-linen-line bg-linen/60 px-4 py-3 text-[14px] leading-relaxed placeholder:text-taupe/70 focus:border-burgundy focus:outline-none" />
               <div className="mt-2 flex min-h-0 flex-wrap items-center gap-3">
                 {/* mousedown keeps focus in the field, so the button doesn't disappear before the click lands */}
-                <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => save(q.id)} disabled={st === "saving" || done || !values[q.id]?.trim()}
+                {!done && <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => save(q.id)} disabled={st === "saving" || !values[q.id]?.trim()}
                   className="hidden rounded-full bg-burgundy px-6 py-2.5 text-[11.5px] uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany disabled:opacity-50 group-focus-within:inline-block">
-                  {st === "saving" ? "Saving…" : done ? "Saved" : "Save"}
-                </button>
+                  {st === "saving" ? "Saving…" : "Save"}
+                </button>}
                 <p role="status" className="text-[12px] text-taupe">
-                  {st === "saved" && "Saved. It will be included in your PDF."}
-                  {st === "device" && "Saved on this device. It will be included in your PDF."}
+                  {/* Just "Saved" with a small check (Jana, 2026-10-15) */}
+                  {done && <span className="inline-flex items-center gap-1.5 text-mahogany/75"><svg aria-hidden="true" width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="text-burgundy"><path d="M2.5 6.3l2.3 2.3 4.7-5" /></svg>Saved</span>}
                   {st === "error" && "We couldn't save just now. Your words are kept on this device. Please try again."}
                 </p>
               </div>
