@@ -191,6 +191,11 @@ const ENERGY_PHRASE: Record<number, string> = {
   5: "drains a lot of your energy",
 };
 const IMPORTANCE_PHRASE = ["not important right now", "slightly important", "moderately important", "very important", "one of your highest priorities"];
+/** "Largest place now" (Jana, 2026-10-15): one plain statement, no repeated "highest". */
+function largestPlaceLine(names: string, count: number, level: number): string {
+  if (level === 4) return count > 1 ? `You rated ${names} among your highest priorities.` : `You rated ${names} as one of your highest priorities.`;
+  return `You rated ${names} as ${IMPORTANCE_PHRASE[level]}, higher than ${count > 1 ? "the other areas" : "any other area"}.`;
+}
 
 export function computeLifeMap(answers: Answers, cfg: ScoringConfig = CURRENT_SCORING): LifeMapResult {
   const pick = (id: string) => {
@@ -316,7 +321,7 @@ export function computeLifeMap(answers: Answers, cfg: ScoringConfig = CURRENT_SC
   snapshot.push({
     key: "largestPlace", label: "Largest place now", orbits: largest, available: largest.length > 0, evidenceType: "direct",
     body: largest.length
-      ? `You rated ${listNames(largest)} as ${IMPORTANCE_PHRASE[Math.round(maxImp * 4)]}${largest.length > 1 ? ", the highest importance you gave any area" : ""}.`
+      ? largestPlaceLine(listNames(largest), largest.length, Math.round(maxImp * 4))
       : "",
     evidence: largest.map((id) => ({ questionId: `${id}.importance`, answer: String(by[id].importanceOrdinal), kind: "direct" as const })),
   });
