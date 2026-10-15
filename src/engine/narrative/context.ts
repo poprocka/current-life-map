@@ -105,10 +105,11 @@ export function makeContext(result: LifeMapResult, answers: Answers) {
     const q = questionById(e.questionId);
     if (!q) return e.answer;
     const area = q.chapterId === "sun" ? "your relationship with yourself" : NAMES[q.chapterId as OrbitId];
-    if (q.responseType === "importance") return `How important ${area} is to you: ${e.answer}`;
-    if (q.responseType === "energy") return `What ${area} does to your energy: ${e.answer}`;
-    if (q.responseType === "emotional_state") return `Feelings you chose for ${area}: ${e.answer.toLowerCase()}`;
-    if (q.responseType === "orbit_select" || q.responseType === "single_choice") return `${q.prompt} ${e.answer}`;
+    // Question, then " — ", then the person's answer: the results show the answer in emphasis (Jana, 2026-10-15)
+    if (q.responseType === "importance") return `How important ${area} is to you — ${e.answer}`;
+    if (q.responseType === "energy") return `What ${area} does to your energy — ${e.answer}`;
+    if (q.responseType === "emotional_state") return `Feelings you chose for ${area} — ${e.answer.toLowerCase()}`;
+    if (q.responseType === "orbit_select" || q.responseType === "single_choice") return `${q.prompt} — ${e.answer}`;
     return `“${q.prompt}”${q.measure === "congruence" ? ` (${area})` : ""} — ${e.answer}`;
   };
   const imp = (o: OrbitId) => by[o].importanceDirect;

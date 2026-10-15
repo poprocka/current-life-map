@@ -86,6 +86,13 @@ function InsightDialog({ insights, index, onIndex, onClose }: { insights: Result
   );
 }
 
+/** One answer the insight refers to: the question muted, the person's answer emphasised (Jana, 2026-10-15). */
+function SharedAnswer({ text }: { text: string }) {
+  const i = text.lastIndexOf(" — ");
+  if (i < 0) return <li>{text}</li>;
+  return <li><span>{text.slice(0, i)}</span> <span aria-hidden="true" className="text-taupe/70">—</span> <span className="font-medium text-burgundy">{text.slice(i + 3)}</span></li>;
+}
+
 /** The two columns of one insight — shared by the popup and the PDF, so both read the same. */
 export function InsightBody({ c }: { c: ResultInsights["cards"][number] }) {
   return (
@@ -115,7 +122,7 @@ function InsightBlock({ s, major }: { s: ResultInsights["cards"][number]["sectio
       {major ? (
         <div className="mt-3 space-y-4 text-[14.5px] leading-[1.75] text-mahogany/85 [@media(min-width:1024px)_and_(max-height:1100px)]:space-y-3 [@media(min-width:1024px)_and_(max-height:1100px)]:text-[14px] [@media(min-width:1024px)_and_(max-height:1100px)]:leading-[1.65]">
           <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">What you shared</p>
-            <ul className="mt-1 space-y-1 text-[13px] text-mahogany/75">{major.shared.map((x, k) => <li key={k}>{x}</li>)}</ul></div>
+            <ul className="mt-1 space-y-1.5 text-[13px] text-mahogany/75">{major.shared.map((x, k) => <SharedAnswer key={k} text={x} />)}</ul></div>
           <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">What stands out</p><p className="mt-1">{major.pattern}</p></div>
           {major.meaning && <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">What it might mean</p><p className="mt-1">{major.meaning}</p></div>}
           {major.alternative && <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">It could also be</p><p className="mt-1">{major.alternative}</p></div>}
