@@ -10,7 +10,7 @@ import { hmacB64, safeEqual, sha256, signBookingToken } from "./crypto";
 import { calendlyAdapter } from "./booking/calendly";
 
 export interface OutgoingEmail {
-  to: string; subject: string; text: string;
+  to: string; subject: string; text: string; html?: string;
   attachments?: { filename: string; content: Uint8Array }[];
   idempotencyKey: string;
 }
@@ -24,7 +24,7 @@ export const resend = (apiKey: string, from: string): EmailProvider => ({
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "Idempotency-Key": m.idempotencyKey },
       body: JSON.stringify({
-        from, to: [m.to], subject: m.subject, text: m.text,
+        from, to: [m.to], subject: m.subject, text: m.text, ...(m.html ? { html: m.html } : {}),
         reply_to: process.env.EMAIL_REPLY_TO || from, // replies always reach Jana's inbox
         attachments: m.attachments?.map((a) => ({ filename: a.filename, content: Buffer.from(a.content).toString("base64") })),
       }),
@@ -59,8 +59,8 @@ A few suggestions as you read it:
 - Pay attention to anything that surprises you.
 - Come back to the questions in your insights when you have a quiet moment.
 
-${bookUrl ? `If you'd like to explore your Map together, you can book a Deep Dive session with me here:
-${bookUrl}
+${bookUrl ? `If you'd like to explore your Map together, you can book a Deep Dive session with me.
+Book a session: ${bookUrl}
 ` : `If you'd like to explore your Map together, you can book a Deep Dive session from your results page.
 `}
 Questions or feedback? Simply reply to this email. It comes straight to me.
@@ -71,6 +71,23 @@ With warmth,
 Jana
 The Current Life Map`;
 export const EMAIL_TEXT = emailText(null);
+
+const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+/** HTML version (what almost every mail app shows): the booking link reads "Book a session" instead of a bare URL.
+ *  Built from the same text, so both versions always say the same thing. No images, no tracking pixels. */
+export function emailHtml(bookUrl: string | null) {
+  const paras = emailText(bookUrl).split(/\n\n+/).map((block) => {
+    const lines = block.split("\n").map((line) => {
+      if (bookUrl && line.startsWith("Book a session: "))
+        return `<a href="${esc(bookUrl)}" style="color:#540F26;font-weight:500;text-decoration:underline;text-underline-offset:3px">Book a session</a>`;
+      return esc(line);
+    });
+    return lines[0]?.startsWith("- ")
+      ? `<ul style="margin:0 0 16px;padding-left:20px">${lines.map((l) => `<li>${l.slice(2)}</li>`).join("")}</ul>`
+      : `<p style="margin:0 0 16px">${lines.join("<br>")}</p>`;
+  });
+  return `<!doctype html><html><body style="margin:0;padding:24px;background:#F5EDE2"><div style="max-width:560px;margin:0 auto;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#1F1411">${paras.join("")}</div></body></html>`;
+}
 
 /**
  * Email the client PDF. Records the request against the assessment, links a client record created from
@@ -123,7 +140,7 @@ export async function requestPdfEmail(db: Db, token: string, email: string, site
   try {
     const pdf = await buildClientPdf(prep.frozen.snapshot, { generatedAt: prep.frozen.generatedAt, reflections: prep.reflections, insights: prep.insights });
     const sent = await provider.send({
-      to: prep.email, subject: EMAIL_SUBJECT, text: emailText(prep.bookUrl),
+      to: prep.email, subject: EMAIL_SUBJECT, text: emailText(prep.bookUrl), html: emailHtml(prep.bookUrl),
       attachments: [{ filename: "current-life-map.pdf", content: pdf }], idempotencyKey: `pdf-${prep.requestId}`,
     });
     await db.query(`update pdf_requests set delivery_state = 'sent', provider_message_id = $2 where id = $1`, [prep.requestId, sent.id]);

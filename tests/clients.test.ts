@@ -119,6 +119,10 @@ describe("client profiles", () => {
       const m = email.sent.at(-1)!.text.match(/https:\/\/map\.example\.com\/book#b=(\S+)/);
       expect(m).toBeTruthy();
       expect(email.sent.at(-1)!.text).not.toContain(id); // no assessment id in the email
+      const html = email.sent.at(-1)!.html!;
+      expect(html).toContain(`>Book a session</a>`);
+      expect(html).toContain(`href="https://map.example.com/book#b=${m![1]}"`);
+      expect(html.replace(/href="[^"]*"/g, "")).not.toContain("/book#b="); // the URL itself is never shown
       const r = await bookingUrlForLinkToken(db, adapter, m![1]);
       if (!r.ok) throw new Error(r.error);
       expect(new URL(r.url).searchParams.get("utm_content")).toBe(m![1]);
