@@ -56,7 +56,7 @@ const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "9. Access, correction, and deletion requests",
     body: [
-      "If we hold information that identifies you, you may contact us to request access, correction, deletion, or other rights available under applicable law. Some requests may be subject to legal exceptions or identity verification. Contact: hello@jasia.design. Because anonymous responses are not necessarily linked to your identity, we may be unable to identify a particular anonymous response after submission.",
+      "If we hold information that identifies you, you may contact us to request access, correction, deletion, or other rights available under applicable law. Some requests may be subject to legal exceptions or identity verification. Contact: talk@self-interview.com. Because anonymous responses are not necessarily linked to your identity, we may be unable to identify a particular anonymous response after submission.",
     ],
   },
   {
@@ -66,7 +66,7 @@ const SECTIONS: { title: string; body: string[] }[] = [
     ],
   },
   { title: "11. Adults", body: ["The Current Life Map is intended for adults aged 18 and older."] },
-  { title: "12. Contact", body: ["For privacy requests, support, or inquiries, email hello@jasia.design."] },
+  { title: "12. Contact", body: ["For privacy requests, support, or inquiries, email talk@self-interview.com."] },
 ];
 
 export default function Privacy() {
