@@ -45,7 +45,7 @@ export function ClientProfile({ data, actions }: { data: ClientProfileData; acti
   const guard = async (fn: () => Promise<void>) => { setErr(null); try { await fn(); } catch { setErr("Couldn’t save. Please try again."); } };
 
   return (
-    <div className="mx-auto max-w-[1280px] px-6 pb-24 pt-6 sm:px-10">
+    <div className="mx-auto max-w-[1280px] px-4 pb-24 pt-5 sm:px-10 sm:pt-6">
       <Link href={actions.listHref} className="text-[11px] uppercase tracking-[0.14em] text-taupe hover:text-burgundy">← All clients</Link>
       <header className="mt-4 border-b hairline pb-5">
         <p className="eyebrow">Client profile <span className="font-mono normal-case tracking-normal">{shortId(c.id)}</span> · private to coaches</p>

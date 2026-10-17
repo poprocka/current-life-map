@@ -55,7 +55,7 @@ export function Workspace({ data, actions }: { data: WorkspaceData; actions: Wor
   const booking = data.bookings.filter((b) => b.booking_state !== "rescheduled").at(-1);
 
   return (
-    <div className="mx-auto max-w-[1280px] px-6 pb-24 pt-6 sm:px-10">
+    <div className="mx-auto max-w-[1280px] px-4 pb-24 pt-5 sm:px-10 sm:pt-6">
       <div className="flex gap-4"><Link href={actions.listHref} className="text-[11px] uppercase tracking-[0.14em] text-taupe hover:text-burgundy">← All assessments</Link>{data.profile && <Link href={actions.profileHref(data.profile.client_id)} className="text-[11px] uppercase tracking-[0.14em] text-taupe hover:text-burgundy">Client profile</Link>}</div>
       <header className="mt-4 flex flex-wrap items-end justify-between gap-4 border-b hairline pb-5">
         <div>
@@ -73,7 +73,14 @@ export function Workspace({ data, actions }: { data: WorkspaceData; actions: Wor
         </div>
       </header>
 
-      <nav className="mt-5 flex gap-1 overflow-x-auto border-b hairline" role="tablist" aria-label="Workspace sections">
+      {/* Phone: all eight sections in one picker instead of a long sideways tab strip */}
+      <label className="mt-5 block sm:hidden">
+        <span className="sr-only">Workspace section</span>
+        <select className={`${input} w-full py-2.5 text-[16px]`} value={tab} onChange={(e) => setTab(e.target.value as Tab)}>
+          {TABS.map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+        </select>
+      </label>
+      <nav className="mt-5 hidden gap-1 overflow-x-auto border-b hairline sm:flex" role="tablist" aria-label="Workspace sections">
         {TABS.map(([k, label]) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
             className={`whitespace-nowrap border-b-2 px-3.5 py-2.5 text-[12px] transition ${tab === k ? "border-burgundy text-burgundy" : "border-transparent text-mahogany/70 hover:text-mahogany"}`}>
@@ -211,16 +218,17 @@ function AnswersTab({ data, answers }: { data: WorkspaceData; answers: Record<st
           <Card key={c.id} title={`${c.name}${c.subtitle ? ` — ${c.subtitle}` : ""}`}>
             <table className="w-full text-[12.5px]">
               <thead className="text-[10px] uppercase tracking-[0.1em] text-taupe"><tr>
-                <th className="w-[110px] pb-2 text-left font-normal">ID</th><th className="pb-2 text-left font-normal">Question · Explore · cue</th>
-                <th className="w-[230px] pb-2 text-left font-normal">Response</th><th className="w-[130px] pb-2 text-left font-normal">Answered</th>
+                <th className="hidden w-[110px] pb-2 text-left font-normal sm:table-cell">ID</th><th className="pb-2 text-left font-normal">Question · Explore · cue</th>
+                <th className="w-[38%] pb-2 text-left font-normal sm:w-[230px]">Response</th><th className="hidden w-[130px] pb-2 text-left font-normal sm:table-cell">Answered</th>
               </tr></thead>
               <tbody>
                 {qs.map((q) => {
                   const r = rows[q.id], v = answers[q.id];
                   return (
                     <tr key={q.id} className="border-t hairline align-top">
-                      <td className="py-2 pr-2 font-mono text-[10.5px] text-taupe">{q.id}{q.reverseKeyed && <span className="block text-[9.5px] text-[#8A6420]">reverse-keyed</span>}</td>
-                      <td className="py-2 pr-4">
+                      <td className="hidden py-2 pr-2 font-mono text-[10.5px] text-taupe sm:table-cell">{q.id}{q.reverseKeyed && <span className="block text-[9.5px] text-[#8A6420]">reverse-keyed</span>}</td>
+                      <td className="py-2 pr-3 sm:pr-4">
+                        <span className="mb-0.5 block font-mono text-[10px] text-taupe sm:hidden">{q.id}{q.reverseKeyed ? " · reverse-keyed" : ""}</span>
                         {q.prompt}
                         <span className="block text-[11px] text-taupe">{q.exploreCategory}{q.cue?.text ? ` · ${q.cue.text}` : ""}</span>
                       </td>
@@ -230,8 +238,9 @@ function AnswersTab({ data, answers }: { data: WorkspaceData; answers: Record<st
                           : q.responseType === "text" ? <q className="italic">{String(v)}</q>
                           : answerLabel(q.id, v)}
                         {r?.raw_ordinal != null && <span className="ml-1 text-[10.5px] text-taupe">({r.raw_ordinal})</span>}
+                        {r && <span className="mt-0.5 block text-[10.5px] text-taupe sm:hidden">{fmtDate(r.answered_at)}</span>}
                       </td>
-                      <td className="py-2 text-[11px] text-taupe">{r ? fmtDate(r.answered_at) : "—"}</td>
+                      <td className="hidden py-2 text-[11px] text-taupe sm:table-cell">{r ? fmtDate(r.answered_at) : "—"}</td>
                     </tr>
                   );
                 })}
@@ -381,13 +390,13 @@ function ContactTab({ data, actions }: { data: WorkspaceData; actions: Workspace
       </Card>
       <Card title="PDF requests">
         {data.pdfRequests.length ? (
-          <table className="w-full text-[12px]"><tbody>
+          <div className="overflow-x-auto"><table className="w-full text-[12px]"><tbody>
             {data.pdfRequests.map((p) => (
               <tr key={p.id} className="border-t hairline first:border-0"><td className="py-1.5">{p.email}</td><td><Badge v={p.delivery_state} /></td>
                 <td className="text-[11px] text-taupe">{fmtDate(p.requested_at)}{p.retry_count ? ` · ${p.retry_count} failed attempt(s)` : ""}</td>
                 <td className="text-[11px] text-taupe">marketing: {p.marketing_consent ? "yes" : "no"}</td></tr>
             ))}
-          </tbody></table>
+          </tbody></table></div>
         ) : <p className="text-[12.5px] text-taupe">No PDF requested by email.</p>}
       </Card>
       <div className="lg:col-span-2">
@@ -424,10 +433,10 @@ function ContactTab({ data, actions }: { data: WorkspaceData; actions: Workspace
       </div>
       <div className="lg:col-span-2">
         <Card title="Consent and privacy notice">
-          {data.consents.length ? <table className="w-full text-[12px]"><tbody>{data.consents.map((c, i) => (
+          {data.consents.length ? <div className="overflow-x-auto"><table className="w-full text-[12px]"><tbody>{data.consents.map((c, i) => (
             <tr key={i} className="border-t hairline first:border-0"><td className="py-1.5">{c.consent_type.replace("_", " ")}</td><td><Badge v={c.status === "granted" ? "confirmed" : "cancelled"} label={c.status} /></td>
               <td className="text-taupe">notice {c.notice_version}</td><td className="text-taupe">{c.source.replace("_", " ")}</td><td className="text-[11px] text-taupe">{fmtDate(c.created_at)}</td></tr>
-          ))}</tbody></table> : <p className="text-[12.5px] text-taupe">No consents recorded (anonymous, no requests).</p>}
+          ))}</tbody></table></div> : <p className="text-[12.5px] text-taupe">No consents recorded (anonymous, no requests).</p>}
           <p className="mt-2 text-[11px] text-taupe">Report-delivery consent is separate from marketing consent. Marketing is never set by a PDF request or a booking.</p>
         </Card>
       </div>
@@ -492,24 +501,24 @@ function ActivityTab({ data }: { data: WorkspaceData }) {
   return (
     <div className="grid gap-5 lg:grid-cols-2">
       <Card title="Audit trail">
-        <table className="w-full text-[12px]"><tbody>{data.audit.map((a, i) => (
+        <div className="overflow-x-auto"><table className="w-full text-[12px]"><tbody>{data.audit.map((a, i) => (
           <tr key={i} className="border-t hairline first:border-0"><td className="py-1.5 pr-3 text-[11px] text-taupe">{fmtDate(a.created_at)}</td><td className="pr-3">{a.action}</td>
             <td className="text-[11px] text-taupe">{a.actor_id ? (a.actor_id === data.viewer.userId ? "you" : shortId(a.actor_id)) : "system"}</td></tr>
-        ))}</tbody></table>
+        ))}</tbody></table></div>
         <p className="mt-2 text-[10.5px] text-taupe">Ids and states only. Answers, free text and notes are never written to logs.</p>
       </Card>
       <div className="space-y-5">
         <Card title="Webhook deliveries">
-          {hooks.length ? <table className="w-full text-[12px]"><tbody>{hooks.map((h, i) => (
+          {hooks.length ? <div className="overflow-x-auto"><table className="w-full text-[12px]"><tbody>{hooks.map((h, i) => (
             <tr key={i} className="border-t hairline first:border-0"><td className="py-1.5 pr-3 text-[11px] text-taupe">{fmtDate(h.received_at)}</td><td className="pr-3">{h.event_type}</td>
               <td><Badge v={h.processed_at ? "confirmed" : "pending"} label={h.processed_at ? "processed" : "pending"} /></td><td className="text-[11px] text-burgundy">{h.processing_error}</td></tr>
-          ))}</tbody></table> : <p className="text-[12.5px] text-taupe">No webhook events for this assessment.</p>}
+          ))}</tbody></table></div> : <p className="text-[12.5px] text-taupe">No webhook events for this assessment.</p>}
         </Card>
         <Card title="Generated artifacts">
-          <table className="w-full text-[12px]"><tbody>{data.artifacts.map((a, i) => (
+          <div className="overflow-x-auto"><table className="w-full text-[12px]"><tbody>{data.artifacts.map((a, i) => (
             <tr key={i} className="border-t hairline first:border-0"><td className="py-1.5 pr-3">{a.artifact_type.replace(/_/g, " ")} v{a.version}</td><td><Badge v={a.generation_status} /></td>
               <td className="font-mono text-[10px] text-taupe">{a.checksum?.slice(0, 12) ?? ""}</td><td className="text-[11px] text-taupe">{fmtDate(a.created_at)}</td></tr>
-          ))}</tbody></table>
+          ))}</tbody></table></div>
         </Card>
       </div>
     </div>

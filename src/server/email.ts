@@ -6,7 +6,8 @@ import { frozenResult, loadAnswers, resolveToken } from "./assessments";
 import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
 import { engineForTemplate, generateResultInsights } from "@/engine/insights";
 import { audit } from "./audit";
-import { hmacB64, safeEqual } from "./crypto";
+import { hmacB64, safeEqual, sha256, signBookingToken } from "./crypto";
+import { calendlyAdapter } from "./booking/calendly";
 
 export interface OutgoingEmail {
   to: string; subject: string; text: string;
@@ -24,7 +25,7 @@ export const resend = (apiKey: string, from: string): EmailProvider => ({
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "Idempotency-Key": m.idempotencyKey },
       body: JSON.stringify({
         from, to: [m.to], subject: m.subject, text: m.text,
-        ...(process.env.EMAIL_REPLY_TO ? { reply_to: process.env.EMAIL_REPLY_TO } : {}),
+        reply_to: process.env.EMAIL_REPLY_TO || from, // replies always reach Jana's inbox
         attachments: m.attachments?.map((a) => ({ filename: a.filename, content: Buffer.from(a.content).toString("base64") })),
       }),
     });
@@ -47,7 +48,7 @@ export type PdfEmailResult =
 
 /** Email sent with the PDF (draft wording for Jana's approval). Plain text: reads well everywhere, no tracking. */
 export const EMAIL_SUBJECT = "Your Current Life Map";
-export const EMAIL_TEXT = `Hello,
+export const emailText = (bookUrl: string | null) => `Hello,
 
 Thank you for taking the time to complete the Self-Interview. Your Current Life Map is attached as a PDF.
 
@@ -58,20 +59,30 @@ A few suggestions as you read it:
 - Pay attention to anything that surprises you.
 - Come back to the questions in your insights when you have a quiet moment.
 
-If you'd like to explore your Map together, you can book a Life Map Deep Dive from your results page.
+${bookUrl ? `If you'd like to explore your Map together, you can book a Deep Dive session with me here:
+${bookUrl}
+` : `If you'd like to explore your Map together, you can book a Deep Dive session from your results page.
+`}
+Questions or feedback? Simply reply to this email. It comes straight to me.
 
 You're receiving this email only because you asked for your PDF. You haven't been added to any mailing list.
 
 With warmth,
 Jana
 The Current Life Map`;
+export const EMAIL_TEXT = emailText(null);
 
 /**
  * Email the client PDF. Records the request against the assessment, links a client record created from
  * the email the person typed (never merged with other records), and tracks the provider's response.
  * "sent" means the provider accepted the message; delivery is confirmed only by the provider's webhook.
  */
-export async function requestPdfEmail(db: Db, token: string, email: string): Promise<PdfEmailResult> {
+/** Booking from the email: on only when booking is switched on and configured. The link carries a fresh one-time
+ *  booking token in the URL fragment (#b=…), which browsers never send to servers or logs; /book exchanges it. */
+const BOOK_LINK_TTL = 60 * 60 * 24 * 30; // 30 days
+const bookingFromEmail = () => process.env.NEXT_PUBLIC_BOOKING_ENABLED === "1" && !!process.env.BOOKING_TOKEN_SECRET && !!calendlyAdapter();
+
+export async function requestPdfEmail(db: Db, token: string, email: string, siteOrigin?: string): Promise<PdfEmailResult> {
   const provider = emailProvider();
   if (!provider) return { ok: false, error: "not_configured" };
   const prep = await db.tx(async (sql) => {
@@ -97,14 +108,22 @@ export async function requestPdfEmail(db: Db, token: string, email: string): Pro
       .filter((q) => typeof stored[q.id] === "string" && (stored[q.id] as string).trim())
       .map((q) => ({ prompt: q.prompt, text: stored[q.id] as string }));
     const insights = generateResultInsights(frozen.snapshot, stored, { engine: engineForTemplate(frozen.narrativeVersion) });
-    return { assessmentId: a.id, requestId: req.rows[0].id, frozen, email: normalized, reflections, insights };
+    let bookUrl: string | null = null;
+    const origin = process.env.PUBLIC_SITE_URL || siteOrigin;
+    if (origin && bookingFromEmail()) {
+      const b = signBookingToken(process.env.BOOKING_TOKEN_SECRET!, BOOK_LINK_TTL);
+      await sql.query(`insert into booking_link_tokens (token_hash, assessment_id, expires_at) values ($1,$2,$3)`, [sha256(b.token), a.id, b.expiresAt]);
+      await audit(sql, null, "booking.link_created", "assessment", a.id, { via: "pdf_email" });
+      bookUrl = `${origin.replace(/\/$/, "")}/book#b=${b.token}`;
+    }
+    return { assessmentId: a.id, requestId: req.rows[0].id, frozen, email: normalized, reflections, insights, bookUrl };
   });
   if ("error" in prep) return { ok: false, error: prep.error! };
 
   try {
     const pdf = await buildClientPdf(prep.frozen.snapshot, { generatedAt: prep.frozen.generatedAt, reflections: prep.reflections, insights: prep.insights });
     const sent = await provider.send({
-      to: prep.email, subject: EMAIL_SUBJECT, text: EMAIL_TEXT,
+      to: prep.email, subject: EMAIL_SUBJECT, text: emailText(prep.bookUrl),
       attachments: [{ filename: "current-life-map.pdf", content: pdf }], idempotencyKey: `pdf-${prep.requestId}`,
     });
     await db.query(`update pdf_requests set delivery_state = 'sent', provider_message_id = $2 where id = $1`, [prep.requestId, sent.id]);

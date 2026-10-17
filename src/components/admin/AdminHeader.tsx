@@ -1,18 +1,17 @@
 import Link from "next/link";
 import { SignOut } from "./connected";
+import { AdminHeaderLayout, brandClass, brandSuffix, navItemClass } from "./ui";
 
-export function AdminHeader({ email, role }: { email: string | null; role: string }) {
+export function AdminHeader({ email, role, active }: { email: string | null; role: string; active?: "assessments" | "clients" }) {
   return (
-    <header className="flex items-center justify-between border-b hairline px-6 py-4 sm:px-10">
-      <div className="flex flex-wrap items-baseline gap-6">
-        <Link href="/admin" className="font-serif text-[20px]">The Current Life Map <span className="text-[11px] uppercase tracking-[0.16em] text-taupe">· Coach workspace</span></Link>
-        <nav aria-label="Coach workspace" className="flex gap-4 text-[11px] uppercase tracking-[0.14em] text-taupe">
-          <Link href="/admin" className="hover:text-burgundy">Assessments</Link>
-          <Link href="/admin/clients" className="hover:text-burgundy">Clients</Link>
-        </nav>
-      </div>
-      <span className="flex items-center gap-4 text-[12px] text-taupe">{email} · {role}<SignOut /></span>
-    </header>
+    <AdminHeaderLayout
+      home={<Link href="/admin" className={brandClass}>The Current Life Map <span className={brandSuffix}>· Coach workspace</span></Link>}
+      links={<>
+        <Link href="/admin" className={navItemClass(active === "assessments")} aria-current={active === "assessments" ? "page" : undefined}>Assessments</Link>
+        <Link href="/admin/clients" className={navItemClass(active === "clients")} aria-current={active === "clients" ? "page" : undefined}>Clients</Link>
+      </>}
+      account={<><span className="hidden lg:inline">{email} · {role}</span><SignOut /></>}
+    />
   );
 }
 

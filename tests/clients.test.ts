@@ -10,7 +10,7 @@ import { setDb, asCoach, type Db } from "@/server/db";
 import { createAssessment, saveAnswers, completeAssessment } from "@/server/assessments";
 import { requestPdfEmail, setEmailProvider } from "@/server/email";
 import { calendlyAdapter } from "@/server/booking/calendly";
-import { createBookingLink, handleBookingWebhook } from "@/server/booking/process";
+import { bookingUrlForLinkToken, createBookingLink, handleBookingWebhook } from "@/server/booking/process";
 import { memoryFileStore } from "@/server/files";
 import {
   addAttachment, attachAssessment, createInvite, createProfileForAssessment, deleteAttachment, deleteClientProfile, deleteSession, getAttachment,
@@ -105,6 +105,30 @@ describe("client profiles", () => {
     expect(dup.merged_into_client_id).toBe(cid);
     expect((await asJana((sql) => listClients(sql))).some((c) => c.client_id === (r.ok ? r.folded[0] : ""))).toBe(false);
     expect((await asJana((sql) => profileForAssessment(sql, old.id))).profile?.client_id).toBe(cid);
+  });
+
+  it("PDF email carries a one-time booking link in the fragment (when booking is on) and invites replies", async () => {
+    const adapter = calendlyAdapter(process.env)!;
+    const { id, token } = await completed();
+    await requestPdfEmail(db, token, "off@example.com", "https://map.example.com");
+    expect(email.sent.at(-1)!.text).not.toContain("/book#b=");
+    expect(email.sent.at(-1)!.text).toContain("reply to this email");
+    process.env.NEXT_PUBLIC_BOOKING_ENABLED = "1";
+    try {
+      await requestPdfEmail(db, token, "on@example.com", "https://map.example.com");
+      const m = email.sent.at(-1)!.text.match(/https:\/\/map\.example\.com\/book#b=(\S+)/);
+      expect(m).toBeTruthy();
+      expect(email.sent.at(-1)!.text).not.toContain(id); // no assessment id in the email
+      const r = await bookingUrlForLinkToken(db, adapter, m![1]);
+      if (!r.ok) throw new Error(r.error);
+      expect(new URL(r.url).searchParams.get("utm_content")).toBe(m![1]);
+      // Booking through it links the assessment, then the link is spent
+      const { body } = inviteeCreated({ token: m![1], email: "on@example.com", name: "On" });
+      await handleBookingWebhook(db, adapter, calendlyHeaders(body), body);
+      expect((await pg.query(`select 1 from bookings where assessment_id = $1`, [id])).rows.length).toBe(1);
+      expect((await bookingUrlForLinkToken(db, adapter, m![1])).ok).toBe(false);
+      expect((await bookingUrlForLinkToken(db, adapter, "v1.forged.9999999999.sig")).ok).toBe(false);
+    } finally { delete process.env.NEXT_PUBLIC_BOOKING_ENABLED; }
   });
 
   it("a confirmed Deep Dive booking turns a Prospect into a Lead (never demotes a Client)", async () => {

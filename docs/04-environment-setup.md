@@ -35,7 +35,8 @@ Store a copy of `FIELD_ENCRYPTION_KEY` in a password manager. If it is lost, enc
 
 1. Add and verify your sending domain (SPF + DKIM records at your DNS host).
 2. Create an API key with "Sending access" → `RESEND_API_KEY`. Set `EMAIL_FROM`, e.g. `The Current Life Map <map@yourdomain.com>`.
-3. Webhooks → add `https://<your-domain>/api/webhooks/resend` with events `email.delivered`, `email.bounced`, `email.complained`, `email.failed` → copy the signing secret into `RESEND_WEBHOOK_SECRET`.
+3. Set `EMAIL_REPLY_TO` to the inbox you read (defaults to the sender) and `PUBLIC_SITE_URL` to `https://<your-domain>`: the email then carries a one-time booking link (`/book#b=…`, valid 30 days) once booking is switched on.
+4. Webhooks → add `https://<your-domain>/api/webhooks/resend` with events `email.delivered`, `email.bounced`, `email.complained`, `email.failed` → copy the signing secret into `RESEND_WEBHOOK_SECRET`.
 
 The PDF goes out as an attachment generated from the frozen snapshot. No public file URL exists. "Sent" in the CMS means Resend accepted the message. "Delivered" or "bounced" comes only from the verified webhook.
 
@@ -88,8 +89,9 @@ The PDF is the results page itself, printed by headless Chromium on the server (
 expanded, no buttons; footer: "Questions or feedback? hello@jasia.design"). The HTML is rendered from the frozen
 snapshot and handed to Chromium with all network requests blocked, so nothing about the person leaves the server.
 
-- **Vercel / serverless:** `npm install @sparticuz/chromium@^138` (a Chromium build that fits a function). The renderer
-  picks it up automatically. Give the PDF routes enough memory (1 GB) and time (30 s) in `vercel.json`.
+- **Vercel / serverless:** `@sparticuz/chromium@141` is installed (matches playwright-core 1.56's Chromium 141) and used
+  automatically on Vercel; `vercel.json` gives the three PDF routes 1 GB and 30 s, and `next.config.ts` ships the
+  package with those routes.
 - **Any other host:** install Chromium and set `PDF_CHROMIUM_PATH=/path/to/chromium`.
 - If Chromium can't start, the send is recorded as failed and the person sees "We couldn't send your PDF just now";
   nothing is reported as sent without a real PDF.

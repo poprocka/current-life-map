@@ -12,5 +12,5 @@ export default async function ClientProfilePage({ params }: { params: Promise<{ 
   const { id } = await params;
   const data = await asCoach(s.db, s.ctx, (sql) => loadClientProfile(sql, { userId: s.ctx.userId, role: s.role }, id));
   if (!data) notFound();
-  return (<><AdminHeader email={s.email} role={s.role} /><ConnectedProfile data={data} /></>);
+  return (<><AdminHeader email={s.email} role={s.role} active="clients" /><ConnectedProfile data={data} /></>);
 }

@@ -29,13 +29,14 @@ const SCALE = Math.round((A4_WIDTH / LAYOUT_WIDTH) * 100) / 100;
 async function launch() {
   const { chromium } = await import("playwright-core");
   if (process.env.PDF_CHROMIUM_PATH) return chromium.launch({ executablePath: process.env.PDF_CHROMIUM_PATH, args: ["--no-sandbox"] });
-  try {
+  // The serverless build only on serverless hosts (Vercel / AWS Lambda); elsewhere the local Playwright browser.
+  const serverless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+  if (serverless) try {
     const spec = "@sparticuz/chromium";
     const mod = (await import(/* webpackIgnore: true */ spec)) as { default: { executablePath: () => Promise<string>; args: string[] } };
-    return chromium.launch({ executablePath: await mod.default.executablePath(), args: mod.default.args });
-  } catch {
-    return chromium.launch({ args: ["--no-sandbox"] });
-  }
+    return await chromium.launch({ executablePath: await mod.default.executablePath(), args: mod.default.args });
+  } catch { /* fall through to the local browser */ }
+  return chromium.launch({ args: ["--no-sandbox"] });
 }
 
 export async function buildResultsPdf(result: LifeMapResult, opts: PdfOptions = {}): Promise<Uint8Array> {

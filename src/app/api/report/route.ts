@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   if (!parsed.data.token) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (parsed.data.reflections && Object.keys(parsed.data.reflections).length)
     await saveReflections(db, parsed.data.token, parsed.data.reflections).catch(() => null);
-  const r = await requestPdfEmail(db, parsed.data.token, parsed.data.email).catch(() => ({ ok: false as const, error: "send_failed" as const }));
+  const r = await requestPdfEmail(db, parsed.data.token, parsed.data.email, new URL(req.url).origin).catch(() => ({ ok: false as const, error: "send_failed" as const }));
   if (r.ok) return NextResponse.json({ state: r.state });
   const status = { not_configured: 503, not_found: 404, not_completed: 409, send_failed: 502 }[r.error];
   return NextResponse.json({ error: r.error }, { status });

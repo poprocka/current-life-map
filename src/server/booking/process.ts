@@ -24,6 +24,17 @@ export async function createBookingLink(db: Db, adapter: SchedulingAdapter, acce
   });
 }
 
+/** /book (from the PDF email): exchange a one-time booking token for the scheduler URL. Never creates an association;
+ *  the token was already stored, hashed, when the email was sent. Unknown, expired or used tokens are refused. */
+export async function bookingUrlForLinkToken(db: Db, adapter: SchedulingAdapter, linkToken: string) {
+  if (!secret()) return { ok: false as const, error: "not_configured" as const };
+  if (!verifyBookingToken(secret(), linkToken).ok) return { ok: false as const, error: "invalid" as const };
+  const row = (await db.query<{ consumed_at: Date | null; expires_at: Date }>(
+    `select consumed_at, expires_at from booking_link_tokens where token_hash = $1`, [sha256(linkToken)])).rows[0];
+  if (!row || row.consumed_at || new Date(row.expires_at).getTime() < Date.now()) return { ok: false as const, error: "invalid" as const };
+  return { ok: true as const, url: adapter.schedulingUrl(linkToken) };
+}
+
 type Outcome = { status: 200 | 400 | 401 | 500; outcome: string };
 
 /** Verified webhook → idempotent processing. Returns 500 on transient failure so the provider retries. */

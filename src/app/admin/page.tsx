@@ -17,8 +17,8 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const [list, recon] = await asCoach(s.db, s.ctx, async (sql) => [await listAssessments(sql, filters), await reconciliationQueue(sql)] as const);
   return (
     <>
-      <AdminHeader email={s.email} role={s.role} />
-      <main className="px-6 py-8 sm:px-10">
+      <AdminHeader email={s.email} role={s.role} active="assessments" />
+      <main className="px-4 py-6 sm:px-10 sm:py-8">
         <h1 className="font-serif text-[32px] font-light">Assessments</h1>
         <div className="mt-6"><ConnectedTable {...list} filters={filters} recon={recon} canExport={s.role === "admin"} /></div>
       </main>

@@ -17,13 +17,30 @@ export function ClientsTable({ rows, profileHref }: { rows: ClientListRow[]; pro
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
-        <input aria-label="Search clients" className={`${input} w-[280px]`} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name, email or ID" />
-        <div role="radiogroup" aria-label="Stage filter" className="inline-flex overflow-hidden rounded-full border border-linen-line text-[11.5px]">
-          <button role="radio" aria-checked={stage === ""} onClick={() => setStage("")} className={`px-3 py-1.5 ${stage === "" ? "bg-burgundy text-linen" : "text-mahogany/75"}`}>All · {rows.length}</button>
-          {STAGES.map((s) => <button key={s.value} role="radio" aria-checked={stage === s.value} onClick={() => setStage(s.value)} className={`px-3 py-1.5 ${stage === s.value ? "bg-burgundy text-linen" : "text-mahogany/75"}`}>{s.label}s · {count(s.value)}</button>)}
+        <input type="search" aria-label="Search clients" className={`${input} w-full py-2.5 text-[16px] sm:w-[280px] sm:py-1.5 sm:text-[12.5px]`} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name, email or ID" />
+        <div role="radiogroup" aria-label="Stage filter" className="inline-flex max-w-full overflow-x-auto rounded-full border border-linen-line text-[11.5px]">
+          <button role="radio" aria-checked={stage === ""} onClick={() => setStage("")} className={`whitespace-nowrap px-3 py-2 sm:py-1.5 ${stage === "" ? "bg-burgundy text-linen" : "text-mahogany/75"}`}>All · {rows.length}</button>
+          {STAGES.map((s) => <button key={s.value} role="radio" aria-checked={stage === s.value} onClick={() => setStage(s.value)} className={`whitespace-nowrap px-3 py-2 sm:py-1.5 ${stage === s.value ? "bg-burgundy text-linen" : "text-mahogany/75"}`}>{s.label}s · {count(s.value)}</button>)}
         </div>
       </div>
-      <div className="mt-4 overflow-x-auto rounded-[18px] border hairline bg-white/40">
+      <ul className="mt-4 space-y-3 md:hidden" aria-label="Clients">
+        {shown.map((r) => (
+          <li key={r.client_id}>
+            <Link href={profileHref(r.client_id)} className="block rounded-[18px] border hairline bg-white/50 p-4 active:bg-linen-deep/50">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="min-w-0 truncate font-serif text-[17px] text-mahogany">{r.name ?? r.email ?? <span className="font-mono text-[12px]">{shortId(r.client_id)}</span>}</span>
+                {stageBadge(r.stage)}
+              </div>
+              {r.name && r.email && <p className="truncate text-[12px] text-taupe">{r.email}</p>}
+              <p className="mt-2 text-[11.5px] text-taupe">
+                {r.maps} Map{r.maps === 1 ? "" : "s"} · {r.sessions} session{r.sessions === 1 ? "" : "s"}{r.next_session ? ` · next ${day(r.next_session)}` : r.last_session ? ` · last ${day(r.last_session)}` : ""}
+              </p>
+            </Link>
+          </li>
+        ))}
+        {shown.length === 0 && <li className="rounded-[18px] border hairline px-4 py-8 text-center text-[12.5px] text-taupe">No profiles match.</li>}
+      </ul>
+      <div className="mt-4 hidden overflow-x-auto rounded-[18px] border hairline bg-white/40 md:block">
         <table className="w-full min-w-[760px] text-left text-[12.5px]">
           <thead className="text-[10.5px] uppercase tracking-[0.12em] text-taupe">
             <tr>{["Client", "Stage", "Maps", "Last Map", "Sessions", "Next session", "Last session"].map((h) => <th key={h} className="px-3 py-2.5 font-normal">{h}</th>)}</tr>

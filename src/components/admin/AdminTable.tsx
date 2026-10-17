@@ -22,6 +22,8 @@ export interface AdminTableProps {
 /** Primary admin screen (addendum §2). No answer details or coach notes are shown here. */
 export function AdminTable(p: AdminTableProps) {
   const [f, setF] = useState<ListFilters>(p.filters);
+  const [more, setMore] = useState(false);
+  const activeFilters = ["booking", "completion", "report", "from", "to"].filter((k) => p.filters[k as keyof ListFilters]).length;
   const set = (k: keyof ListFilters, v: string) => setF((x) => ({ ...x, [k]: v || undefined }));
   const sortBy = (k: NonNullable<ListFilters["sort"]>) => p.onFilter({ ...p.filters, sort: k, dir: p.filters.sort === k && p.filters.dir !== "asc" ? "asc" : "desc", page: 1 });
   const Th = ({ k, children }: { k?: NonNullable<ListFilters["sort"]>; children: React.ReactNode }) => (
@@ -35,9 +37,11 @@ export function AdminTable(p: AdminTableProps) {
       {p.recon.length > 0 && <ReconQueue rows={p.recon} onReconcile={p.onReconcile} onSearch={p.onSearch} />}
 
       <form className="flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); p.onFilter({ ...f, page: 1 }); }}>
-        <label className="flex flex-col gap-1 text-[10.5px] uppercase tracking-[0.12em] text-taupe">Search
-          <input className={`${input} w-[260px] normal-case tracking-normal`} placeholder="ID, email or name" value={f.q ?? ""} onChange={(e) => set("q", e.target.value)} />
+        <label className="flex w-full flex-col gap-1 text-[10.5px] uppercase tracking-[0.12em] text-taupe sm:w-auto">Search
+          <input type="search" className={`${input} w-full py-2.5 text-[16px] normal-case tracking-normal sm:w-[260px] sm:py-1.5 sm:text-[12.5px]`} placeholder="ID, email or name" value={f.q ?? ""} onChange={(e) => set("q", e.target.value)} />
         </label>
+        <button type="button" className={`${btn} sm:hidden`} aria-expanded={more} onClick={() => setMore((m) => !m)}>Filters{activeFilters ? ` · ${activeFilters}` : ""}</button>
+        <div className={`${more ? "flex" : "hidden"} w-full flex-wrap items-end gap-3 sm:contents`}>
         <label className="flex flex-col gap-1 text-[10.5px] uppercase tracking-[0.12em] text-taupe">Booking
           <select className={input} value={f.booking ?? ""} onChange={(e) => set("booking", e.target.value)}>
             <option value="">Any</option>{BOOKING_STATES.map((s) => <option key={s} value={s}>{s.replace("_", "-")}</option>)}
@@ -59,13 +63,40 @@ export function AdminTable(p: AdminTableProps) {
         <label className="flex flex-col gap-1 text-[10.5px] uppercase tracking-[0.12em] text-taupe">To
           <input type="date" className={input} value={f.to ?? ""} onChange={(e) => set("to", e.target.value)} />
         </label>
+        </div>
         <button className={btnPrimary} type="submit">Apply</button>
         <button className={btn} type="button" onClick={() => { setF({}); p.onFilter({}); }}>Clear</button>
-        <span className="ml-auto text-[12px] text-taupe">{p.total} assessment{p.total === 1 ? "" : "s"}</span>
+        <span className="w-full text-[12px] text-taupe sm:ml-auto sm:w-auto">{p.total} assessment{p.total === 1 ? "" : "s"}</span>
         {p.canExport && p.exportHref && <a className={btn} href={p.exportHref}>Export CSV</a>}
       </form>
 
-      <div className="overflow-x-auto rounded-[18px] border hairline bg-white/40">
+      <ul className="space-y-3 lg:hidden" aria-label="Assessments">
+        {p.rows.map((r) => (
+          <li key={r.assessment_id}>
+            <Link href={p.workspaceHref(r.assessment_id)} className="block rounded-[18px] border hairline bg-white/50 p-4 active:bg-linen-deep/50">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="min-w-0 truncate font-serif text-[17px] text-mahogany">{r.client_name ?? <span className="text-taupe">Anonymous</span>}</span>
+                <span className="shrink-0 font-mono text-[11px] text-burgundy">{shortId(r.assessment_id)}</span>
+              </div>
+              {r.client_email && <p className="truncate text-[12px] text-taupe">{r.client_email}</p>}
+              <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[11px]">
+                {r.status === "completed" ? <Badge v="completed" /> : <Badge v="in_progress" label={`${r.sections_completed}/10 sections`} />}
+                {r.client_stage && <Badge v={r.client_stage === "client" ? "confirmed" : r.client_stage === "lead" ? "pending" : "unreviewed"} label={r.client_stage === "client" ? "Client" : r.client_stage === "lead" ? "Lead" : "Prospect"} />}
+                {r.booking_state && <Badge v={r.booking_state} label={`Deep Dive ${r.booking_state.replace("_", "-")}`} />}
+                {r.payment_state && r.payment_state !== "none" && <Badge v={r.payment_state} />}
+                {r.email_delivery_state && <Badge v={r.email_delivery_state} label={`PDF ${r.email_delivery_state}`} />}
+                {r.coach_review_state && r.coach_review_state !== "unreviewed" && <Badge v={r.coach_review_state} label={`review ${r.coach_review_state.replace("_", " ")}`} />}
+              </div>
+              <p className="mt-2 text-[11.5px] text-taupe">
+                {r.scheduled_start ? <>Session {fmtDate(r.scheduled_start, r.timezone)} · </> : null}Created {fmtDate(r.created_at)}
+              </p>
+            </Link>
+          </li>
+        ))}
+        {!p.rows.length && <li className="rounded-[18px] border hairline px-4 py-8 text-center text-[12.5px] text-taupe">No assessments match these filters.</li>}
+      </ul>
+
+      <div className="hidden overflow-x-auto rounded-[18px] border hairline bg-white/40 lg:block">
         <table className="w-full min-w-[1600px] text-[12px] text-mahogany/90">
           <thead className="border-b hairline text-[10px] uppercase tracking-[0.1em] text-taupe">
             <tr>
@@ -139,7 +170,7 @@ function ReconItem({ r, onReconcile, onSearch }: { r: ReconRow; onReconcile: Adm
   return (
     <li className="py-4 text-[12.5px]">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="min-w-[200px]"><b className="font-normal">{r.booked_name ?? "Unknown"}</b> <span className="text-taupe">{r.booked_email}</span></span>
+        <span className="min-w-0 sm:min-w-[200px]"><b className="font-normal">{r.booked_name ?? "Unknown"}</b> <span className="text-taupe">{r.booked_email}</span></span>
         <span className="text-taupe">{fmtDate(r.scheduled_start)}</span>
         <Badge v={r.booking_state} /><Badge v={r.payment_state} />
         <span className="flex-1 text-[#8A6420]">{r.reconciliation_reason}</span>
@@ -147,7 +178,7 @@ function ReconItem({ r, onReconcile, onSearch }: { r: ReconRow; onReconcile: Adm
       {!r.assessment_id && (
         <div className="mt-3 rounded-[12px] bg-white/60 p-3">
           <label className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.12em] text-taupe">Find assessment
-            <input className={`${input} w-[340px] normal-case tracking-normal`} placeholder="Name, email or assessment ID" value={q}
+            <input className={`${input} w-full normal-case tracking-normal sm:w-[340px]`} placeholder="Name, email or assessment ID" value={q}
               onChange={(e) => { setQ(e.target.value); setPicked(null); }} />
           </label>
           {hits && (hits.length ? (

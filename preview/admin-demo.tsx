@@ -4,7 +4,7 @@ import { AdminTable } from "@/components/admin/AdminTable";
 import { Workspace } from "@/components/admin/Workspace";
 import { ClientProfile } from "@/components/admin/ClientProfile";
 import { ClientsTable } from "@/components/admin/ClientsTable";
-import { DemoBanner } from "@/components/admin/ui";
+import { AdminHeaderLayout, brandClass, brandSuffix, DemoBanner, navItemClass } from "@/components/admin/ui";
 import type { AttachmentView, ClientListRow, ClientMap, ClientProfileData, ListFilters, ListRow, ReconRow, SessionView, Stage, WorkspaceData } from "@/server/admin/types";
 import { computeLifeMap } from "@/engine/compute";
 import { generateCoachReport, COACH_REPORT_TEMPLATE_VERSION } from "@/engine/coach/report";
@@ -202,18 +202,17 @@ function workspace(p: Person): WorkspaceData {
 const RECON: ReconRow[] = [{ id: "r1", booked_name: "Pat Morgan", booked_email: "pat@example.com", scheduled_start: ahead(5, 13), booking_state: "confirmed", payment_state: "paid",
   reconciliation_reason: "No assessment link token on the booking", assessment_id: null, created_at: ago(0, 8) }];
 
-function DemoHeader() {
+function DemoHeader({ path }: { path: string }) {
+  const clients = path.startsWith("/admin/clients");
   return (
-    <header className="flex items-center justify-between border-b hairline px-6 py-4 sm:px-10">
-      <div className="flex flex-wrap items-baseline gap-6">
-        <button onClick={() => navigate("/admin")} className="font-serif text-[20px]">The Current Life Map <span className="text-[11px] uppercase tracking-[0.16em] text-taupe">· Coach workspace</span></button>
-        <nav aria-label="Coach workspace" className="flex gap-4 text-[11px] uppercase tracking-[0.14em] text-taupe">
-          <button onClick={() => navigate("/admin")} className="uppercase hover:text-burgundy">Assessments</button>
-          <button onClick={() => navigate("/admin/clients")} className="uppercase hover:text-burgundy">Clients</button>
-        </nav>
-      </div>
-      <span className="text-[12px] text-taupe">jana@… · admin (demo)</span>
-    </header>
+    <AdminHeaderLayout
+      home={<button onClick={() => navigate("/admin")} className={`${brandClass} text-left`}>The Current Life Map <span className={brandSuffix}>· Coach workspace</span></button>}
+      links={<>
+        <button onClick={() => navigate("/admin")} className={navItemClass(!clients)} aria-current={!clients ? "page" : undefined}>Assessments</button>
+        <button onClick={() => navigate("/admin/clients")} className={navItemClass(clients)} aria-current={clients ? "page" : undefined}>Clients</button>
+      </>}
+      account={<span>admin (demo)</span>}
+    />
   );
 }
 
@@ -240,9 +239,9 @@ export function AdminDemo({ path }: { path: string }) {
   return (
     <div className="min-h-dvh bg-linen">
       <DemoBanner />
-      <DemoHeader />
+      <DemoHeader path={path} />
       {path === "/admin/clients" ? (
-        <main className="px-6 py-8 sm:px-10">
+        <main className="px-4 py-6 sm:px-10 sm:py-8">
           <h1 className="font-serif text-[32px] font-light">Clients</h1>
           <div className="mt-6"><ClientsTable rows={clientRows()} profileHref={(i) => `/admin/clients/${i}`} /></div>
         </main>
@@ -313,7 +312,7 @@ export function AdminDemo({ path }: { path: string }) {
           pdfHref: null, exportHref: null, listHref: "/admin",
         }} />
       ) : (
-        <main className="px-6 py-8 sm:px-10">
+        <main className="px-4 py-6 sm:px-10 sm:py-8">
           <h1 className="font-serif text-[32px] font-light">Assessments</h1>
           <div className="mt-6">
             <AdminTable rows={rows} total={rows.length} page={1} pages={1} filters={filters} recon={recon} canExport={false}

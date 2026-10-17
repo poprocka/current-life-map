@@ -12,5 +12,5 @@ export default async function AssessmentWorkspace({ params }: { params: Promise<
   const { id } = await params;
   const data = await asCoach(s.db, s.ctx, (sql) => loadWorkspace(sql, { userId: s.ctx.userId, role: s.role }, id));
   if (!data) notFound();
-  return (<><AdminHeader email={s.email} role={s.role} /><ConnectedWorkspace data={data} /></>);
+  return (<><AdminHeader email={s.email} role={s.role} active="assessments" /><ConnectedWorkspace data={data} /></>);
 }
