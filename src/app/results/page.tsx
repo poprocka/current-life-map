@@ -8,6 +8,7 @@ import { readStored } from "@/lib/useInterview";
 import { computeLifeMap, type LifeMapResult } from "@/engine/compute";
 import { generateResultInsights } from "@/engine/insights";
 import { isComplete } from "@/engine/navigation";
+import { trackOnce } from "@/lib/analytics";
 import type { AnswerValue } from "@/content/types";
 
 export default function Results() {
@@ -20,6 +21,7 @@ export default function Results() {
     // Freeze the server-side snapshot (idempotent). Without server storage this quietly does nothing.
     if (s?.token) void fetch("/api/assessments/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: s.token }) }).catch(() => undefined);
   }, []);
+  useEffect(() => { if (answers && isComplete(answers)) trackOnce("interview_complete"); }, [answers]);
   const result = useMemo<LifeMapResult | null>(() => (answers ? computeLifeMap(answers) : null), [answers]);
 
   if (!answers || !result) return <main className="min-h-dvh" aria-busy="true" />;

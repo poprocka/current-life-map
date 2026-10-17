@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { track } from "@/lib/analytics";
 import type { AnswerValue } from "@/content/types";
 import { CONTENT_VERSION } from "@/content/v10/question-bank";
 import { resumeStep, TOTAL_STEPS } from "@/engine/navigation";
@@ -75,6 +76,7 @@ export function useInterview() {
         if (r.status === 503) { serverAvailable.current = false; return setSync("device"); }
         if (!r.ok) throw new Error();
         token.current = (await r.json()).token;
+        track("interview_start", { entry: invite ? "client_link" : "public" });
         try { localStorage.removeItem("clm:v10:invite"); } catch { /* private mode */ }
       }
       // The access token travels in the body, never in the URL.
@@ -112,9 +114,10 @@ export function useInterview() {
 
   const goTo = useCallback((st: number) => {
     const clamped = Math.max(0, Math.min(st, TOTAL_STEPS - 1));
+    if (clamped > step) track("interview_progress", { step: clamped + 1, of: TOTAL_STEPS });
     setStep(clamped);
     setAnswers((a) => { persist(a, clamped); return a; });
-  }, [persist]);
+  }, [persist, step]);
 
   return { ready, answers, step, sync, answer, goTo, token: token.current };
 }

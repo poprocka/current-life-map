@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { track } from "@/lib/analytics";
 
 /** Set NEXT_PUBLIC_BOOKING_ENABLED=1 once Calendly is connected. Until then the buttons say so honestly. */
 export const BOOKING_ENABLED = process.env.NEXT_PUBLIC_BOOKING_ENABLED === "1";
@@ -21,6 +22,7 @@ export function useBooking(token?: string) {
       const r = await fetch("/api/booking/link", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) });
       if (r.ok) {
         const { url } = await r.json();
+        track("booking_open", { from: "results" });
         if (win) win.location.href = url; else window.location.href = url;
         return setState({ kind: "idle" });
       }

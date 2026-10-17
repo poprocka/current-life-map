@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { track } from "@/lib/analytics";
 import { useBooking } from "@/lib/useBooking";
 
 /**
@@ -66,6 +67,7 @@ export function SectionTabs({ token }: { token?: string }) {
       const a = document.createElement("a");
       a.href = url; a.download = "current-life-map.pdf"; document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      track("pdf_download");
       setDl("idle");
     } catch { setDl("error"); scrollTo("pdf-card"); }
   }

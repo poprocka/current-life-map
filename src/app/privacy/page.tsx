@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AnalyticsSettingsButton } from "@/components/Analytics";
 
 // Privacy & Data Use Notice — text supplied by Jana (October 2026), verbatim.
 // The document's implementation note is intentionally not shown to respondents.
@@ -90,6 +91,7 @@ export default function Privacy() {
           </section>
         ))}
       </div>
+      <p className="mt-12 text-[12.5px] text-taupe"><AnalyticsSettingsButton /></p>
     </main>
   );
 }

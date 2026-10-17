@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { track } from "@/lib/analytics";
 
 import { BOOKING_ENABLED, useBooking } from "@/lib/useBooking";
 
@@ -63,7 +64,7 @@ export function PdfCard({ token }: { token?: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, token, reflections: (() => { try { return JSON.parse(localStorage.getItem("clm:v10:postmap") ?? "{}"); } catch { return {}; } })() }),
       });
-      if (r.ok) return setState({ kind: "sent" });
+      if (r.ok) { track("pdf_email_sent"); return setState({ kind: "sent" }); }
       if (r.status === 503 || r.status === 404 || r.status === 409)
         return setState({ kind: "error", message: "Email delivery isn't connected yet, so nothing was sent. Your results stay on this page." });
       setState({ kind: "error", message: "We couldn't send your PDF just now. Please try again in a moment." });
