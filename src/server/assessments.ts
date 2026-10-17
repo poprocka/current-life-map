@@ -1,4 +1,5 @@
 import "server-only";
+import { cleanSlug } from "@/content/channels";
 import type { AnswerValue } from "@/content/types";
 import { NOT_APPLICABLE } from "@/content/types";
 import { ACTIVE_QUESTIONS, ASSESSMENT_VERSION, QUESTION_BANK_VERSION, questionById } from "@/content/v10/question-bank";
@@ -21,12 +22,12 @@ export type Answers = Record<string, AnswerValue>;
  * Start an assessment. With a valid private client link (`invite`), the new Map is attached to that client's
  * profile; an unknown or revoked invite is ignored silently (the person can still complete an anonymous Map).
  */
-export async function createAssessment(db: Db, opts: { invite?: string | null } = {}): Promise<{ id: string; token: string; linkedToProfile: boolean }> {
+export async function createAssessment(db: Db, opts: { invite?: string | null; source?: unknown; campaign?: unknown } = {}): Promise<{ id: string; token: string; linkedToProfile: boolean }> {
   const token = randomToken();
   return db.tx(async (sql) => {
     const r = await sql.query<{ id: string }>(
-      `insert into assessments (access_token_hash, assessment_version, question_bank_version) values ($1, $2, $3) returning id`,
-      [sha256(token), ASSESSMENT_VERSION, QUESTION_BANK_VERSION],
+      `insert into assessments (access_token_hash, assessment_version, question_bank_version, source, campaign) values ($1, $2, $3, $4, $5) returning id`,
+      [sha256(token), ASSESSMENT_VERSION, QUESTION_BANK_VERSION, cleanSlug(opts.source), cleanSlug(opts.campaign)],
     );
     const id = r.rows[0].id;
     const clientId = await clientForInvite(sql, opts.invite);

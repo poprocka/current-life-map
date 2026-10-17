@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { track } from "@/lib/analytics";
+import { readChannel } from "@/lib/channel";
 import type { AnswerValue } from "@/content/types";
 import { CONTENT_VERSION } from "@/content/v10/question-bank";
 import { resumeStep, TOTAL_STEPS } from "@/engine/navigation";
@@ -72,7 +73,9 @@ export function useInterview() {
         // A private client link's token (kept from the URL fragment) is sent in the body, never in a URL.
         let invite: string | null = null;
         try { invite = localStorage.getItem("clm:v10:invite"); } catch { /* private mode */ }
-        const r = await fetch("/api/assessments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(invite ? { invite } : {}) });
+        const ch = readChannel();
+        const r = await fetch("/api/assessments", { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...(invite ? { invite } : {}), ...(ch ? { source: ch.source, campaign: ch.campaign } : {}) }) });
         if (r.status === 503) { serverAvailable.current = false; return setSync("device"); }
         if (!r.ok) throw new Error();
         token.current = (await r.json()).token;

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useEffect } from "react";
 import type { ListFilters, ListRow, ReconRow, SearchHit } from "@/server/admin/types";
+import { sourceLabel } from "@/content/channels";
 import { Badge, btn, btnPrimary, fmtDate, input, shortId } from "./ui";
 
 const BOOKING_STATES = ["none", "pending", "confirmed", "rescheduled", "cancelled", "completed", "no_show"];
@@ -88,7 +89,7 @@ export function AdminTable(p: AdminTableProps) {
                 {r.coach_review_state && r.coach_review_state !== "unreviewed" && <Badge v={r.coach_review_state} label={`review ${r.coach_review_state.replace("_", " ")}`} />}
               </div>
               <p className="mt-2 text-[11.5px] text-taupe">
-                {r.scheduled_start ? <>Session {fmtDate(r.scheduled_start, r.timezone)} · </> : null}Created {fmtDate(r.created_at)}
+                {r.scheduled_start ? <>Session {fmtDate(r.scheduled_start, r.timezone)} · </> : null}Created {fmtDate(r.created_at)} · via {sourceLabel(r.source)}
               </p>
             </Link>
           </li>
@@ -97,11 +98,11 @@ export function AdminTable(p: AdminTableProps) {
       </ul>
 
       <div className="hidden overflow-x-auto rounded-[18px] border hairline bg-white/40 lg:block">
-        <table className="w-full min-w-[1600px] text-[12px] text-mahogany/90">
+        <table className="w-full min-w-[1700px] text-[12px] text-mahogany/90">
           <thead className="border-b hairline text-[10px] uppercase tracking-[0.1em] text-taupe">
             <tr>
               <Th>Assessment</Th><Th k="created_at">Created</Th><Th k="completed_at">Completed</Th><Th>Progress</Th><Th>Version</Th>
-              <Th>Client</Th><Th>Email</Th><Th>Contact source</Th><Th>Email delivery</Th>
+              <Th>Client</Th><Th>Email</Th><Th>Came from</Th><Th>Contact source</Th><Th>Email delivery</Th>
               <Th>Booking</Th><Th k="scheduled_start">Session</Th><Th>Payment</Th>
               <Th>Report</Th><Th>Coach review</Th><Th>Follow-up</Th><Th>Stage</Th><Th k="last_activity_at">Last activity</Th>
             </tr>
@@ -116,6 +117,7 @@ export function AdminTable(p: AdminTableProps) {
                 <td className="px-3 py-2.5 text-taupe">{r.assessment_version.replace("v10-with-approved-oct12-overrides", "v10 · 12 Oct")}</td>
                 <td className="px-3 py-2.5">{r.client_name ?? <span className="text-taupe">Anonymous</span>}</td>
                 <td className="px-3 py-2.5">{r.client_email ?? <span className="text-taupe">—</span>}</td>
+                <td className="whitespace-nowrap px-3 py-2.5">{sourceLabel(r.source)}{r.campaign && <span className="block text-[10.5px] text-taupe">{r.campaign.replace(/_/g, " ")}</span>}</td>
                 <td className="px-3 py-2.5">{r.contact_source?.split(",").map((s) => s.replace("_", " ")).join(", ") ?? "—"}</td>
                 <td className="px-3 py-2.5"><Badge v={r.email_delivery_state} /></td>
                 <td className="px-3 py-2.5">{r.booking_state ? <Badge v={r.booking_state} /> : <span className="text-taupe">none</span>}</td>
@@ -128,7 +130,7 @@ export function AdminTable(p: AdminTableProps) {
                 <td className="whitespace-nowrap px-3 py-2.5 text-taupe">{fmtDate(r.last_activity_at)}</td>
               </tr>
             ))}
-            {!p.rows.length && <tr><td colSpan={17} className="px-3 py-10 text-center text-taupe">No assessments match these filters.</td></tr>}
+            {!p.rows.length && <tr><td colSpan={18} className="px-3 py-10 text-center text-taupe">No assessments match these filters.</td></tr>}
           </tbody>
         </table>
       </div>

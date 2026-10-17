@@ -13,8 +13,9 @@ export async function freshDb() {
     create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
     grant usage on schema auth to anon, authenticated;
   `);
-  const sql = fs.readFileSync(path.join(__dirname, "../../supabase/migrations/0001_initial.sql"), "utf8");
-  await db.exec(sql);
+  // 0002 (storage bucket) needs Supabase's storage schema, which the embedded database doesn't have.
+  for (const f of ["0001_initial.sql", "0003_channels.sql"])
+    await db.exec(fs.readFileSync(path.join(__dirname, "../../supabase/migrations", f), "utf8"));
   await db.exec(`
     grant usage on schema public to anon, authenticated;
     grant select, insert, update, delete on all tables in schema public to anon, authenticated;

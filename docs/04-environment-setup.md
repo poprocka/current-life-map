@@ -7,7 +7,7 @@ Without a variable, the matching feature stays off and says so honestly (for exa
 ## 1. Supabase (database + coach sign-in)
 
 1. Create a Supabase project (EU or US region, whichever your privacy notice names).
-2. SQL editor → run `supabase/migrations/0001_initial.sql` (or `supabase db push`).
+2. SQL editor → run `supabase/migrations/0001_initial.sql`, then `0002_storage.sql` and `0003_channels.sql` (or `supabase db push`).
 3. Authentication → Providers → Email: enable; **disable "Allow new users to sign up"** (coaches are invited, never self-registered).
 4. Authentication → Multi-Factor → enable **TOTP**.
 5. Authentication → Users → **Invite** Jana's email. After she sets a password, copy her user id and run:

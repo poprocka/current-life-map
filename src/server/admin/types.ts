@@ -9,7 +9,10 @@ export interface ListRow {
   last_activity_at: string; client_id?: string | null; client_name: string | null; client_email: string | null; coaching_enrolled: boolean; client_stage?: Stage | null; contact_source: string | null; email_delivery_state: string | null;
   booking_state: string | null; scheduled_start: string | null; timezone: string | null; payment_state: string | null; report_status: string | null;
   coach_review_state: string | null; follow_up_status: string | null;
+  source?: string | null; campaign?: string | null;
 }
+/** Per-channel funnel for the portal home (first-touch source of each assessment). */
+export interface ChannelRow { source: string; started: number; completed: number; pdf: number; booked: number; paid: number }
 export interface ListFilters {
   q?: string; booking?: string; completion?: "completed" | "in_progress"; report?: "ready" | "none"; from?: string; to?: string;
   sort?: "created_at" | "completed_at" | "last_activity_at" | "scheduled_start"; dir?: "asc" | "desc"; page?: number;

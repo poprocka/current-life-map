@@ -31,6 +31,19 @@ export async function listAssessments(sql: Sql, f: ListFilters): Promise<{ rows:
   return { rows, total, page, pages: Math.max(1, Math.ceil(total / PAGE)) };
 }
 
+/** Where people come from: started → completed → PDF → booked → paid, per channel, over the last `days` days. */
+export async function channelSummary(sql: Sql, days = 90): Promise<import("./types").ChannelRow[]> {
+  const d = Math.max(1, Math.min(Math.floor(days), 3650));
+  return (await sql.query<import("./types").ChannelRow>(
+    `select coalesce(source, 'direct') as source, count(*)::int as started,
+            count(*) filter (where status = 'completed')::int as completed,
+            count(*) filter (where email_delivery_state is not null)::int as pdf,
+            count(*) filter (where booking_state is not null and booking_state not in ('cancelled'))::int as booked,
+            count(*) filter (where payment_state = 'paid')::int as paid
+     from admin_assessment_list where created_at >= now() - ($1::int * interval '1 day')
+     group by 1 order by started desc`, [d])).rows;
+}
+
 /** Name, email or assessment-ID prefix search for reconciliation (max 8). Reads the RLS-protected list view. */
 export async function searchAssessments(sql: Sql, q: string): Promise<import("./types").SearchHit[]> {
   const term = q.trim().slice(0, 120);

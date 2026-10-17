@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { captureChannel } from "@/lib/channel";
 import { GA_ID, GA_SIGNALS, excludedPath, loadAnalytics, pageView, readConsent, writeConsent, type Consent } from "@/lib/analytics";
 
 /** Opt-in analytics banner + page views. Renders nothing when GA isn't configured or on the coach portal. */
@@ -9,6 +10,7 @@ export function Analytics() {
   const path = usePathname() ?? "/";
   const [consent, setConsent] = useState<Consent | "unknown">("unknown");
   useEffect(() => {
+    captureChannel(); // first-party channel for the portal; works whether or not analytics is allowed
     const c = readConsent(); setConsent(c);
     const reopen = () => setConsent(null);
     window.addEventListener("clm:analytics-settings", reopen);

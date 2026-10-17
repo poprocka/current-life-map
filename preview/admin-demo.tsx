@@ -1,11 +1,12 @@
 /** Preview-only coach workspace with invented sample data, clearly labelled. Same components as production. */
 import React, { useMemo, useState } from "react";
+import { ChannelSummary } from "@/components/admin/ChannelSummary";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { Workspace } from "@/components/admin/Workspace";
 import { ClientProfile } from "@/components/admin/ClientProfile";
 import { ClientsTable } from "@/components/admin/ClientsTable";
 import { AdminHeaderLayout, brandClass, brandSuffix, DemoBanner, navItemClass } from "@/components/admin/ui";
-import type { AttachmentView, ClientListRow, ClientMap, ClientProfileData, ListFilters, ListRow, ReconRow, SessionView, Stage, WorkspaceData } from "@/server/admin/types";
+import type { AttachmentView, ClientListRow, ClientMap, ClientProfileData, ChannelRow, ListFilters, ListRow, ReconRow, SessionView, Stage, WorkspaceData } from "@/server/admin/types";
 import { computeLifeMap } from "@/engine/compute";
 import { generateCoachReport, COACH_REPORT_TEMPLATE_VERSION } from "@/engine/coach/report";
 import { generateDeepDiveScript } from "@/engine/coach/script";
@@ -129,7 +130,19 @@ function listRow(p: Person): ListRow {
     email_delivery_state: p.pdf ?? null, booking_state: p.booking?.state ?? null, scheduled_start: p.booking?.start ?? null, timezone: p.booking?.tz ?? null,
     payment_state: p.booking?.payment ?? null, report_status: p.complete ? "ready" : null, coach_review_state: p.complete ? p.review : null, follow_up_status: p.follow,
     client_stage: clientOfMap(p.id)?.stage ?? null,
+    source: DEMO_SOURCES[PEOPLE.indexOf(p) % DEMO_SOURCES.length], campaign: null,
   };
+}
+const DEMO_SOURCES = ["instagram", "qr_card", "linkedin", null, "instagram", "website", "instagram", "newsletter"];
+function demoChannels(rows: ListRow[]): ChannelRow[] {
+  const m = new Map<string, ChannelRow>();
+  for (const r of rows) {
+    const k = r.source ?? "direct", x = m.get(k) ?? { source: k, started: 0, completed: 0, pdf: 0, booked: 0, paid: 0 };
+    x.started++; if (r.status === "completed") x.completed++; if (r.email_delivery_state) x.pdf++;
+    if (r.booking_state && r.booking_state !== "cancelled") x.booked++; if (r.payment_state === "paid") x.paid++;
+    m.set(k, x);
+  }
+  return [...m.values()].sort((a, b) => b.started - a.started);
 }
 
 function workspace(p: Person): WorkspaceData {
@@ -314,6 +327,7 @@ export function AdminDemo({ path }: { path: string }) {
       ) : (
         <main className="px-4 py-6 sm:px-10 sm:py-8">
           <h1 className="font-serif text-[32px] font-light">Assessments</h1>
+          <div className="mt-6"><ChannelSummary rows={demoChannels(PEOPLE.map(listRow))} /></div>
           <div className="mt-6">
             <AdminTable rows={rows} total={rows.length} page={1} pages={1} filters={filters} recon={recon} canExport={false}
               onFilter={setFilters} workspaceHref={(i) => `/admin/assessments/${i}`}

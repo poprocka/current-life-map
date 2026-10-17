@@ -20,7 +20,13 @@ export const writeConsent = (v: Exclude<Consent, null>) => { try { localStorage.
 export const clearConsent = () => { try { localStorage.removeItem(KEY); } catch { /* private mode */ } };
 
 export const excludedPath = (p: string) => p.startsWith("/admin") || p.startsWith("/book") || p.startsWith("/api");
-const cleanLocation = () => `${window.location.origin}${window.location.pathname}`;
+/** Page address for GA: path plus campaign tags only (utm_*), so channels are attributed; never other parameters or the #fragment. */
+const cleanLocation = () => {
+  const q = new URLSearchParams(window.location.search), keep = new URLSearchParams();
+  for (const k of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"]) { const v = q.get(k); if (v && /^[A-Za-z0-9_.-]{1,40}$/.test(v)) keep.set(k, v); }
+  const qs = keep.toString();
+  return `${window.location.origin}${window.location.pathname}${qs ? `?${qs}` : ""}`;
+};
 
 type W = Window & { dataLayer?: unknown[]; gtag?: (...a: unknown[]) => void };
 let loaded = false;
