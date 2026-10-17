@@ -298,7 +298,7 @@ export function AdminDemo({ path }: { path: string }) {
           deleteAttachment: async (aid) => { await later(); c.files = c.files.filter((f) => f.id !== aid); for (const x of c.sessions) x.attachments = x.attachments.filter((f) => f.id !== aid); for (const x of c.notes) x.attachments = x.attachments.filter((f) => f.id !== aid); },
           attachmentHref: (aid) => blobUrls.get(aid) ?? "#",
           workspaceHref: (aid) => `/admin/assessments/${aid}`,
-          inviteUrl: (token) => `https://map.jasia.design/#invite=${token}`,
+          inviteUrl: (token) => `https://self-interview.com/#invite=${token}`,
           listHref: "/admin/clients",
           refresh,
         }} />;
