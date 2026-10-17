@@ -6,3 +6,4 @@ export function useSearchParams() {
 }
 export function redirect(to: string) { navigate(to); }
 export function notFound() { navigate("/admin"); }
+export function usePathname() { return usePath().split("?")[0]; }

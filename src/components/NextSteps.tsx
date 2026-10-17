@@ -19,12 +19,11 @@ export function DeepDiveCard({ token }: { token?: string }) {
       {/* Deep Dive */}
       <div className="grid gap-6 rounded-[28px] bg-burgundy p-8 text-linen sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-16">
         <div>
-        <p className="text-[10.5px] uppercase tracking-eyebrow text-linen/70">Life Map Deep Dive</p>
-        <h2 className="mt-3 font-serif text-[30px] font-light leading-tight">Your Map shows where you are. Let&rsquo;s talk about where you&rsquo;re going.</h2>
+        <p className="text-[10.5px] uppercase tracking-eyebrow text-linen/70">There is more to your story</p>
+        <h2 className="mt-3 font-serif text-[30px] font-light leading-tight">Want to talk about it?</h2>
         <p className="mt-3 max-w-[640px] text-[13.5px] leading-relaxed text-linen/85">
-          This is where real change begins. In a private 60-minute session, I listen to your story, help you read what your
-          Map is telling you, and guide you toward the steps that matter most. From there, if you choose to continue, I walk
-          beside you: believing in you, guiding you, and keeping you accountable as you build a life that feels like your own.
+          Let&rsquo;s look beyond your answers to understand the choices, priorities, and experiences shaping your life
+          today &mdash; so you can move forward with greater clarity and intention.
         </p>
         </div>
         <div className="lg:text-right">
