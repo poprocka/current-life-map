@@ -4,7 +4,8 @@
  * only from its own readings within the length budget, and checks every sentence before it is stored.
  */
 import type { OrbitId } from "@/content/types";
-import { DISTANCE_LINES, CARD_META, ORBIT_Q } from "@/engine/narrative/compose";
+import { DISTANCE_LINES, CARD_META } from "@/engine/narrative/compose";
+import { orbitQuestion } from "./orbit-questions";
 import { cap, list } from "@/engine/narrative/context";
 import { energyWords } from "@/engine/narrative/rules";
 import type { Evidence, InsightCard, OrbitNarrative, Para } from "@/engine/narrative/types";
@@ -98,7 +99,7 @@ function composeMap(e: E): string {
 }
 
 const FEEL_CAP = (e: E, o: OrbitId) => cap(e.c.feelings(o));
-function composeOrbit(e: E, o: OrbitId, plan: Plan, withQuestion: boolean, coexistUsed: { done: boolean }): OrbitNarrative {
+function composeOrbit(e: E, o: OrbitId, plan: Plan, coexistUsed: { done: boolean }): OrbitNarrative {
   const c = e.c, r = c.by[o];
   const ids = c.statements(o).filter((i) => !e.isNA(i));
   const hi = ids.filter(e.yes), lo = ids.filter(e.no);
@@ -135,7 +136,7 @@ function composeOrbit(e: E, o: OrbitId, plan: Plan, withQuestion: boolean, coexi
     else if (bright && !imp) parts.push("It works well without needing to be a top priority.");
     else if (lo.length && !hi.length) parts.push("It seems to be asking for more than it currently gets.");
   }
-  return { orbit: o, name: e.N(o), paragraphs: [parts.join(" ")], question: withQuestion ? ORBIT_Q[o] : "", evidence: ev };
+  return { orbit: o, name: e.N(o), paragraphs: [parts.join(" ")], question: "", evidence: ev };
 }
 
 const para = (text: string, r?: Reading | null): Para => ({ text, observationIds: r ? [r.id] : [], evidence: r ? r.evidence : [] });
@@ -181,12 +182,12 @@ export function composeAll(e: E, plan: Plan, clean: (t: string) => string) {
   const seenQ = new Set<string>([closing]);
   for (const k of cards) { if (seenQ.has(k.question)) { k.question = CARD_META[k.key].fallbackQuestion.replace("this season of your life", "this time in your life"); if (k.major) k.major.question = k.question; } seenQ.add(k.question); }
 
-  // Orbits: questions on at most three (the furthest / dimmest / lever first)
-  const qOrbits = [...new Set([...e.map.far, ...e.map.dimmest, ...(e.roles.lever ? [e.roles.lever] : [])])].slice(0, 3);
+  // Orbits: every Orbit carries one question, chosen by its state (Jana, 17 Oct)
   const coexist = { done: false };
+  const takenQ = new Set<string>([...seenQ, ...(byHome.sun ? [byHome.sun.question.text] : [])]);
   const orbits = ORBITS.map((o) => {
-    const n = composeOrbit(e, o, plan, qOrbits.includes(o), coexist);
-    return { ...n, paragraphs: n.paragraphs.map(clean) };
+    const n = composeOrbit(e, o, plan, coexist);
+    return { ...n, paragraphs: n.paragraphs.map(clean), question: orbitQuestion(e, o, takenQ).text };
   });
 
   const sunR = byHome.sun;
