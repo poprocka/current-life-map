@@ -112,7 +112,7 @@ describe("client profiles", () => {
     const { id, token } = await completed();
     await requestPdfEmail(db, token, "off@example.com", "https://map.example.com");
     expect(email.sent.at(-1)!.text).not.toContain("/book#b=");
-    expect(email.sent.at(-1)!.text).toContain("reply to this email");
+    expect(email.sent.at(-1)!.text).toContain("Just reply to this email.");
     process.env.NEXT_PUBLIC_BOOKING_ENABLED = "1";
     try {
       await requestPdfEmail(db, token, "on@example.com", "https://map.example.com");

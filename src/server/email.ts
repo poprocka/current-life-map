@@ -46,30 +46,24 @@ export type PdfEmailResult =
   | { ok: true; state: "sent" }
   | { ok: false; error: "not_configured" | "not_found" | "not_completed" | "send_failed" };
 
-/** Email sent with the PDF (draft wording for Jana's approval). Plain text: reads well everywhere, no tracking. */
+/** Email sent with the PDF (Jana's wording, 17 Oct). Plain text plus a matching HTML version; no tracking. */
 export const EMAIL_SUBJECT = "Your Current Life Map";
-export const emailText = (bookUrl: string | null) => `Hello,
+export const emailText = (bookUrl: string | null) => `Hi,
 
-Thank you for taking the time to complete the Self-Interview. Your Current Life Map is attached as a PDF.
+Your Current Life Map is ready.
 
-It reflects the life you described: what matters most to you right now, what gives and takes your energy, and how the different parts of your life influence one another. It isn't a verdict or a diagnosis. It's a starting point for seeing your life more clearly.
+Thank you for taking the time to have a conversation with yourself. I hope it gives you a new perspective on where you are today, and perhaps raises a few questions worth exploring. Your map is attached to this email.
 
-A few suggestions as you read it:
-- Take your time. Notice what feels accurate, and what doesn't.
-- Pay attention to anything that surprises you.
-- Come back to the questions in your insights when you have a quiet moment.
+I'd love to hear what you think. Did anything surprise you? Was there something that made you pause or see your life differently?
 
-${bookUrl ? `If you'd like to explore your Map together, you can book a Deep Dive session with me.
+Just reply to this email. I'll be happy to hear from you.
+${bookUrl ? `
 Book a session: ${bookUrl}
-` : `If you'd like to explore your Map together, you can book a Deep Dive session from your results page.
-`}
-Questions or feedback? Simply reply to this email. It comes straight to me.
-
-You're receiving this email only because you asked for your PDF. You haven't been added to any mailing list.
-
-With warmth,
+` : ""}
+Warmly,
 Jana
-The Current Life Map`;
+Creator of The Life System™`;
+
 export const EMAIL_TEXT = emailText(null);
 
 const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
