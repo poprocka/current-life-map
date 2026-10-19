@@ -91,7 +91,8 @@ export function ConnectedProfile({ data }: { data: ClientProfileData }) {
       deleteAttachment: async (aid) => { await post(`/api/admin/clients/${id}/attachments/${aid}`, { action: "delete" }); },
       attachmentHref: (aid) => `/api/admin/clients/${id}/attachments/${aid}`,
       workspaceHref: (aid) => `/admin/assessments/${aid}`,
-      inviteUrl: (token) => `${window.location.origin}/#invite=${token}`,
+      // Client links always point at the public site, even when Jana works on the coach subdomain.
+      inviteUrl: (token) => `${(process.env.NEXT_PUBLIC_SITE_URL || window.location.origin).replace(/\/$/, "")}/#invite=${token}`,
       listHref: "/admin/clients",
       refresh: () => router.refresh(),
     }} />

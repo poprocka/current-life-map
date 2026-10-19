@@ -182,7 +182,9 @@ export async function retryPending(db: Db) {
   let ok = 0;
   for (const row of r.rows) if ((await processEvent(db, row.id, row.payload)).status === 200) ok++;
   await db.query(`select prune_booking_payloads()`);
-  return { attempted: r.rows.length, processed: ok };
+  // Retention: unfinished, unlinked Self-Interviews with no activity for 90 days are removed (Jana, 19 Oct).
+  const purged = Number((await db.query<{ n: number }>(`select purge_abandoned_assessments(90) as n`)).rows[0]?.n ?? 0);
+  return { attempted: r.rows.length, processed: ok, purged };
 }
 
 /** Manual reconciliation by a coach (runs under the coach's RLS context). */

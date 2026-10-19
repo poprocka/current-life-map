@@ -35,7 +35,7 @@ Store a copy of `FIELD_ENCRYPTION_KEY` in a password manager. If it is lost, enc
 
 1. Add and verify your sending domain (SPF + DKIM records at your DNS host).
 2. Create an API key with "Sending access" → `RESEND_API_KEY`. Set `EMAIL_FROM`, e.g. `Jana | The Self-Interview <talk@self-interview.com>`.
-3. Set `EMAIL_REPLY_TO` to the inbox you read (defaults to the sender) and `PUBLIC_SITE_URL` to `https://<your-domain>`: the email then carries a one-time booking link (`/book#b=…`, valid 30 days) once booking is switched on.
+3. Set `EMAIL_REPLY_TO` to the inbox you read (defaults to the sender) and `NEXT_PUBLIC_SITE_URL` to `https://<your-domain>`: the email then carries a one-time booking link (`/book#b=…`, valid 30 days) once booking is switched on.
 4. Webhooks → add `https://<your-domain>/api/webhooks/resend` with events `email.delivered`, `email.bounced`, `email.complained`, `email.failed` → copy the signing secret into `RESEND_WEBHOOK_SECRET`.
 
 The PDF goes out as an attachment generated from the frozen snapshot. No public file URL exists. "Sent" in the CMS means Resend accepted the message. "Delivered" or "bounced" comes only from the verified webhook.

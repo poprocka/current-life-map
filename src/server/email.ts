@@ -120,7 +120,7 @@ export async function requestPdfEmail(db: Db, token: string, email: string, site
       .map((q) => ({ prompt: q.prompt, text: stored[q.id] as string }));
     const insights = generateResultInsights(frozen.snapshot, stored, { engine: engineForTemplate(frozen.narrativeVersion) });
     let bookUrl: string | null = null;
-    const origin = process.env.PUBLIC_SITE_URL || siteOrigin;
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || process.env.PUBLIC_SITE_URL || siteOrigin;
     if (origin && bookingFromEmail()) {
       const b = signBookingToken(process.env.BOOKING_TOKEN_SECRET!, BOOK_LINK_TTL);
       await sql.query(`insert into booking_link_tokens (token_hash, assessment_id, expires_at) values ($1,$2,$3)`, [sha256(b.token), a.id, b.expiresAt]);
