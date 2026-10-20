@@ -246,6 +246,9 @@ export function PersonalMap({ result, still = false }: { result: LifeMapResult; 
  * Legend distinguishes active, proxy and pending indicators (spec §7.1).
  * distancePending: no Orbit has a distance (an earlier scoring version, or no congruence answers), so all sit on one ring.
  */
+/** Legend swatches use a real Orbit colour and the Map's own line styles, so the legend matches the Map (Jana, 20 Oct). */
+const LEGEND_ORBIT = ORBIT_TINT.mind;
+
 export function MapLegend({ distancePending = true, columns = 3, compact = false, fixed = false }: { distancePending?: boolean; columns?: 1 | 2 | 3; compact?: boolean; /** exact column count at every width (PDF) */ fixed?: boolean }) {
   const item = "flex items-start gap-3";
   // Wording by Jana (2026-10-12). Full width of the Map card: three columns, two rows (2026-10-13):
@@ -256,14 +259,14 @@ export function MapLegend({ distancePending = true, columns = 3, compact = false
         <span><b className="font-normal text-mahogany">Energy in</b> — This Orbit gives you energy. It gathers as a glow around the Sun.</span></div>
       <div className={item}><Swatch><FlowSwatch color={OUT} /></Swatch>
         <span><b className="font-normal text-mahogany">Energy out</b> — This Orbit requires your energy.</span></div>
-      <div className={item}><Swatch><line x1="2" y1="9" x2="28" y2="9" stroke={STEADY} strokeWidth="1.4" strokeLinecap="round" /></Swatch>
+      <div className={item}><Swatch><line x1="2" y1="9" x2="28" y2="9" stroke={STEADY} strokeWidth="1.4" strokeLinecap="round" opacity=".55" /></Swatch>
         <span><b className="font-normal text-mahogany">Steady</b> — This Orbit keeps your energy relatively balanced.</span></div>
-      <div className={item}><Swatch><circle cx="9" cy="9" r="6" fill="#B7AC9B" opacity=".3" /><circle cx="22" cy="9" r="6" fill="#B7AC9B" /></Swatch>
+      <div className={item}><Swatch><circle cx="9" cy="9" r="6" fill={LEGEND_ORBIT} opacity=".3" /><circle cx="22" cy="9" r="6" fill={LEGEND_ORBIT} /></Swatch>
         <span><b className="font-normal text-mahogany">Brightness</b> — How supported and fulfilling this Orbit feels in your current life.</span></div>
-      <div className={item}><Swatch><circle cx="4" cy="9" r="3" fill="#D9B26A" /><circle cx="26" cy="9" r="4" fill="#B7AC9B" /><line x1="8" y1="9" x2="21" y2="9" stroke="#C2B3A3" strokeDasharray="2 2" /></Swatch>
+      <div className={item}><Swatch><circle cx="4" cy="9" r="3" fill="#D9B26A" /><circle cx="26" cy="9" r="4" fill={LEGEND_ORBIT} /><line x1="8" y1="9" x2="21" y2="9" stroke="#C2B3A3" strokeDasharray="2 2" /></Swatch>
         <span><b className="font-normal text-mahogany">Distance from the Sun</b> — How closely the way you live in this Orbit reflects what genuinely matters to you.
           {distancePending && <span className="text-taupe"> Not shown on this Map: every Orbit sits at the same distance.</span>}</span></div>
-      <div className={item}><Swatch><circle cx="9" cy="9" r="4" fill="#B7AC9B" /><circle cx="22" cy="9" r="8" fill="#B7AC9B" /></Swatch>
+      <div className={item}><Swatch><circle cx="9" cy="9" r="4" fill={LEGEND_ORBIT} /><circle cx="22" cy="9" r="8" fill={LEGEND_ORBIT} /></Swatch>
         <span><b className="font-normal text-mahogany">Size</b> — How important this Orbit is to you at this stage of your life.</span></div>
     </div>
   );
