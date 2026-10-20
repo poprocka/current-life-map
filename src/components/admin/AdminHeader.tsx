@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { SignOut } from "./connected";
-import { AdminHeaderLayout, brandClass, brandSuffix, navItemClass } from "./ui";
+import { AdminHeaderLayout, brandClass, brandSuffix, navItemClass } from "./header-layout";
 
 export function AdminHeader({ email, role, active }: { email: string | null; role: string; active?: "assessments" | "clients" }) {
   return (
