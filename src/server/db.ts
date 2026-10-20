@@ -20,6 +20,16 @@ export function setDb(db: Db | null) {
   override = db;
 }
 
+/**
+ * Database errors are logged as their code and message only (Postgres and network errors never contain the
+ * password or any query parameters), so connection problems can be diagnosed from the host's logs without
+ * ever writing answers or identifiers to them.
+ */
+function logDbError(where: string, e: unknown) {
+  const err = e as { code?: string; message?: string };
+  console.error(`[db] ${where} failed: ${err?.code ?? "error"} ${String(err?.message ?? "").slice(0, 200)}`);
+}
+
 export function getDb(): Db | null {
   if (override) return override;
   const url = process.env.DATABASE_URL;
@@ -29,15 +39,16 @@ export function getDb(): Db | null {
     const { Pool } = require("pg") as typeof import("pg");
     const p = new Pool({ connectionString: url, max: 3, ssl: url.includes("localhost") ? undefined : { rejectUnauthorized: false } });
     pool = {
-      query: (text, params) => p.query(text, params as unknown[]) as never,
+      query: (text, params) => (p.query(text, params as unknown[]) as Promise<never>).catch((e) => { logDbError("query", e); throw e; }),
       async tx(fn) {
-        const c = await p.connect();
+        const c = await p.connect().catch((e) => { logDbError("connect", e); throw e; });
         try {
           await c.query("begin");
           const out = await fn({ query: (t, ps) => c.query(t, ps as unknown[]) as never });
           await c.query("commit");
           return out;
         } catch (e) {
+          logDbError("transaction", e);
           await c.query("rollback").catch(() => undefined);
           throw e;
         } finally {
