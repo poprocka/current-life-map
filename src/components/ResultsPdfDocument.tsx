@@ -166,9 +166,10 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
 
       {/* Reflections (Jana, 20 Oct): every optional reflection is printed. Written ones show the person's words; the rest
           get five ruled lines, so the PDF can be filled in by hand later. */}
-      <section className="pdf-flow mt-12 rounded-[22px] border hairline px-10 py-7">
-        <p className="eyebrow">{POST_MAP_REFLECTIONS.eyebrow}</p>
-        <h2 className={h2}>In Your Own Words</h2>
+      {/* The outer wrapper's cloned padding keeps the box's top and bottom borders clear of the page bands where it breaks */}
+      <div className="pdf-flow mt-12 py-[6px]">
+      <section className="pdf-flow rounded-[22px] border hairline px-10 py-7">
+        <h2 className={h2.replace("mt-2 ", "")}>In Your Own Words</h2>
         {/* Jana's wording, 20 Oct */}
         <div className={`mt-3 max-w-[680px] space-y-2 ${body}`}>
           <p>A little space to continue the conversation with yourself.</p>
@@ -196,6 +197,7 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
           })}
         </div>
       </section>
+      </div>
 
       {/* Contact: the friendly contact line is in the footer of every page */}
     </main>
