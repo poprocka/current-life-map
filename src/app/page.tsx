@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LifeSystem } from "@/components/LifeSystem";
 import { ResumeLink } from "@/components/ResumeLink";
+import { BeginLink } from "@/components/BeginLink";
 import { InviteCapture } from "@/components/InviteCapture";
 import { OPENING, PRIVACY_LINE } from "@/content/v10/opening";
 
@@ -24,16 +25,17 @@ export default function Introduction() {
 
           <p className="mt-10 text-[12px] uppercase tracking-[0.14em] text-taupe">{OPENING.estimatedTime}</p>
           <div className="mt-4 flex flex-wrap items-center gap-x-7 gap-y-4">
-            <Link href="/interview?new=1"
+            <BeginLink
               className="rounded-full bg-burgundy px-8 py-[15px] text-[13px] font-normal uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-burgundy">
               {OPENING.cta}
-            </Link>
+            </BeginLink>
             <ResumeLink />
           </div>
 
           <p className="mt-10 border-t hairline pt-5 text-[12.5px] leading-relaxed text-taupe">
-            {PRIVACY_LINE.text}{" "}
+            {PRIVACY_LINE.text} {PRIVACY_LINE.agreeBefore}
             <Link href="/privacy" className="underline underline-offset-4 hover:text-burgundy">{PRIVACY_LINE.linkLabel}</Link>
+            {PRIVACY_LINE.agreeAfter}
           </p>
         </div>
       </section>

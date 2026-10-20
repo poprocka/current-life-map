@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { AnalyticsSettingsButton } from "@/components/Analytics";
+import { GA_SIGNALS } from "@/lib/analytics";
 
 // Privacy & Data Use Notice — text supplied by Jana (October 2026), verbatim.
 // The document's implementation note is intentionally not shown to respondents.
+// Section 8 (site analytics) added 20 Oct when the analytics banner was replaced by agreement on Begin.
 const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "1. Anonymous by default",
@@ -48,25 +50,33 @@ const SECTIONS: { title: string; body: string[] }[] = [
     ],
   },
   {
-    title: "8. Retention",
+    title: "8. Site analytics",
+    body: [
+      "We use Google Analytics, a service provided by Google, to understand how people find and use this site: for example, which pages are visited, which channel a visit came from (such as Instagram, LinkedIn or a printed card), how far people progress through the Self-Interview, and general device, browser and approximate location information. Google Analytics uses cookies and similar technologies on your device.",
+      "By selecting Begin on the welcome page, you agree to this use of Google Analytics. Your answers, optional reflections, results, name and email address are never sent to Google Analytics, and we do not use it for advertising." + (GA_SIGNALS ? " Google signals is enabled, so reports may include Google's broad estimates of visitors' age range, gender and interests." : ""),
+      "You can turn analytics off on your device at any time using the setting at the bottom of this page. If your browser sends a Global Privacy Control signal, analytics stays off. Google's own handling of this information is described in Google's privacy policy (policies.google.com/privacy).",
+    ],
+  },
+  {
+    title: "9. Retention",
     body: [
       "De-identified assessment data may be retained for ongoing internal research and methodology improvement. Identifiable contact and client records are retained only for as long as reasonably needed for the relevant service, legal obligations, and legitimate business records. Specific retention periods or criteria will be confirmed before public launch. Where a response remains anonymous and cannot be linked to an individual, it may not be possible to locate or delete that specific response upon request.",
     ],
   },
   {
-    title: "9. Access, correction, and deletion requests",
+    title: "10. Access, correction, and deletion requests",
     body: [
       "If we hold information that identifies you, you may contact us to request access, correction, deletion, or other rights available under applicable law. Some requests may be subject to legal exceptions or identity verification. Contact: talk@self-interview.com. Because anonymous responses are not necessarily linked to your identity, we may be unable to identify a particular anonymous response after submission.",
     ],
   },
   {
-    title: "10. Coaching and wellbeing scope",
+    title: "11. Coaching and wellbeing scope",
     body: [
       "The Current Life Map is a reflective coaching and self-awareness tool. It is not medical, psychological, psychiatric, diagnostic, legal, financial, or emergency care and does not replace qualified professional services. Its interpretations are intended to support reflection, not to establish clinical findings or objective judgments about you.",
     ],
   },
-  { title: "11. Adults", body: ["The Current Life Map is intended for adults aged 18 and older."] },
-  { title: "12. Contact", body: ["For privacy requests, support, or inquiries, email talk@self-interview.com."] },
+  { title: "12. Adults", body: ["The Current Life Map is intended for adults aged 18 and older."] },
+  { title: "13. Contact", body: ["For privacy requests, support, or inquiries, email talk@self-interview.com."] },
 ];
 
 export default function Privacy() {

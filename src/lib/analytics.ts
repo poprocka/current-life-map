@@ -1,14 +1,16 @@
 /**
  * Google Analytics 4 (Jana, 17 Oct): site activity and audience, never answers.
  *
- * - Off unless NEXT_PUBLIC_GA_MEASUREMENT_ID is set, and loaded only after the visitor says yes (opt-in banner).
+ * - Off unless NEXT_PUBLIC_GA_MEASUREMENT_ID is set. No banner (Jana, 20 Oct): the welcome page says that selecting Begin
+ *   means agreeing to the Privacy & Data Use Notice, including analytics, so analytics starts when Begin is selected.
+ *   A browser's Global Privacy Control signal keeps it off, and the privacy page lets anyone turn it off on their device.
  * - Never on the coach portal (/admin) or the booking hand-off (/book).
  * - Pages are reported as origin + path only: no query string and no #fragment (client-link and booking codes live
  *   there), and no page titles beyond the site's own.
  * - Events are a fixed list with fixed, non-identifying parameters. No answers, reflections, emails, names, tokens,
  *   assessment IDs or results are ever sent; `track` drops anything not on the list.
  * - Age, gender and interests in GA come only from Google signals. They are turned on only when
- *   NEXT_PUBLIC_GA_SIGNALS=1 and the visitor has agreed, and the banner says so.
+ *   NEXT_PUBLIC_GA_SIGNALS=1, and the privacy notice says so.
  */
 export const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "";
 export const GA_SIGNALS = process.env.NEXT_PUBLIC_GA_SIGNALS === "1";
@@ -18,6 +20,9 @@ export type Consent = "granted" | "denied" | null;
 export const readConsent = (): Consent => { try { const v = localStorage.getItem(KEY); return v === "granted" || v === "denied" ? v : null; } catch { return null; } };
 export const writeConsent = (v: Exclude<Consent, null>) => { try { localStorage.setItem(KEY, v); } catch { /* private mode */ } };
 export const clearConsent = () => { try { localStorage.removeItem(KEY); } catch { /* private mode */ } };
+
+/** Global Privacy Control: a browser-level "don't track or share" signal, honoured as a standing opt-out. */
+export const gpcOn = () => { try { return (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true; } catch { return false; } };
 
 export const excludedPath = (p: string) => p.startsWith("/admin") || p.startsWith("/book") || p.startsWith("/api");
 /** Page address for GA: path plus campaign tags only (utm_*), so channels are attributed; never other parameters or the #fragment. */
@@ -33,7 +38,7 @@ let loaded = false;
 
 export function loadAnalytics() {
   const w = window as W;
-  if (!GA_ID || loaded || excludedPath(window.location.pathname)) return;
+  if (!GA_ID || loaded || gpcOn() || excludedPath(window.location.pathname)) return;
   loaded = true;
   w.dataLayer = w.dataLayer || [];
   w.gtag = function gtag() { w.dataLayer!.push(arguments); }; // eslint-disable-line prefer-rest-params
@@ -44,6 +49,17 @@ export function loadAnalytics() {
   s.async = true;
   s.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA_ID)}`;
   document.head.appendChild(s);
+}
+
+/** Begin on the welcome page: the notice beside it says selecting Begin means agreeing, so analytics starts here.
+ *  An earlier "off" choice on this device (privacy page) and Global Privacy Control are respected. The welcome page is
+ *  reported first, so the visit keeps its channel (the utm tags live on that page's address). */
+export function agreeOnBegin() {
+  if (!GA_ID || gpcOn() || readConsent() === "denied") return;
+  writeConsent("granted");
+  loadAnalytics();
+  pageView();
+  window.dispatchEvent(new Event("clm:analytics-consent"));
 }
 
 export function pageView() {
@@ -65,7 +81,7 @@ type Param = string | number;
 
 export function track(name: EventName, params: Record<string, Param> = {}) {
   const w = window as W;
-  if (!loaded && readConsent() === "granted") loadAnalytics(); // an event can fire before the banner component mounts
+  if (!loaded && readConsent() === "granted") loadAnalytics(); // an event can fire before the Analytics component mounts
   if (!loaded || !w.gtag || excludedPath(window.location.pathname)) return;
   const allowed = EVENTS[name] as readonly string[];
   const safe: Record<string, Param> = {};

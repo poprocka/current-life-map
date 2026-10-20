@@ -20,5 +20,8 @@ export const OPENING = {
 export const PRIVACY_LINE = {
   status: "draft" as const,
   text: "Your Self-Interview is anonymous. You don't need to share your name or email to see your Map.",
+  // Selecting Begin is the agreement (Jana, 20 Oct): no analytics banner
+  agreeBefore: "By selecting Begin, you agree to the ",
   linkLabel: "Privacy & Data Use Notice",
+  agreeAfter: ", including our use of Google Analytics to understand how people find and use this site. Your answers are never shared with it.",
 };
