@@ -337,7 +337,8 @@ export function AdminDemo({ path }: { path: string }) {
                 return PEOPLE.filter((x) => x.id.startsWith(t) || x.email?.includes(t) || x.name?.toLowerCase().includes(t))
                   .map((x) => ({ assessment_id: x.id, created_at: ago(x.created, 9), status: x.complete ? "completed" : "in_progress", client_name: x.name, client_email: x.email, booking_state: x.booking?.state ?? null }));
               }}
-              onReconcile={async (bid) => { await later(); setRecon((r) => r.filter((x) => x.id !== bid)); }} />
+              onReconcile={async (bid) => { await later(); setRecon((r) => r.filter((x) => x.id !== bid)); }}
+              onResolve={async (bid) => { await later(); setRecon((r) => r.filter((x) => x.id !== bid)); }} />
           </div>
         </main>
       )}

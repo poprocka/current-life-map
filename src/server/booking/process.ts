@@ -3,6 +3,7 @@ import { promoteToLead } from "../clients";
 import { PRIVACY_NOTICE_VERSION } from "@/content/privacy-version";
 import type { Db, Sql } from "../db";
 import { audit } from "../audit";
+import { PAID_CANCEL_REASON } from "./reasons";
 import { loadAnswers, frozenResult, resolveToken, writeCoachMaterial } from "../assessments";
 import { sha256, signBookingToken, verifyBookingToken } from "../crypto";
 import type { NormalizedBookingEvent, SchedulingAdapter } from "./types";
@@ -169,8 +170,8 @@ async function onCanceled(sql: Sql, e: NormalizedBookingEvent): Promise<{ bookin
   const paidCancelled = !e.rescheduled && b.payment_state === "paid";
   await sql.query(
     `update bookings set booking_state = $2, updated_at = now(),
-       needs_reconciliation = needs_reconciliation or $3, reconciliation_reason = case when $3 then 'Paid booking cancelled — check refund in Stripe' else reconciliation_reason end
-     where id = $1`, [b.id, state, paidCancelled]);
+       needs_reconciliation = needs_reconciliation or $3, reconciliation_reason = case when $3 then concat_ws('; ', reconciliation_reason, $4::text) else reconciliation_reason end
+     where id = $1`, [b.id, state, paidCancelled, PAID_CANCEL_REASON]);
   await audit(sql, null, `booking.${state}`, "booking", b.id);
   return { bookingId: b.id, outcome: state };
 }

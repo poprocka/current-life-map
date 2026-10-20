@@ -2,6 +2,7 @@ import "server-only";
 import { hmacHex, safeEqual } from "../crypto";
 import type { Db } from "../db";
 import { audit } from "../audit";
+import { PAID_CANCEL_REASON } from "./reasons";
 
 /** Stripe-Signature: t=<unix>,v1=<hex HMAC-SHA256 of "<t>.<raw body>"> (possibly several v1 entries). */
 export function verifyStripeSignature(secret: string, header: string | null, body: string, now = Date.now(), tolerance = 300) {
@@ -35,8 +36,12 @@ export async function handleStripeEvent(db: Db, evt: StripeEvent) {
     else if (evt.type === "charge.dispute.created") reason = "Payment disputed in Stripe";
     const r = await sql.query<{ id: string }>(
       `update bookings set payment_state = coalesce($2, payment_state),
-         needs_reconciliation = needs_reconciliation or $3::text is not null, reconciliation_reason = coalesce($3, reconciliation_reason), updated_at = now()
-       where payment_reference = any($1::text[]) returning id`, [refs, state, reason]);
+         -- a full refund settles "Paid booking cancelled — check refund" on its own (Jana, 20 Oct)
+         needs_reconciliation = case when $2 = 'refunded' and reconciliation_reason = $4 and assessment_id is not null then false
+                                     else needs_reconciliation or $3::text is not null end,
+         reconciliation_reason = case when $2 = 'refunded' and reconciliation_reason = $4 and assessment_id is not null then null else coalesce($3, reconciliation_reason) end,
+         updated_at = now()
+       where payment_reference = any($1::text[]) returning id`, [refs, state, reason, PAID_CANCEL_REASON]);
     await sql.query(`update booking_events set processed_at = now(), booking_id = $2, processing_error = $3 where id = $1`,
       [ins.rows[0].id, r.rows[0]?.id ?? null, r.rows.length ? null : "no_matching_booking"]);
     for (const b of r.rows) await audit(sql, null, `payment.${state ?? "flagged"}`, "booking", b.id);

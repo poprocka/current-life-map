@@ -35,6 +35,17 @@ export async function setReviewState(sql: Sql, coachId: string, reportId: string
   return r.rows.length > 0;
 }
 
+/** Coach closes a reconciliation item after dealing with it (e.g. refund done, test booking). The booking itself is
+ *  unchanged; the reason is kept in the audit log. */
+export async function resolveBooking(sql: Sql, coachId: string, bookingId: string) {
+  const r = await sql.query<{ reason: string | null }>(
+    `update bookings b set needs_reconciliation = false, reconciliation_reason = null, updated_at = now()
+     from (select id, reconciliation_reason as reason from bookings where id = $1) old
+     where b.id = old.id and b.needs_reconciliation returning old.reason`, [bookingId]);
+  if (r.rows.length) await audit(sql, coachId, "booking.resolved", "booking", bookingId, { reason: r.rows[0].reason });
+  return r.rows.length > 0;
+}
+
 export async function setBookingOutcome(sql: Sql, coachId: string, bookingId: string, state: "completed" | "no_show") {
   const r = await sql.query(`update bookings set booking_state = $2, updated_at = now() where id = $1 and booking_state in ('confirmed','completed','no_show') returning id`, [bookingId, state]);
   if (r.rows.length) await audit(sql, coachId, `booking.${state}`, "booking", bookingId);

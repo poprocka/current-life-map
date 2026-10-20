@@ -14,6 +14,8 @@ export interface AdminTableProps {
   canExport: boolean;
   onFilter: (f: ListFilters) => void;
   onReconcile: (bookingId: string, assessmentId: string) => Promise<void>;
+  /** Close a queue item once it's been dealt with (Jana, 20 Oct). */
+  onResolve: (bookingId: string) => Promise<void>;
   /** Find assessments by name, email or assessment ID (prefix). */
   onSearch: (q: string) => Promise<SearchHit[]>;
   exportHref?: string;
@@ -35,7 +37,7 @@ export function AdminTable(p: AdminTableProps) {
 
   return (
     <div className="space-y-6">
-      {p.recon.length > 0 && <ReconQueue rows={p.recon} onReconcile={p.onReconcile} onSearch={p.onSearch} />}
+      {p.recon.length > 0 && <ReconQueue rows={p.recon} onReconcile={p.onReconcile} onResolve={p.onResolve} onSearch={p.onSearch} />}
 
       <form className="flex flex-wrap items-end gap-3" onSubmit={(e) => { e.preventDefault(); p.onFilter({ ...f, page: 1 }); }}>
         <label className="flex w-full flex-col gap-1 text-[10.5px] uppercase tracking-[0.12em] text-taupe sm:w-auto">Search
@@ -146,19 +148,21 @@ export function AdminTable(p: AdminTableProps) {
   );
 }
 
-function ReconQueue({ rows, onReconcile, onSearch }: { rows: ReconRow[]; onReconcile: AdminTableProps["onReconcile"]; onSearch: AdminTableProps["onSearch"] }) {
+function ReconQueue({ rows, onReconcile, onResolve, onSearch }: { rows: ReconRow[]; onReconcile: AdminTableProps["onReconcile"]; onResolve: AdminTableProps["onResolve"]; onSearch: AdminTableProps["onSearch"] }) {
   return (
     <section className="rounded-[18px] border border-[#E7C98F] bg-[#FBF3E3] p-5" aria-labelledby="recon-h">
-      <h2 id="recon-h" className="text-[10.5px] uppercase tracking-[0.16em] text-[#8A6420]">Needs reconciliation · {rows.length}</h2>
-      <p className="mt-1 text-[12px] text-mahogany/70">Bookings that couldn’t be matched to a Self-Interview automatically. Find the right assessment by name, email or assessment ID, then confirm the link. Nothing is linked until you confirm.</p>
+      <h2 id="recon-h" className="text-[10.5px] uppercase tracking-[0.16em] text-[#8A6420]">Needs your attention · {rows.length}</h2>
+      <p className="mt-1 text-[12px] text-mahogany/70">Bookings to check: ones that couldn’t be matched to a Self-Interview (find the right assessment and confirm the link; nothing is linked until you confirm), and paid bookings that were cancelled, refunded only in part or disputed. Mark each one as done once you’ve dealt with it.</p>
       <ul className="mt-4 divide-y divide-[#EBD9B4]">
-        {rows.map((r) => <ReconItem key={r.id} r={r} onReconcile={onReconcile} onSearch={onSearch} />)}
+        {rows.map((r) => <ReconItem key={r.id} r={r} onReconcile={onReconcile} onResolve={onResolve} onSearch={onSearch} />)}
       </ul>
     </section>
   );
 }
 
-function ReconItem({ r, onReconcile, onSearch }: { r: ReconRow; onReconcile: AdminTableProps["onReconcile"]; onSearch: AdminTableProps["onSearch"] }) {
+function ReconItem({ r, onReconcile, onResolve, onSearch }: { r: ReconRow; onReconcile: AdminTableProps["onReconcile"]; onResolve: AdminTableProps["onResolve"]; onSearch: AdminTableProps["onSearch"] }) {
+  const [confirming, setConfirming] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [q, setQ] = useState(r.booked_email ?? r.booked_name ?? "");
   const [hits, setHits] = useState<SearchHit[] | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
@@ -176,7 +180,24 @@ function ReconItem({ r, onReconcile, onSearch }: { r: ReconRow; onReconcile: Adm
         <span className="text-taupe">{fmtDate(r.scheduled_start)}</span>
         <Badge v={r.booking_state} /><Badge v={r.payment_state} />
         <span className="flex-1 text-[#8A6420]">{r.reconciliation_reason}</span>
+        {/* Done: closes the item; the booking and its history are kept (two taps, so it can't happen by accident) */}
+        {confirming ? (
+          <span className="flex items-center gap-2">
+            <span className="text-[11.5px] text-mahogany/70">{r.assessment_id ? "Mark as done?" : "Close without linking?"}</span>
+            <button className={btnPrimary} disabled={closing}
+              onClick={async () => { setClosing(true); setErr(null); try { await onResolve(r.id); } catch { setErr("Couldn’t update that. Please try again."); setClosing(false); setConfirming(false); } }}>
+              {closing ? "Saving…" : "Yes, done"}
+            </button>
+            <button className="text-[11.5px] text-taupe underline underline-offset-4" onClick={() => setConfirming(false)}>Cancel</button>
+          </span>
+        ) : (
+          <button className="rounded-full border border-[#D9B877] px-3.5 py-1.5 text-[10.5px] uppercase tracking-[0.13em] text-[#8A6420] hover:bg-white/60" onClick={() => setConfirming(true)}>
+            Mark as done
+          </button>
+        )}
       </div>
+      {r.assessment_id && <p className="mt-1.5 text-[11.5px] text-taupe">Linked to assessment <span className="font-mono text-burgundy">{shortId(r.assessment_id)}</span></p>}
+      {err && r.assessment_id && <p role="alert" className="mt-1.5 text-[12px] text-burgundy">{err}</p>}
       {!r.assessment_id && (
         <div className="mt-3 rounded-[12px] bg-white/60 p-3">
           <label className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-[0.12em] text-taupe">Find assessment

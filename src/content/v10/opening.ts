@@ -23,5 +23,5 @@ export const PRIVACY_LINE = {
   // Selecting Begin is the agreement (Jana, 20 Oct): no analytics banner
   agreeBefore: "By selecting Begin, you agree to the ",
   linkLabel: "Privacy & Data Use Notice",
-  agreeAfter: ", including our use of Google Analytics to understand how people find and use this site. Your answers are never shared with it.",
+  agreeAfter: ".", // short on the welcome page; the analytics detail is in the notice (section 8)
 };

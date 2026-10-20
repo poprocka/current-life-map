@@ -2,23 +2,23 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { captureChannel } from "@/lib/channel";
-import { GA_ID, gpcOn, loadAnalytics, pageView, readConsent, writeConsent, type Consent } from "@/lib/analytics";
+import { GA_ID, analyticsAllowed, gpcOn, loadAnalytics, pageView, readConsent, writeConsent } from "@/lib/analytics";
 
 /**
- * Page views once the visitor has agreed (by selecting Begin on the welcome page, Jana 20 Oct). No banner.
- * Renders nothing.
+ * Page views from arrival (Jana, 20 Oct): no banner. Off where this device turned analytics off on the privacy page,
+ * or where the browser sends Global Privacy Control. Renders nothing.
  */
 export function Analytics() {
   const path = usePathname() ?? "/";
-  const [consent, setConsent] = useState<Consent>(null);
+  const [allowed, setAllowed] = useState(false);
   useEffect(() => {
     captureChannel(); // first-party channel for the portal; works whether or not analytics is on
-    setConsent(readConsent());
-    const sync = () => setConsent(readConsent());
+    setAllowed(analyticsAllowed());
+    const sync = () => setAllowed(analyticsAllowed());
     window.addEventListener("clm:analytics-consent", sync);
     return () => window.removeEventListener("clm:analytics-consent", sync);
   }, []);
-  useEffect(() => { if (consent === "granted") { loadAnalytics(); pageView(); } }, [consent, path]);
+  useEffect(() => { if (allowed) { loadAnalytics(); pageView(); } }, [allowed, path]);
   return null;
 }
 

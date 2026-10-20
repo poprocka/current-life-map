@@ -1,9 +1,10 @@
 /**
  * Google Analytics 4 (Jana, 17 Oct): site activity and audience, never answers.
  *
- * - Off unless NEXT_PUBLIC_GA_MEASUREMENT_ID is set. No banner (Jana, 20 Oct): the welcome page says that selecting Begin
- *   means agreeing to the Privacy & Data Use Notice, including analytics, so analytics starts when Begin is selected.
- *   A browser's Global Privacy Control signal keeps it off, and the privacy page lets anyone turn it off on their device.
+ * - Off unless NEXT_PUBLIC_GA_MEASUREMENT_ID is set. No banner (Jana, 20 Oct): analytics runs from arrival, so both visits
+ *   and Begin selections are counted; the welcome page says selecting Begin means agreeing to the Privacy & Data Use
+ *   Notice, which explains analytics (section 8). A browser's Global Privacy Control signal keeps it off, and the privacy
+ *   page lets anyone turn it off on their device ("denied").
  * - Never on the coach portal (/admin) or the booking hand-off (/book).
  * - Pages are reported as origin + path only: no query string and no #fragment (client-link and booking codes live
  *   there), and no page titles beyond the site's own.
@@ -51,16 +52,11 @@ export function loadAnalytics() {
   document.head.appendChild(s);
 }
 
-/** Begin on the welcome page: the notice beside it says selecting Begin means agreeing, so analytics starts here.
- *  An earlier "off" choice on this device (privacy page) and Global Privacy Control are respected. The welcome page is
- *  reported first, so the visit keeps its channel (the utm tags live on that page's address). */
-export function agreeOnBegin() {
-  if (!GA_ID || gpcOn() || readConsent() === "denied") return;
-  writeConsent("granted");
-  loadAnalytics();
-  pageView();
-  window.dispatchEvent(new Event("clm:analytics-consent"));
-}
+/** On unless this device turned it off (privacy page) or the browser sends Global Privacy Control. */
+export const analyticsAllowed = () => !!GA_ID && !gpcOn() && readConsent() !== "denied";
+
+/** Begin on the welcome page: counted as its own event, next to the visit itself. */
+export function onBegin() { track("begin"); }
 
 export function pageView() {
   const w = window as W;
@@ -70,6 +66,7 @@ export function pageView() {
 
 /** The only events sent, and the only parameters each may carry. */
 const EVENTS = {
+  begin: [],                           // Begin selected on the welcome page
   interview_start: ["entry"],          // entry: "public" | "client_link"
   interview_progress: ["step", "of"],  // a step number reached, for drop-off
   interview_complete: [],
@@ -81,7 +78,7 @@ type Param = string | number;
 
 export function track(name: EventName, params: Record<string, Param> = {}) {
   const w = window as W;
-  if (!loaded && readConsent() === "granted") loadAnalytics(); // an event can fire before the Analytics component mounts
+  if (!loaded && analyticsAllowed()) loadAnalytics(); // an event can fire before the Analytics component mounts
   if (!loaded || !w.gtag || excludedPath(window.location.pathname)) return;
   const allowed = EVENTS[name] as readonly string[];
   const safe: Record<string, Param> = {};
@@ -96,7 +93,7 @@ export function track(name: EventName, params: Record<string, Param> = {}) {
 /** Once per device (e.g. interview_complete), so revisiting results doesn't count twice. */
 export function trackOnce(name: EventName, params: Record<string, Param> = {}) {
   const k = `clm:ga-once:${name}`;
-  if (!GA_ID || readConsent() !== "granted") return; // don't mark as sent when nothing could be sent
+  if (!analyticsAllowed()) return; // don't mark as sent when nothing could be sent
   try { if (localStorage.getItem(k)) return; localStorage.setItem(k, "1"); } catch { /* private mode */ }
   track(name, params);
 }

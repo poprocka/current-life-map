@@ -3,11 +3,12 @@ import { z } from "zod";
 import { asCoach } from "@/server/db";
 import { coachForApi } from "@/server/auth";
 import { reconcileBooking } from "@/server/booking/process";
-import { setBookingOutcome } from "@/server/admin/mutations";
+import { resolveBooking, setBookingOutcome } from "@/server/admin/mutations";
 
 const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("reconcile"), assessmentId: z.string().uuid() }),
   z.object({ action: z.literal("outcome"), state: z.enum(["completed", "no_show"]) }),
+  z.object({ action: z.literal("resolve") }),
 ]);
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -18,6 +19,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!b.success) return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   const body = b.data;
   const ok = await asCoach(s.db, s.ctx, async (sql) =>
-    body.action === "reconcile" ? (await reconcileBooking(sql, s.ctx.userId, id, body.assessmentId)).ok : setBookingOutcome(sql, s.ctx.userId, id, body.state));
+    body.action === "reconcile" ? (await reconcileBooking(sql, s.ctx.userId, id, body.assessmentId)).ok
+    : body.action === "resolve" ? resolveBooking(sql, s.ctx.userId, id)
+    : setBookingOutcome(sql, s.ctx.userId, id, body.state));
   return NextResponse.json({ ok }, { status: ok ? 200 : 404 });
 }
