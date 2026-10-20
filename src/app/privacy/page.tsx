@@ -4,6 +4,7 @@ import { GA_SIGNALS } from "@/lib/analytics";
 // Privacy & Data Use Notice — text supplied by Jana (October 2026), verbatim.
 // The document's implementation note is intentionally not shown to respondents.
 // Section 8 (site analytics) added 20 Oct when the analytics banner was replaced by agreement on Begin.
+// Sections 7 and 9: Jana's wording, 20 Oct.
 const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "1. Anonymous by default",
@@ -45,10 +46,10 @@ const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "7. Storage, service providers, and security",
     body: [
-      "We use the following service providers to run the Current Life Map. Each receives only the information it needs for its part of the service:",
-      "• Vercel (hosting): runs the website and the application, and generates PDF reports.\n• Supabase (database): stores Self-Interview answers, reflections, results, PDF and booking records, and coach portal sign-in.\n• Resend (email delivery): sends your PDF report when you request it.\n• Calendly (scheduling): handles Life Map Deep Dive bookings and the details you enter there.\n• Stripe (payments): processes session payments and refunds. We never see or store your full card details.\n• Google: Google Analytics (see section 8), Google Fonts (the site's typefaces), and Google Workspace (the inbox that receives replies sent to talk@self-interview.com).",
-      "Our service providers store and process information in the United States. If you use the Current Life Map from outside the United States, your information will be transferred to and processed in the United States.",
-      "Information is encrypted in transit. Optional written answers and reflections are additionally encrypted before they are stored. Access to identifiable client information is limited to Jana, through a coach portal protected by a password and two-step verification. We use reasonable technical and organizational safeguards, but no online system can guarantee absolute security.",
+      "We use trusted third-party service providers to operate The Self-Interview, securely store information, deliver reports, manage bookings, process payments, and analyze website usage.",
+      "These providers include Vercel, Supabase, Resend, Calendly, Stripe, and Google. They process personal information as necessary to provide their services, subject to applicable privacy and data protection requirements.",
+      "Your information may be stored or processed in the United States, including when you access The Self-Interview from another country.",
+      "We use reasonable technical and organizational safeguards to protect personal information, including encryption and restricted access. However, no method of electronic storage or transmission is completely secure.",
     ],
   },
   {
@@ -60,11 +61,12 @@ const SECTIONS: { title: string; body: string[] }[] = [
     ],
   },
   {
-    title: "9. Retention",
+    title: "9. Data Retention",
     body: [
-      "We keep information only as long as described here:",
-      "• Unfinished Self-Interviews: deleted automatically after 90 days without activity, unless they are connected to a PDF request, a booking or a client record.\n• Completed Self-Interviews (answers, reflections and the Current Life Map): kept for ongoing internal research and methodology improvement until you ask us to delete them, as long as we can identify your response (see below).\n• PDF delivery records (the email address you entered and the delivery status): kept for up to 2 years after the request, then deleted.\n• Client records, bookings and payment records for Life Map Deep Dive sessions: kept while we work together and for up to 7 years after your last session, to meet tax and business recordkeeping obligations.\n• Technical booking messages from our scheduling provider: deleted after 90 days.\n• Google Analytics data: kept for 14 months, then deleted by Google.",
-      "Our payment and scheduling providers (Stripe and Calendly) keep their own records of payments and bookings under their own policies and legal obligations. Where a response remains anonymous and cannot be linked to an individual, it may not be possible to locate or delete that specific response upon request.",
+      "We retain personal information only for as long as reasonably necessary to provide our services, improve The Self-Interview, and meet applicable legal and business obligations.",
+      "• Incomplete Self-Interviews are generally deleted after 90 days of inactivity, unless associated with a PDF request, booking, or client record.\n• Completed Self-Interviews and Life Maps may be retained for internal research, analysis, and improvement of our framework until deletion is requested, where the information can be linked to an individual.\n• Email and PDF delivery records are retained for up to 2 years.\n• Booking, client, and payment records may be retained for up to 7 years where necessary for business, accounting, or legal purposes.\n• Technical and analytics data is retained according to our operational needs and applicable service-provider settings.",
+      "Third-party providers, including Stripe, Calendly, and Google Analytics, may retain certain information under their own privacy policies.",
+      "You may request deletion of your personal information by contacting talk@self-interview.com, subject to applicable legal requirements. Information that is fully anonymous and cannot be linked to an individual may not be identifiable for deletion.",
     ],
   },
   {
