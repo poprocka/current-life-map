@@ -292,7 +292,7 @@ describe("optional reflections in the emailed PDF", () => {
     const before = (await frozenResult(db, id))!.sha256;
     expect(await requestPdfEmail(db, token, "r@example.com")).toEqual({ ok: true, state: "sent" });
     const text = (await pdfText(email.sent.at(-1)!.attachments![0].content)).replace(/\s+/g, " ");
-    expect(text).toContain("In your own words");
+    expect(text).toContain("In Your Own Words");
     expect(text).toContain("Sleeping before midnight.");
     expect(text).toContain("That I keep postponing rest.");
     expect((await frozenResult(db, id))!.sha256).toBe(before);
