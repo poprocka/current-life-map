@@ -24,7 +24,7 @@ export default function Introduction() {
 
           <p className="mt-10 text-[12px] uppercase tracking-[0.14em] text-taupe">{OPENING.estimatedTime}</p>
           <div className="mt-4 flex flex-wrap items-center gap-x-7 gap-y-4">
-            <Link href="/interview"
+            <Link href="/interview?new=1"
               className="rounded-full bg-burgundy px-8 py-[15px] text-[13px] font-normal uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-burgundy">
               {OPENING.cta}
             </Link>

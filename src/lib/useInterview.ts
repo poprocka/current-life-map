@@ -38,7 +38,9 @@ function write(s: Stored) {
 }
 
 export function clearStored() {
-  try { localStorage.removeItem(KEY); } catch { /* noop */ }
+  // Answers, progress, access token and the optional reflections from the previous run. The private client link and
+  // the analytics choice are kept: a fresh start still belongs to the same client, and consent isn't asked twice.
+  try { localStorage.removeItem(KEY); localStorage.removeItem("clm:v10:postmap"); } catch { /* noop */ }
 }
 
 /**
@@ -46,7 +48,7 @@ export function clearStored() {
  * Every change is written to the device immediately, then synced to the server (debounced).
  * If server storage isn't configured, sync reports "device" honestly instead of "saved".
  */
-export function useInterview() {
+export function useInterview(opts: { fresh?: boolean } = {}) {
   const [ready, setReady] = useState(false);
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const [step, setStep] = useState(0);
@@ -56,6 +58,8 @@ export function useInterview() {
   const serverAvailable = useRef(true);
 
   useEffect(() => {
+    // "Begin" on the home page starts over (/interview?new=1); "Continue where you left off" resumes.
+    if (opts.fresh) clearStored();
     const s = readStored();
     if (s) {
       setAnswers(s.answers);

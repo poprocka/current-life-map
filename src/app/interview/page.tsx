@@ -22,13 +22,17 @@ function Interview() {
   const router = useRouter();
   const params = useSearchParams();
   // Saving happens quietly in the background; no save status is shown (Jana, 20 Oct).
-  const { ready, answers, step, answer, goTo, flush } = useInterview();
+  // "Begin" on the home page links to /interview?new=1 and starts over; "Continue where you left off" resumes.
+  const fresh = params.get("new") === "1";
+  const { ready, answers, step, answer, goTo, flush } = useInterview({ fresh });
   const [error, setError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
 
   useEffect(() => {
+    // Drop ?new=1 once the slate is clean, so a later reload doesn't wipe the new answers.
+    if (ready && fresh) router.replace("/interview");
     if (ready && params.get("resume")) goTo(resumeStep(answers));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready]);
