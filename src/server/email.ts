@@ -46,7 +46,7 @@ export type PdfEmailResult =
   | { ok: true; state: "sent" }
   | { ok: false; error: "not_configured" | "not_found" | "not_completed" | "send_failed" };
 
-/** Email sent with the PDF (Jana's wording, 17 Oct). Plain text plus a matching HTML version; no tracking. */
+/** Email sent with the PDF (Jana's wording, 17 Oct; Deep Dive invitation added 20 Oct). Plain text plus a matching HTML version; no tracking. */
 export const EMAIL_SUBJECT = "Your Current Life Map";
 export const emailText = (bookUrl: string | null) => `Hi,
 
@@ -58,6 +58,8 @@ I'd love to hear what you think. Did anything surprise you? Was there something 
 
 Just reply to this email. I'll be happy to hear from you.
 ${bookUrl ? `
+If you'd like to explore your current life more deeply together, I invite you to a private Life Map Deep Dive session.
+
 Book a session: ${bookUrl}
 ` : ""}
 Warmly,
