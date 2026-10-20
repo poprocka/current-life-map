@@ -63,10 +63,10 @@ const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "9. Data Retention",
     body: [
-      "We retain personal information only for as long as reasonably necessary to provide our services, improve The Self-Interview, and meet applicable legal and business obligations.",
-      "• Incomplete Self-Interviews are generally deleted after 90 days of inactivity, unless associated with a PDF request, booking, or client record.\n• Completed Self-Interviews and Life Maps may be retained for internal research, analysis, and improvement of our framework until deletion is requested, where the information can be linked to an individual.\n• Email and PDF delivery records are retained for up to 2 years.\n• Booking, client, and payment records may be retained for up to 7 years where necessary for business, accounting, or legal purposes.\n• Technical and analytics data is retained according to our operational needs and applicable service-provider settings.",
-      "Third-party providers, including Stripe, Calendly, and Google Analytics, may retain certain information under their own privacy policies.",
-      "You may request deletion of your personal information by contacting talk@self-interview.com, subject to applicable legal requirements. Information that is fully anonymous and cannot be linked to an individual may not be identifiable for deletion.",
+      "We retain personal information only for as long as reasonably necessary to provide our services, improve The Life System™, and fulfill applicable legal and business obligations.",
+      "This includes Self-Interview responses, Current Life Maps, optional reflections, email delivery records, bookings, payment-related information, and technical data. Retention depends on the purpose for which the information was collected and any applicable legal requirements.",
+      "Third-party service providers may retain certain information in accordance with their own privacy policies.",
+      "You may request deletion of your personal information by contacting talk@self-interview.com, subject to applicable legal requirements. We can process deletion requests where the information can reasonably be linked to you. Fully anonymous information may not be identifiable for deletion.",
     ],
   },
   {
