@@ -3,8 +3,8 @@
  *
  * - Off unless NEXT_PUBLIC_GA_MEASUREMENT_ID is set. No banner (Jana, 20 Oct): analytics runs from arrival, so both visits
  *   and Begin selections are counted; the welcome page says selecting Begin means agreeing to the Privacy & Data Use
- *   Notice, which explains analytics (section 8). A browser's Global Privacy Control signal keeps it off, and the privacy
- *   page lets anyone turn it off on their device ("denied").
+ *   Notice, which explains analytics (section 8). A browser's Global Privacy Control signal keeps it off. No on-page
+ *   switch (Jana, 20 Oct); the notice points to Google's opt-out add-on. Choices stored by the old banner are ignored.
  * - Never on the coach portal (/admin) or the booking hand-off (/book).
  * - Pages are reported as origin + path only: no query string and no #fragment (client-link and booking codes live
  *   there), and no page titles beyond the site's own.
@@ -52,8 +52,8 @@ export function loadAnalytics() {
   document.head.appendChild(s);
 }
 
-/** On unless this device turned it off (privacy page) or the browser sends Global Privacy Control. */
-export const analyticsAllowed = () => !!GA_ID && !gpcOn() && readConsent() !== "denied";
+/** On unless the browser sends Global Privacy Control. */
+export const analyticsAllowed = () => !!GA_ID && !gpcOn();
 
 /** Begin on the welcome page: counted as its own event, next to the visit itself. */
 export function onBegin() { track("begin"); }

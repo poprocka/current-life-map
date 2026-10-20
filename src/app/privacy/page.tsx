@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AnalyticsSettingsButton } from "@/components/Analytics";
 import { GA_SIGNALS } from "@/lib/analytics";
 
 // Privacy & Data Use Notice — text supplied by Jana (October 2026), verbatim.
@@ -46,7 +45,10 @@ const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "7. Storage, service providers, and security",
     body: [
-      "Information may be processed by service providers that operate the application, store assessment data, deliver email or PDFs, or support bookings. Access to identifiable client information should be limited to those who need it to provide the service. We use reasonable technical and organizational safeguards, but no online system can guarantee absolute security. Specific providers, storage locations, and international transfers must be disclosed once the production infrastructure is confirmed.",
+      "We use the following service providers to run the Current Life Map. Each receives only the information it needs for its part of the service:",
+      "• Vercel (hosting): runs the website and the application, and generates PDF reports.\n• Supabase (database): stores Self-Interview answers, reflections, results, PDF and booking records, and coach portal sign-in.\n• Resend (email delivery): sends your PDF report when you request it.\n• Calendly (scheduling): handles Life Map Deep Dive bookings and the details you enter there.\n• Stripe (payments): processes session payments and refunds. We never see or store your full card details.\n• Google: Google Analytics (see section 8), Google Fonts (the site's typefaces), and Google Workspace (the inbox that receives replies sent to talk@self-interview.com).",
+      "Our service providers store and process information in the United States. If you use the Current Life Map from outside the United States, your information will be transferred to and processed in the United States.",
+      "Information is encrypted in transit. Optional written answers and reflections are additionally encrypted before they are stored. Access to identifiable client information is limited to Jana, through a coach portal protected by a password and two-step verification. We use reasonable technical and organizational safeguards, but no online system can guarantee absolute security.",
     ],
   },
   {
@@ -54,13 +56,15 @@ const SECTIONS: { title: string; body: string[] }[] = [
     body: [
       "We use Google Analytics, a service provided by Google, to understand how people find and use this site: for example, which pages are visited, which channel a visit came from (such as Instagram, LinkedIn or a printed card), how far people progress through the Self-Interview, and general device, browser and approximate location information. Google Analytics uses cookies and similar technologies on your device.",
       "Google Analytics runs from your first visit to this site, so we can see both how many people arrive and how many begin the Self-Interview. By using this site and selecting Begin on the welcome page, you agree to this use of Google Analytics. Your answers, optional reflections, results, name and email address are never sent to Google Analytics, and we do not use it for advertising." + (GA_SIGNALS ? " Google signals is enabled, so reports may include Google's broad estimates of visitors' age range, gender and interests." : ""),
-      "You can turn analytics off on your device at any time using the setting at the bottom of this page. If your browser sends a Global Privacy Control signal, analytics stays off. Google's own handling of this information is described in Google's privacy policy (policies.google.com/privacy).",
+      "If your browser sends a Global Privacy Control signal, analytics stays off. You can also block Google Analytics on any site with Google's browser add-on (tools.google.com/dlpage/gaoptout), or by blocking cookies in your browser settings. Google's own handling of this information is described in Google's privacy policy (policies.google.com/privacy).",
     ],
   },
   {
     title: "9. Retention",
     body: [
-      "De-identified assessment data may be retained for ongoing internal research and methodology improvement. Identifiable contact and client records are retained only for as long as reasonably needed for the relevant service, legal obligations, and legitimate business records. Specific retention periods or criteria will be confirmed before public launch. Where a response remains anonymous and cannot be linked to an individual, it may not be possible to locate or delete that specific response upon request.",
+      "We keep information only as long as described here:",
+      "• Unfinished Self-Interviews: deleted automatically after 90 days without activity, unless they are connected to a PDF request, a booking or a client record.\n• Completed Self-Interviews (answers, reflections and the Current Life Map): kept for ongoing internal research and methodology improvement until you ask us to delete them, as long as we can identify your response (see below).\n• PDF delivery records (the email address you entered and the delivery status): kept for up to 2 years after the request, then deleted.\n• Client records, bookings and payment records for Life Map Deep Dive sessions: kept while we work together and for up to 7 years after your last session, to meet tax and business recordkeeping obligations.\n• Technical booking messages from our scheduling provider: deleted after 90 days.\n• Google Analytics data: kept for 14 months, then deleted by Google.",
+      "Our payment and scheduling providers (Stripe and Calendly) keep their own records of payments and bookings under their own policies and legal obligations. Where a response remains anonymous and cannot be linked to an individual, it may not be possible to locate or delete that specific response upon request.",
     ],
   },
   {
@@ -96,12 +100,11 @@ export default function Privacy() {
           <section key={s.title}>
             <h2 className="font-serif text-[22px] font-normal text-burgundy">{s.title}</h2>
             <div className="mt-3 space-y-3 text-[14px] leading-[1.75] text-mahogany/85">
-              {s.body.map((p) => <p key={p.slice(0, 40)}>{p}</p>)}
+              {s.body.map((p) => <p key={p.slice(0, 40)} className="whitespace-pre-line">{p}</p>)}
             </div>
           </section>
         ))}
       </div>
-      <p className="mt-12 text-[12.5px] text-taupe"><AnalyticsSettingsButton /></p>
     </main>
   );
 }
