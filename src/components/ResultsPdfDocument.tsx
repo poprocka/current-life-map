@@ -168,13 +168,12 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
           get five ruled lines, so the PDF can be filled in by hand later. */}
       <section className="pdf-flow mt-12 rounded-[22px] border hairline px-10 py-7">
         <p className="eyebrow">{POST_MAP_REFLECTIONS.eyebrow}</p>
-        <h2 className={h2}>In your own words</h2>
-        <p className="mt-2 text-[12.5px] leading-relaxed text-taupe">
-          {written.length < POST_MAP_REFLECTIONS.questions.length
-            ? "Answer any that feel useful. The lines are there for whenever you want to come back to them."
-            : "Your reflections, as you wrote them."}
-        </p>
-        {layer && <p className="mt-2 text-[12.5px] leading-relaxed text-taupe">{layer.note}</p>}
+        <h2 className={h2}>In Your Own Words</h2>
+        {/* Jana's wording, 20 Oct */}
+        <div className={`mt-3 max-w-[680px] space-y-2 ${body}`}>
+          <p>A little space to continue the conversation with yourself.</p>
+          <p>Some reflections may already have your answers. Others may be waiting for you. Take your time, return to these questions whenever you wish, and let your thoughts evolve as you see your life from new perspectives.</p>
+        </div>
         <div className="mt-6 space-y-7">
           {POST_MAP_REFLECTIONS.questions.map((q) => {
             const r = written.find((w) => w.prompt === q.prompt);
@@ -183,7 +182,8 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
                 <p className="text-[13px] leading-snug text-mahogany/80">{q.prompt}</p>
                 {r ? (
                   <>
-                    <p className="mt-1.5 whitespace-pre-wrap font-serif text-[17px] italic leading-relaxed text-mahogany">{r.text}</p>{/* their words in italic, for contrast with the prompt (Jana, 2026-10-13) */}
+                    {/* Their answer in the same box the results page shows it in (Jana, 20 Oct) */}
+                    <p className="mt-2.5 whitespace-pre-wrap rounded-[16px] border border-linen-line bg-linen/60 px-4 py-3 text-[13px] leading-relaxed text-mahogany">{r.text}</p>
                     {alongside(r.prompt) && <p className="mt-1.5 text-[12.5px] italic leading-relaxed text-mahogany/70">{alongside(r.prompt)!.text}</p>}
                   </>
                 ) : (
