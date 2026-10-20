@@ -142,10 +142,12 @@ export function useInterview(opts: { fresh?: boolean } = {}) {
   const flush = useCallback(async () => {
     if (timer.current) { clearTimeout(timer.current); timer.current = null; }
     const l = latest.current;
-    if (l) {
-      await pushToServer(l.a);
-      write({ version: CONTENT_VERSION, answers: l.a, step: l.st, token: token.current, updatedAt: new Date().toISOString() });
-    } else if (inFlight.current) await inFlight.current.catch(() => undefined);
+    const work = l
+      ? pushToServer(l.a).then(() => write({ version: CONTENT_VERSION, answers: l.a, step: l.st, token: token.current, updatedAt: new Date().toISOString() }))
+      : (inFlight.current ?? Promise.resolve()).catch(() => undefined);
+    // Never keep the person waiting: after 6 s the Map opens anyway (answers are safe on the device, saving continues,
+    // and the results page retries completion).
+    await Promise.race([work, new Promise((r) => setTimeout(r, 6000))]);
   }, [pushToServer]);
 
   return { ready, answers, step, sync, answer, goTo, flush, token: token.current };

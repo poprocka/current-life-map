@@ -71,7 +71,9 @@ export async function saveAnswers(db: Db, token: string, answers: Answers): Prom
     const a = await resolveToken(sql, token);
     if (!a) return { ok: false as const, error: "not_found" as const };
     if (a.status === "completed") return { ok: true as const, saved: 0, complete: true }; // frozen once completed
-    let saved = 0;
+    // All answers in ONE statement (20 Oct): the database may be across the country from the app server, and one
+    // round trip per answer made each save take seconds.
+    const rows: Record<string, unknown>[] = [];
     for (const [id, value] of Object.entries(answers)) {
       const row = answerRow(id, value) as Record<string, unknown>;
       if ("text" in row) {
@@ -79,17 +81,18 @@ export async function saveAnswers(db: Db, token: string, answers: Answers): Prom
         row.text_ciphertext = encrypt(String(row.text));
         delete row.text;
       }
-      await sql.query(
-        `insert into assessment_answers (assessment_id, question_id, question_version, response_status, option_ids, raw_ordinal, selected_orbit, raw_value, text_ciphertext, answered_at)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9, now())
-         on conflict (assessment_id, question_id) do update set question_version = excluded.question_version, response_status = excluded.response_status,
-           option_ids = excluded.option_ids, raw_ordinal = excluded.raw_ordinal, selected_orbit = excluded.selected_orbit, raw_value = excluded.raw_value,
-           text_ciphertext = excluded.text_ciphertext, answered_at = now()`,
-        [a.id, id, QUESTION_BANK_VERSION, row.response_status, row.option_ids ?? null, row.raw_ordinal ?? null, row.selected_orbit ?? null,
-          row.raw_value === undefined ? null : JSON.stringify(row.raw_value), row.text_ciphertext ?? null],
-      );
-      saved++;
+      rows.push({ question_id: id, response_status: row.response_status, option_ids: row.option_ids ?? null, raw_ordinal: row.raw_ordinal ?? null,
+        selected_orbit: row.selected_orbit ?? null, raw_value: row.raw_value === undefined ? null : row.raw_value, text_ciphertext: row.text_ciphertext ?? null });
     }
+    if (rows.length) await sql.query(
+      `insert into assessment_answers (assessment_id, question_id, question_version, response_status, option_ids, raw_ordinal, selected_orbit, raw_value, text_ciphertext, answered_at)
+       select $1, r.question_id, $2, r.response_status, r.option_ids, r.raw_ordinal, r.selected_orbit, r.raw_value, r.text_ciphertext, now()
+       from jsonb_to_recordset($3::jsonb) as r(question_id text, response_status text, option_ids text[], raw_ordinal smallint, selected_orbit text, raw_value jsonb, text_ciphertext text)
+       on conflict (assessment_id, question_id) do update set question_version = excluded.question_version, response_status = excluded.response_status,
+         option_ids = excluded.option_ids, raw_ordinal = excluded.raw_ordinal, selected_orbit = excluded.selected_orbit, raw_value = excluded.raw_value,
+         text_ciphertext = excluded.text_ciphertext, answered_at = now()`,
+      [a.id, QUESTION_BANK_VERSION, JSON.stringify(rows)]);
+    const saved = rows.length;
     await sql.query(`delete from assessment_answers where assessment_id = $1 and question_id not like 'postmap.%' and not (question_id = any($2::text[]))`, [a.id, Object.keys(answers)]);
     await sql.query(`update assessments set sections_completed = $2, last_activity_at = now() where id = $1`, [a.id, sectionsCompleted(answers)]);
     return { ok: true as const, saved, complete: isComplete(answers) };
