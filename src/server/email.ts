@@ -68,19 +68,20 @@ export const EMAIL_TEXT = emailText(null);
 
 const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 /** HTML version (what almost every mail app shows): the booking link reads "Book a session" instead of a bare URL.
- *  Built from the same text, so both versions always say the same thing. No images, no tracking pixels. */
+ *  Built from the same text, so both versions always say the same thing. Plain markup: no styling, images or tracking. */
 export function emailHtml(bookUrl: string | null) {
   const paras = emailText(bookUrl).split(/\n\n+/).map((block) => {
     const lines = block.split("\n").map((line) => {
       if (bookUrl && line.startsWith("Book a session: "))
-        return `<a href="${esc(bookUrl)}" style="color:#540F26;font-weight:500;text-decoration:underline;text-underline-offset:3px">Book a session</a>`;
+        return `<a href="${esc(bookUrl)}">Book a session</a>`;
       return esc(line);
     });
     return lines[0]?.startsWith("- ")
-      ? `<ul style="margin:0 0 16px;padding-left:20px">${lines.map((l) => `<li>${l.slice(2)}</li>`).join("")}</ul>`
-      : `<p style="margin:0 0 16px">${lines.join("<br>")}</p>`;
+      ? `<ul>${lines.map((l) => `<li>${l.slice(2)}</li>`).join("")}</ul>`
+      : `<p>${lines.join("<br>")}</p>`;
   });
-  return `<!doctype html><html><body style="margin:0;padding:24px;background:#F5EDE2"><div style="max-width:560px;margin:0 auto;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#1F1411">${paras.join("")}</div></body></html>`;
+  // A regular, personal-looking email (Jana, 20 Oct): no background, no theme, the reader's own mail font.
+  return `<!doctype html><html><body>${paras.join("")}</body></html>`;
 }
 
 /**
