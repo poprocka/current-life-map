@@ -43,4 +43,4 @@ export async function middleware(req: NextRequest) {
 }
 
 // Everything except build assets and webhooks/cron (those are called by services directly on whichever host).
-export const config = { matcher: ["/((?!_next/|favicon|api/webhooks|api/cron).*)"] };
+export const config = { matcher: ["/((?!_next/|favicon|icon|apple-icon|api/webhooks|api/cron).*)"] };

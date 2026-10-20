@@ -44,7 +44,6 @@ export function reportModel(result: LifeMapResult) {
     attention: result.attention.candidates.map((c) => ({ name: c.name, reasons: c.reasons.map((r) => r.body) })),
     caveats: [
       "This Map reflects your own answers at the time you completed the Self-Interview. It is a reflection to explore, not a diagnosis or an assessment of you as a person.",
-      ...(result.scoringStatus !== "approved" ? ["The scoring method is under review (preview). Brightness uses your answers to each area's statements; distance is not personalised yet."] : []),
       "Questions answered 'Not applicable to my current life' are left out of the calculations.",
     ],
   };

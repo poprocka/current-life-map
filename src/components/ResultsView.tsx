@@ -30,9 +30,6 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
 
   return (
     <Root className="mx-auto max-w-[1180px] px-6 pb-24 sm:px-10">
-      {result.scoringStatus !== "approved" && (
-        <p className="mt-4 text-center text-[11px] uppercase tracking-[0.16em] text-taupe">Preview · methodology under review</p>
-      )}
 
       {/* A. Opening — a personalised reflection before any numbers (brief §4A) */}
       {insights && (
