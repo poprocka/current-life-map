@@ -106,7 +106,9 @@ export function useInterview() {
     }
   };
 
+  const latest = useRef<{ a: Record<string, AnswerValue>; st: number } | null>(null);
   const persist = useCallback((a: Record<string, AnswerValue>, st: number) => {
+    latest.current = { a, st };
     write({ version: CONTENT_VERSION, answers: a, step: st, token: token.current, updatedAt: new Date().toISOString() });
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
@@ -132,5 +134,15 @@ export function useInterview() {
     setAnswers((a) => { persist(a, clamped); return a; });
   }, [persist, step]);
 
-  return { ready, answers, step, sync, answer, goTo, token: token.current };
+  /** Save everything now (no debounce) and wait until the server has it. Used before showing the Map. */
+  const flush = useCallback(async () => {
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+    const l = latest.current;
+    if (l) {
+      await pushToServer(l.a);
+      write({ version: CONTENT_VERSION, answers: l.a, step: l.st, token: token.current, updatedAt: new Date().toISOString() });
+    } else if (inFlight.current) await inFlight.current.catch(() => undefined);
+  }, [pushToServer]);
+
+  return { ready, answers, step, sync, answer, goTo, flush, token: token.current };
 }

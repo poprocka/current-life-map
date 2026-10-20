@@ -1,7 +1,8 @@
 "use client";
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ResultsView } from "@/components/ResultsView";
+import { GeneratingMap } from "@/components/GeneratingMap";
+import { useRouter } from "next/navigation";
 import { DeepDiveCard, PdfCard } from "@/components/NextSteps";
 import { OptionalReflections } from "@/components/OptionalReflections";
 import { readStored } from "@/lib/useInterview";
@@ -11,6 +12,12 @@ import { isComplete } from "@/engine/navigation";
 import { trackOnce } from "@/lib/analytics";
 import type { AnswerValue } from "@/content/types";
 
+function ResumeInterview() {
+  const router = useRouter();
+  useEffect(() => { const t = setTimeout(() => router.replace("/interview?resume=1"), 2200); return () => clearTimeout(t); }, [router]);
+  return <GeneratingMap title="Picking up where you left off" note="A few questions still need an answer. Taking you back to them." />;
+}
+
 export default function Results() {
   const [answers, setAnswers] = useState<Record<string, AnswerValue> | null>(null);
   const [token, setToken] = useState<string | undefined>();
@@ -19,22 +26,18 @@ export default function Results() {
     setAnswers(s?.answers ?? {});
     setToken(s?.token);
     // Freeze the server-side snapshot (idempotent). Without server storage this quietly does nothing.
-    if (s?.token) void fetch("/api/assessments/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: s.token }) }).catch(() => undefined);
+    // If the last answers were still on their way, the server says "not complete yet" (409): try again shortly.
+    const complete = (attempt: number) => fetch("/api/assessments/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: s!.token }) })
+      .then((r) => { if (r.status === 409 && attempt < 3) setTimeout(() => complete(attempt + 1), 1500 * attempt); })
+      .catch(() => undefined);
+    if (s?.token) void complete(1);
   }, []);
   useEffect(() => { if (answers && isComplete(answers)) trackOnce("interview_complete"); }, [answers]);
   const result = useMemo<LifeMapResult | null>(() => (answers ? computeLifeMap(answers) : null), [answers]);
 
   if (!answers || !result) return <main className="min-h-dvh" aria-busy="true" />;
-  if (!isComplete(answers))
-    return (
-      <main className="mx-auto flex min-h-dvh max-w-[520px] flex-col justify-center px-6">
-        <h1 className="font-serif text-[36px] font-light">Your Map isn't ready yet.</h1>
-        <p className="mt-4 text-[14px] text-mahogany/75">It appears once every question in the Self-Interview has an answer.</p>
-        <Link href="/interview?resume=1" className="mt-8 self-start rounded-full bg-burgundy px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen">
-          Continue the Self-Interview
-        </Link>
-      </main>
-    );
+  // Not finished on this device: no dead end, no buttons; we take the person back to the next unanswered question.
+  if (!isComplete(answers)) return <ResumeInterview />;
 
   return (
     <ResultsView result={result} insights={generateResultInsights(result, answers)} token={token} afterMap={<DeepDiveCard token={token} />}>

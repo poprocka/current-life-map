@@ -7,15 +7,8 @@ import { CHAPTERS, ORBIT_IDS, chapterById } from "@/content/v10/chapters";
 import type { OrbitId } from "@/content/types";
 import { ACTIVE_QUESTIONS } from "@/content/v10/question-bank";
 import { TOTAL_STEPS, isComplete, progress, questionAt, resumeStep, validate } from "@/engine/navigation";
-import { useInterview, type SyncState } from "@/lib/useInterview";
-
-const SYNC_LABEL: Record<SyncState, string> = {
-  idle: "",
-  saving: "Saving…",
-  saved: "Saved",
-  device: "Saved on this device",
-  error: "Couldn't reach the server — saved on this device",
-};
+import { useInterview } from "@/lib/useInterview";
+import { GeneratingMap } from "@/components/GeneratingMap";
 
 // Orbits are numbered in Roman numerals in the order of the Life System (Jana, 2026-10-12)
 const ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
@@ -28,8 +21,10 @@ function eyebrowFor(kind: string, id: string) {
 function Interview() {
   const router = useRouter();
   const params = useSearchParams();
-  const { ready, answers, step, sync, answer, goTo } = useInterview();
+  // Saving happens quietly in the background; no save status is shown (Jana, 20 Oct).
+  const { ready, answers, step, answer, goTo, flush } = useInterview();
   const [error, setError] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
 
@@ -46,6 +41,7 @@ function Interview() {
   }, [step]);
 
   if (!ready) return <main className="min-h-dvh" aria-busy="true" />;
+  if (generating) return <GeneratingMap />;
 
   const q = questionAt(step);
   const chapter = chapterById(q.chapterId);
@@ -69,7 +65,14 @@ function Interview() {
     const err = validate(q, value);
     if (err) return setError(err);
     if (!last) return goTo(step + 1);
-    if (isComplete(answers)) return router.push("/results");
+    if (isComplete(answers)) {
+      // "Your Map is being generated": the last answers finish saving, then the Map opens (at least ~1.8 s, so the moment reads).
+      setGenerating(true);
+      const started = Date.now();
+      void flush().catch(() => undefined).finally(() =>
+        setTimeout(() => router.push("/results"), Math.max(0, 1800 - (Date.now() - started))));
+      return;
+    }
     const missing = ACTIVE_QUESTIONS.findIndex((x) => !x.optional && answers[x.id] === undefined);
     setError("A few earlier questions still need an answer. Taking you there.");
     setTimeout(() => goTo(missing), 900);
@@ -124,7 +127,6 @@ function Interview() {
               </div>
             ))}
           </div>
-          <p className="mt-2 h-4 text-right text-[10.5px] text-taupe/80">{SYNC_LABEL[sync]}</p>
         </header>
 
         <form className="flex flex-1 flex-col" onSubmit={(e) => { e.preventDefault(); next(); }}>
