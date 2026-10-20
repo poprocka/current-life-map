@@ -65,7 +65,17 @@ export function useInterview() {
     setReady(true);
   }, []);
 
+  // One save at a time: a save that starts while the previous one is still creating the record waits for it,
+  // so two quick answers can never create two assessments.
+  const inFlight = useRef<Promise<void> | null>(null);
   const pushToServer = useCallback(async (a: Record<string, AnswerValue>) => {
+    const prev = inFlight.current;
+    const run = (async () => { if (prev) await prev.catch(() => undefined); await pushOnce(a); })();
+    inFlight.current = run;
+    try { await run; } finally { if (inFlight.current === run) inFlight.current = null; }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pushOnce = async (a: Record<string, AnswerValue>) => {
     if (!serverAvailable.current) return setSync("device");
     setSync("saving");
     try {
@@ -94,7 +104,7 @@ export function useInterview() {
     } catch {
       setSync("error");
     }
-  }, []);
+  };
 
   const persist = useCallback((a: Record<string, AnswerValue>, st: number) => {
     write({ version: CONTENT_VERSION, answers: a, step: st, token: token.current, updatedAt: new Date().toISOString() });
