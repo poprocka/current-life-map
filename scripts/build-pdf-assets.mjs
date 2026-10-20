@@ -26,7 +26,13 @@ html,body{background:#F5EDE2;-webkit-print-color-adjust:exact;print-color-adjust
 .pdf-break-before{break-before:page;page-break-before:always}
 .pdf-insights h3{break-after:avoid;page-break-after:avoid}
 .pdf-insights section > div > div,.pdf-insights section > p,.pdf-insights .border.hairline{break-inside:avoid;page-break-inside:avoid}
-.pdf-insights p:not(.eyebrow):not(.font-serif){font-size:13px!important;line-height:1.65!important}
+.pdf-insights p:not(.eyebrow):not(.font-serif){font-size:12.5px!important;line-height:1.6!important}
+/* Flowing document (Jana, 20 Oct): large blocks may continue on the next page; only small units stay whole */
+.pdf-table tr,.pdf-cell,.pdf-insights .border.hairline,blockquote,figure{break-inside:avoid;page-break-inside:avoid}
+.pdf-table th,.pdf-table td{padding-top:7px!important;padding-bottom:7px!important}
+.pdf-flow{box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.pdf-head + *{break-before:avoid;page-break-before:avoid}
+p{orphans:3;widows:3}
 .pdf-insights li{font-size:12px!important}
 section,article,li{orphans:3;widows:3}
 h1,h2,h3,.pdf-with-next{break-after:avoid;page-break-after:avoid}

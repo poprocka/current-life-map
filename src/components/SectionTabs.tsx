@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { track } from "@/lib/analytics";
 import { useBooking } from "@/lib/useBooking";
 
 /**
@@ -16,14 +15,9 @@ const SECTIONS = [
   { id: "reflections", label: "Reflections" },
 ];
 
-function reflectionsFromDevice(): Record<string, string> {
-  try { return JSON.parse(localStorage.getItem("clm:v10:postmap") ?? "{}"); } catch { return {}; }
-}
-
 export function SectionTabs({ token }: { token?: string }) {
   const [present, setPresent] = useState(SECTIONS);
   const [active, setActive] = useState<string | null>("your-map"); // Your Map is above the fold on every device
-  const [dl, setDl] = useState<"idle" | "working" | "error">("idle");
   const booking = useBooking(token);
 
   useEffect(() => {
@@ -55,21 +49,11 @@ export function SectionTabs({ token }: { token?: string }) {
   };
   const go = (id: string) => (e: React.MouseEvent) => { e.preventDefault(); scrollTo(id); };
 
-  /** Download the same PDF as the email. The token goes in the POST body, never the URL. If downloading isn't
-   *  available (not connected yet, or no saved Map), we take the person to the email-a-PDF card instead. */
-  async function download() {
-    if (!token) return scrollTo("pdf-card");
-    setDl("working");
-    try {
-      const r = await fetch("/api/report/download", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, reflections: reflectionsFromDevice() }) });
-      if (!r.ok) { setDl(r.status === 503 || r.status === 404 ? "idle" : "error"); return scrollTo("pdf-card"); }
-      const url = URL.createObjectURL(await r.blob());
-      const a = document.createElement("a");
-      a.href = url; a.download = "current-life-map.pdf"; document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 10_000);
-      track("pdf_download");
-      setDl("idle");
-    } catch { setDl("error"); scrollTo("pdf-card"); }
+  /** "Download results" (Jana, 20 Oct): no direct download; the PDF is only sent by email. Takes the person to the
+   *  email field and puts the cursor in it. */
+  function toPdf() {
+    scrollTo("pdf-card");
+    setTimeout(() => document.getElementById("pdf-email")?.focus({ preventScroll: true }), 600);
   }
 
   const tab = "block whitespace-nowrap rounded-full border px-3.5 py-2 text-center text-[10.5px] uppercase tracking-[0.13em] transition";
@@ -87,8 +71,8 @@ export function SectionTabs({ token }: { token?: string }) {
         ))}
         <li className="shrink-0 lg:ml-auto">
           {/* Secondary */}
-          <button type="button" onClick={download} disabled={dl === "working"} className={`${tab} border-burgundy text-burgundy hover:bg-white/60 disabled:opacity-60`}>
-            {dl === "working" ? "Preparing…" : "Download results"}
+          <button type="button" onClick={toPdf} className={`${tab} border-burgundy text-burgundy hover:bg-white/60`}>
+            Download results
           </button>
         </li>
         <li className="shrink-0">
@@ -99,7 +83,6 @@ export function SectionTabs({ token }: { token?: string }) {
           </button>
         </li>
       </ul>
-      {dl === "error" && <p role="status" className="mt-2 text-right text-[12px] text-burgundy">We couldn't prepare your PDF just now. You can have it emailed below.</p>}
       {booking.state.kind === "error" && <p role="status" className="mt-2 text-right text-[12px] text-burgundy">{booking.state.message}</p>}
     </nav>
   );

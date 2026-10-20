@@ -10,10 +10,6 @@
       "memory": 1024,
       "maxDuration": 30
     },
-    "src/app/api/report/download/route.ts": {
-      "memory": 1024,
-      "maxDuration": 30
-    },
     "src/app/api/admin/assessments/[id]/pdf/route.ts": {
       "memory": 1024,
       "maxDuration": 30

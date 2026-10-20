@@ -7,7 +7,7 @@ Automated equivalents run on every `npm test` (embedded Postgres, fake email, si
 | # | Scenario (addendum §9) | Steps on staging | Pass when |
 |---|---|---|---|
 | 1 | Anonymous completion | Complete the self-interview in a private window | `/admin` shows a new row: Anonymous, no email, 10/10, report ready |
-| 2 | Download PDF | Click **Download PDF** | PDF content matches the results page; the footer fingerprint equals the one in Client's Map (tab B) |
+| 2 | Download results | Click **Download results** | Scrolls to the PDF email field (no direct download); the emailed PDF matches the results page; the footer fingerprint equals the one in Client's Map (tab B) |
 | 3 | Email PDF | Request the PDF to a real inbox, then to an address that bounces (e.g. `bounced@resend.dev`) | First: PDF attached, CMS shows sent → delivered. Second: bounced. Marketing shows "no". Kill the Resend key temporarily: UI says nothing was sent, CMS shows failed |
 | 4 | Booking linkage | From results, **Book a Deep Dive**, pay with Stripe test card `4242…` | Within seconds the row shows confirmed + paid; tab E shows name, email, intake answer, time + timezone, meeting link; tab D has a new script version that quotes the intake answer |
 | 5a | Reschedule | Reschedule from the Calendly confirmation email | Old booking "rescheduled", new one "confirmed", still paid, same client, no new row |
@@ -21,7 +21,7 @@ Automated equivalents run on every `npm test` (embedded Postgres, fake email, si
 | 11 | Webhook security | Send a Calendly payload with a wrong signature, and one with a timestamp > 3 min old | 401, nothing stored |
 | 12 | Retry | Temporarily break `DATABASE_URL` for the webhook route only (or pause the DB), book, restore | Calendly retries or the 15-minute cron processes the stored event; booking appears once |
 | 13 | Bundle | `npm run build && npm run check:bundle` | "Client bundle clean." |
-| 14 | Mobile | Results page + PDF download on iOS Safari and Android Chrome | Download works; booking opens in a new tab |
+| 14 | Mobile | Results page + PDF email on iOS Safari and Android Chrome | PDF arrives; booking opens in a new tab |
 | 15 | Inclusive QA | Respondents of different genders, relationship statuses and life circumstances complete and review results + PDF (docs/07) | Nothing reads as assumed; identical answers give identical results |
 
 Record each run (date, tester, pass/fail, notes) before switching production on.

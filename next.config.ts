@@ -6,7 +6,6 @@ const nextConfig: NextConfig = {
   // The renderer loads @sparticuz/chromium dynamically, so file tracing can't see it: ship it with the three PDF routes.
   outputFileTracingIncludes: {
     "/api/report": ["./node_modules/@sparticuz/chromium/**"],
-    "/api/report/download": ["./node_modules/@sparticuz/chromium/**"],
     "/api/admin/assessments/[id]/pdf": ["./node_modules/@sparticuz/chromium/**"],
   },
   // Channel short links: /ig, /li, /card … → the public page with UTM tags (temporary redirects, so they can change later).

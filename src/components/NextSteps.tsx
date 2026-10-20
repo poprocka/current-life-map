@@ -102,7 +102,15 @@ export function PdfCard({ token }: { token?: string }) {
           </button>
         </form>
         <p role="status" className="mt-3 min-h-[20px] text-[12.5px]">
-          {state.kind === "sent" && <span className="text-mahogany">Your PDF is on its way to {email}.</span>}
+          {state.kind === "sent" && (
+            <span className="inline-flex items-center gap-2.5 rounded-full bg-white/70 px-4 py-2.5 text-[14px] text-burgundy shadow-[0_1px_0_rgba(255,255,255,0.7)_inset]">
+              {/* paper plane */}
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-[18px] w-[18px] shrink-0" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.5 2.5 10.6 13.4" /><path d="M21.5 2.5 14.6 21.4l-4-8-8-4 18.9-6.9Z" />
+              </svg>
+              <span>Your PDF is on its way to <b className="font-medium">{email}</b>.</span>
+            </span>
+          )}
           {state.kind === "error" && <span className="text-burgundy">{state.message}</span>}
         </p>
       </div>

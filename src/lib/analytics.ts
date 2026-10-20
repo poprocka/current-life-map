@@ -57,7 +57,6 @@ const EVENTS = {
   interview_start: ["entry"],          // entry: "public" | "client_link"
   interview_progress: ["step", "of"],  // a step number reached, for drop-off
   interview_complete: [],
-  pdf_download: [],
   pdf_email_sent: [],
   booking_open: ["from"],              // from: "results" | "email"
 } as const;

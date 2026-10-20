@@ -10,7 +10,7 @@ describe("analytics", () => {
     const win: Record<string, unknown> = { location: { origin: "https://map.example.com", pathname: "/results", href: "https://map.example.com/results?x=1#invite=SECRET" } };
     vi.stubGlobal("window", win);
     const a = await import("@/lib/analytics");
-    a.track("pdf_download");
+    a.track("pdf_email_sent");
     expect(win.dataLayer).toBeUndefined(); // no consent → nothing loaded
     a.writeConsent("granted");
     a.track("interview_start", { entry: "client_link", email: "x@y.com", answer: "secret" } as never);
