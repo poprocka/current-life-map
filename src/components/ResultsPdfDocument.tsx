@@ -164,22 +164,38 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
         </section>
       )}
 
-      {written.length > 0 && (
-        <section className="pdf-flow mt-12 rounded-[22px] border hairline px-10 py-7">
-          <p className="eyebrow">Reflections</p>
-          <h2 className={h2}>In your own words</h2>
-          {layer && <p className="mt-2 text-[12.5px] leading-relaxed text-taupe">{layer.note}</p>}
-          <div className="mt-5 space-y-5">
-            {written.map((r, i) => (
-              <div key={i} className="pdf-keep">
-                <p className="text-[13px] leading-snug text-mahogany/80">{r.prompt}</p>
-                <p className="mt-1.5 whitespace-pre-wrap font-serif text-[17px] italic leading-relaxed text-mahogany">{r.text}</p>{/* their words in italic, for contrast with the prompt (Jana, 2026-10-13) */}
-                {alongside(r.prompt) && <p className="mt-1.5 text-[12.5px] italic leading-relaxed text-mahogany/70">{alongside(r.prompt)!.text}</p>}
+      {/* Reflections (Jana, 20 Oct): every optional reflection is printed. Written ones show the person's words; the rest
+          get five ruled lines, so the PDF can be filled in by hand later. */}
+      <section className="pdf-flow mt-12 rounded-[22px] border hairline px-10 py-7">
+        <p className="eyebrow">{POST_MAP_REFLECTIONS.eyebrow}</p>
+        <h2 className={h2}>In your own words</h2>
+        <p className="mt-2 text-[12.5px] leading-relaxed text-taupe">
+          {written.length < POST_MAP_REFLECTIONS.questions.length
+            ? "Answer any that feel useful. The lines are there for whenever you want to come back to them."
+            : "Your reflections, as you wrote them."}
+        </p>
+        {layer && <p className="mt-2 text-[12.5px] leading-relaxed text-taupe">{layer.note}</p>}
+        <div className="mt-6 space-y-7">
+          {POST_MAP_REFLECTIONS.questions.map((q) => {
+            const r = written.find((w) => w.prompt === q.prompt);
+            return (
+              <div key={q.id} className="pdf-keep">
+                <p className="text-[13px] leading-snug text-mahogany/80">{q.prompt}</p>
+                {r ? (
+                  <>
+                    <p className="mt-1.5 whitespace-pre-wrap font-serif text-[17px] italic leading-relaxed text-mahogany">{r.text}</p>{/* their words in italic, for contrast with the prompt (Jana, 2026-10-13) */}
+                    {alongside(r.prompt) && <p className="mt-1.5 text-[12.5px] italic leading-relaxed text-mahogany/70">{alongside(r.prompt)!.text}</p>}
+                  </>
+                ) : (
+                  <div aria-hidden className="mt-1">
+                    {[0, 1, 2, 3, 4].map((k) => <div key={k} className="h-[30px] border-b border-linen-line" />)}
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-        </section>
-      )}
+            );
+          })}
+        </div>
+      </section>
 
       {/* Contact: the friendly contact line is in the footer of every page */}
     </main>
