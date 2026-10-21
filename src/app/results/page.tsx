@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ResultsView } from "@/components/ResultsView";
 import { GeneratingMap } from "@/components/GeneratingMap";
 import { useRouter } from "next/navigation";
-import { DeepDiveCard, PdfCard } from "@/components/NextSteps";
+import { CoachingCard, PdfCard } from "@/components/NextSteps";
 import { OptionalReflections } from "@/components/OptionalReflections";
 import { readStored } from "@/lib/useInterview";
 import { computeLifeMap, type LifeMapResult } from "@/engine/compute";
@@ -40,7 +40,7 @@ export default function Results() {
   if (!isComplete(answers)) return <ResumeInterview />;
 
   return (
-    <ResultsView result={result} insights={generateResultInsights(result, answers)} token={token} afterMap={<DeepDiveCard token={token} />}>
+    <ResultsView result={result} insights={generateResultInsights(result, answers)} token={token} afterMap={<CoachingCard token={token} />}>
       {/* Optional reflections: one visible, "Show all" for the rest (Jana, 2026-10-13); then the PDF card */}
       <OptionalReflections token={token} result={result} />
       <PdfCard token={token} />

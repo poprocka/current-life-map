@@ -46,9 +46,10 @@ export type PdfEmailResult =
   | { ok: true; state: "sent" }
   | { ok: false; error: "not_configured" | "not_found" | "not_completed" | "send_failed" };
 
-/** Email sent with the PDF (Jana's wording, 17 Oct; Deep Dive invitation added 20 Oct). The link sits in the invitation's
- *  own paragraph, so Gmail doesn't fold it into the repeated sign-off it hides in a thread (Jana, 20 Oct). Plain text plus a matching HTML version; no tracking. */
+/** Email sent with the PDF (Jana's wording, 17 Oct). The closing invitation is to 1:1 coaching (21 Oct; it invited to the
+ *  paid Life Map Deep Dive before). The link sits in the invitation's own paragraph, so Gmail doesn't fold it into the repeated sign-off it hides in a thread (Jana, 20 Oct). Plain text plus a matching HTML version; no tracking. */
 export const EMAIL_SUBJECT = "Your Current Life Map";
+const APPLY_LABEL = "Apply for 1:1 coaching";
 export const emailText = (bookUrl: string | null) => `Hi,
 
 Your Current Life Map is ready.
@@ -59,8 +60,8 @@ I'd love to hear what you think. Did anything surprise you? Was there something 
 
 Just reply to this email. I'll be happy to hear from you.
 ${bookUrl ? `
-If you'd like to explore your current life more deeply together, I invite you to a private Life Map Deep Dive session.
-Book a session: ${bookUrl}
+If you're curious about what we could explore together, I'd love to get to know you.
+${APPLY_LABEL}: ${bookUrl}
 ` : ""}
 Warmly,
 Jana
@@ -69,13 +70,13 @@ Creator of The Life System™`;
 export const EMAIL_TEXT = emailText(null);
 
 const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-/** HTML version (what almost every mail app shows): the booking link reads "Book a session" instead of a bare URL.
+/** HTML version (what almost every mail app shows): the link reads "Apply for 1:1 coaching" instead of a bare URL.
  *  Built from the same text, so both versions always say the same thing. Plain markup: no styling, images or tracking. */
 export function emailHtml(bookUrl: string | null) {
   const paras = emailText(bookUrl).split(/\n\n+/).map((block) => {
     const lines = block.split("\n").map((line) => {
-      if (bookUrl && line.startsWith("Book a session: "))
-        return `<a href="${esc(bookUrl)}">Book a session</a>`;
+      if (bookUrl && line.startsWith(`${APPLY_LABEL}: `))
+        return `<a href="${esc(bookUrl)}">${APPLY_LABEL}</a>`;
       return esc(line);
     });
     return lines[0]?.startsWith("- ")
@@ -91,10 +92,10 @@ export function emailHtml(bookUrl: string | null) {
  * the email the person typed (never merged with other records), and tracks the provider's response.
  * "sent" means the provider accepted the message; delivery is confirmed only by the provider's webhook.
  */
-/** Booking from the email: on only when booking is switched on and configured. The link carries a fresh one-time
- *  booking token in the URL fragment (#b=…), which browsers never send to servers or logs; /book exchanges it. */
+/** "Apply for 1:1 coaching" from the email (21 Oct): opens Calendly's introductory conversation. The link carries a
+ *  one-time code in the URL fragment (#b=…), which browsers never send to servers or logs; /book exchanges it, so the
+ *  booking is linked to this Self-Interview. Included only when booking links and Calendly are configured. */
 const BOOK_LINK_TTL = 60 * 60 * 24 * 30; // 30 days
-const bookingFromEmail = () => process.env.NEXT_PUBLIC_BOOKING_ENABLED === "1" && !!process.env.BOOKING_TOKEN_SECRET && !!calendlyAdapter();
 
 export async function requestPdfEmail(db: Db, token: string, email: string, siteOrigin?: string): Promise<PdfEmailResult> {
   const provider = emailProvider();
@@ -124,8 +125,8 @@ export async function requestPdfEmail(db: Db, token: string, email: string, site
     const insights = generateResultInsights(frozen.snapshot, stored, { engine: engineForTemplate(frozen.narrativeVersion) });
     let bookUrl: string | null = null;
     const origin = process.env.NEXT_PUBLIC_SITE_URL || process.env.PUBLIC_SITE_URL || siteOrigin;
-    if (origin && bookingFromEmail()) {
-      const b = signBookingToken(process.env.BOOKING_TOKEN_SECRET!, BOOK_LINK_TTL);
+    if (origin && process.env.BOOKING_TOKEN_SECRET && calendlyAdapter()) {
+      const b = signBookingToken(process.env.BOOKING_TOKEN_SECRET, BOOK_LINK_TTL);
       await sql.query(`insert into booking_link_tokens (token_hash, assessment_id, expires_at) values ($1,$2,$3)`, [sha256(b.token), a.id, b.expiresAt]);
       await audit(sql, null, "booking.link_created", "assessment", a.id, { via: "pdf_email" });
       bookUrl = `${origin.replace(/\/$/, "")}/book#b=${b.token}`;

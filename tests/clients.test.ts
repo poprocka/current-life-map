@@ -4,13 +4,14 @@
  */
 import { describe, it, expect, beforeAll } from "vitest";
 import type { PGlite } from "@electric-sql/pglite";
-import { ENV, FakeEmail, fullAnswers, calendlyHeaders, inviteeCreated } from "./e2e/helpers";
+import { ENV, FakeEmail, fullAnswers, calendlyHeaders, inviteeCreated, inviteeCanceled } from "./e2e/helpers";
 import { freshDb, asAppDb, as } from "./db/pg";
 import { setDb, asCoach, type Db } from "@/server/db";
 import { createAssessment, saveAnswers, completeAssessment } from "@/server/assessments";
 import { requestPdfEmail, setEmailProvider } from "@/server/email";
 import { calendlyAdapter } from "@/server/booking/calendly";
 import { bookingUrlForLinkToken, createBookingLink, handleBookingWebhook } from "@/server/booking/process";
+import { introConversations } from "@/server/admin/queries";
 import { memoryFileStore } from "@/server/files";
 import {
   addAttachment, attachAssessment, createInvite, createProfileForAssessment, deleteAttachment, deleteClientProfile, deleteSession, getAttachment,
@@ -107,35 +108,36 @@ describe("client profiles", () => {
     expect((await asJana((sql) => profileForAssessment(sql, old.id))).profile?.client_id).toBe(cid);
   });
 
-  it("PDF email carries a one-time booking link in the fragment (when booking is on) and invites replies", async () => {
+  it("PDF email invites to apply for 1:1 coaching with a one-time Calendly link in the fragment, and invites replies", async () => {
     const adapter = calendlyAdapter(process.env)!;
     const { id, token } = await completed();
-    await requestPdfEmail(db, token, "off@example.com", "https://map.example.com");
-    expect(email.sent.at(-1)!.text).not.toContain("/book#b=");
-    expect(email.sent.at(-1)!.text).toContain("Just reply to this email.");
-    process.env.NEXT_PUBLIC_BOOKING_ENABLED = "1";
-    try {
-      await requestPdfEmail(db, token, "on@example.com", "https://map.example.com");
-      const m = email.sent.at(-1)!.text.match(/https:\/\/map\.example\.com\/book#b=(\S+)/);
-      expect(m).toBeTruthy();
-      expect(email.sent.at(-1)!.text).not.toContain(id); // no assessment id in the email
-      const html = email.sent.at(-1)!.html!;
-      expect(html).toContain(`>Book a session</a>`);
-      expect(html).toContain(`href="https://map.example.com/book#b=${m![1]}"`);
-      expect(html.replace(/href="[^"]*"/g, "")).not.toContain("/book#b="); // the URL itself is never shown
-      const r = await bookingUrlForLinkToken(db, adapter, m![1]);
-      if (!r.ok) throw new Error(r.error);
-      expect(new URL(r.url).searchParams.get("utm_content")).toBe(m![1]);
-      // Booking through it links the assessment, then the link is spent
-      const { body } = inviteeCreated({ token: m![1], email: "on@example.com", name: "On" });
-      await handleBookingWebhook(db, adapter, calendlyHeaders(body), body);
-      expect((await pg.query(`select 1 from bookings where assessment_id = $1`, [id])).rows.length).toBe(1);
-      expect((await bookingUrlForLinkToken(db, adapter, m![1])).ok).toBe(false);
-      expect((await bookingUrlForLinkToken(db, adapter, "v1.forged.9999999999.sig")).ok).toBe(false);
-    } finally { delete process.env.NEXT_PUBLIC_BOOKING_ENABLED; }
+    await requestPdfEmail(db, token, "on@example.com", "https://map.example.com");
+    const sent = email.sent.at(-1)!;
+    expect(sent.text).toContain("Just reply to this email.");
+    expect(sent.text).not.toMatch(/Deep Dive|\$125|payment/i);
+    const m = sent.text.match(/https:\/\/map\.example\.com\/book#b=(\S+)/);
+    expect(m).toBeTruthy();
+    expect(sent.text).not.toContain(id); // no assessment id in the email
+    expect(sent.html!).toContain(`>Apply for 1:1 coaching</a>`);
+    expect(sent.html!).toContain(`href="https://map.example.com/book#b=${m![1]}"`);
+    expect(sent.html!.replace(/href="[^"]*"/g, "")).not.toContain("/book#b="); // the URL itself is never shown
+    const r = await bookingUrlForLinkToken(db, adapter, m![1]);
+    if (!r.ok) throw new Error(r.error);
+    expect(new URL(r.url).searchParams.get("utm_content")).toBe(m![1]);
+    // Booking the introductory conversation through it links the assessment (free: no payment expected), then the link is spent
+    const { body, invitee } = inviteeCreated({ token: m![1], email: "on@example.com", name: "On" });
+    await handleBookingWebhook(db, adapter, calendlyHeaders(body), body);
+    const b = (await pg.query<{ assessment_id: string; payment_state: string; needs_reconciliation: boolean }>(`select assessment_id, payment_state, needs_reconciliation from bookings where provider_invitee_id = $1`, [invitee])).rows[0];
+    expect(b).toEqual({ assessment_id: id, payment_state: "not_required", needs_reconciliation: false });
+    expect((await bookingUrlForLinkToken(db, adapter, m![1])).ok).toBe(false);
+    expect((await bookingUrlForLinkToken(db, adapter, "v1.forged.9999999999.sig")).ok).toBe(false);
+    // The coach portal lists it with the answers from Calendly's booking form
+    const listed = (await asJana((sql) => introConversations(sql))).find((x) => x.assessment_id === id)!;
+    expect(listed).toMatchObject({ booked_name: "On", booked_email: "on@example.com", booking_state: "confirmed" });
+    expect(listed.intake_answers?.[0].answer).toBe("Why I feel stretched");
   });
 
-  it("a confirmed Deep Dive booking turns a Prospect into a Lead (never demotes a Client)", async () => {
+  it("a confirmed booking turns a Prospect into a Lead (never demotes a Client)", async () => {
     const adapter = calendlyAdapter(process.env)!;
     const { id, token } = await completed();
     await requestPdfEmail(db, token, "lee@example.com");

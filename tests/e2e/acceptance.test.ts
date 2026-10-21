@@ -1,18 +1,17 @@
 /**
  * Addendum §9 acceptance tests, end to end against the real schema + RLS (embedded Postgres),
- * with fake emails and signed fake Calendly / Stripe webhooks.
+ * with fake emails and signed fake Calendly webhooks.
  */
 import { describe, it, expect, beforeAll } from "vitest";
 import { inflateSync } from "zlib";
 import type { PGlite } from "@electric-sql/pglite";
-import { ENV, FakeEmail, fullAnswers, calendlyHeaders, inviteeCreated, inviteeCanceled, stripeHeaders } from "./helpers";
+import { ENV, FakeEmail, fullAnswers, calendlyHeaders, inviteeCreated, inviteeCanceled } from "./helpers";
 import { freshDb, asAppDb } from "../db/pg";
 import { setDb, asCoach, type Db } from "@/server/db";
 import { createAssessment, saveAnswers, completeAssessment, frozenResult, loadAnswers } from "@/server/assessments";
 import { requestPdfEmail, setEmailProvider } from "@/server/email";
 import { calendlyAdapter } from "@/server/booking/calendly";
 import { createBookingLink, handleBookingWebhook, reconcileBooking } from "@/server/booking/process";
-import { handleStripeEvent, verifyStripeSignature } from "@/server/booking/stripe";
 import { listAssessments, loadWorkspace, reconciliationQueue } from "@/server/admin/queries";
 import { saveScriptEdit, saveNote } from "@/server/admin/mutations";
 import { computeLifeMap } from "@/engine/compute";
@@ -126,7 +125,7 @@ describe("§9 acceptance", () => {
     expect(ws.scripts.length).toBe(2); // generated at completion + regenerated with booking intake
     expect(ws.scripts[0].content.blocks.map((b) => [b.startMin, b.endMin])).toEqual([[0, 10], [10, 20], [20, 35], [35, 45], [45, 55], [55, 60]]);
     expect(ws.scripts[0].content.blocks[0].prompts.some((p) => p.text.includes("Why I feel stretched"))).toBe(true);
-    expect(ws.bookings[0]).toMatchObject({ booking_state: "confirmed", payment_state: "paid", timezone: "Europe/Lisbon", meeting_url: "https://zoom.us/j/123", needs_reconciliation: false });
+    expect(ws.bookings[0]).toMatchObject({ booking_state: "confirmed", payment_state: "not_required", timezone: "Europe/Lisbon", meeting_url: "https://zoom.us/j/123", needs_reconciliation: false });
     expect(ws.clients.find((c) => c.link_source === "booking")?.email).toBe("alex@example.com");
     const otherWs = (await asJana((sql) => loadWorkspace(sql, { userId: JANA, role: "admin" }, other.id)))!;
     expect(otherWs.bookings).toHaveLength(0);
@@ -138,37 +137,29 @@ describe("§9 acceptance", () => {
     expect((await pg.query(`select 1 from bookings where provider_invitee_id = $1`, [forged.invitee])).rows).toHaveLength(0);
   });
 
-  it("5. duplicate, reschedule, cancel, refund — no duplicated client or assessment", async () => {
+  it("5. duplicate, reschedule, cancel — an earlier paid booking keeps its payment history; no duplicated client or assessment", async () => {
     const { id, token } = await completedAssessment();
     const t = await bookingToken(token);
-    const first = inviteeCreated({ token: t, email: "lee@example.com" });
+    const first = inviteeCreated({ token: t, email: "lee@example.com", paid: true }); // a paid Deep Dive from before 21 Oct
     await webhook(first.body);
     expect((await webhook(first.body)).outcome).toBe("duplicate"); // provider retry
 
     // reschedule = cancel (rescheduled) + new invitee referencing old_invitee
     expect((await webhook(inviteeCanceled(first.invitee, true))).outcome).toBe("rescheduled");
-    const second = inviteeCreated({ token: t, email: "lee@example.com", oldInvitee: first.invitee, paid: false });
+    const second = inviteeCreated({ token: t, email: "lee@example.com", oldInvitee: first.invitee });
     expect((await webhook(second.body)).outcome).toBe("rescheduled");
 
-    let bookings = (await pg.query<{ booking_state: string; payment_state: string; payment_reference: string; needs_reconciliation: boolean }>(
-      `select booking_state, payment_state, payment_reference, needs_reconciliation from bookings where assessment_id = $1 order by created_at`, [id])).rows;
+    let bookings = (await pg.query<{ booking_state: string; payment_state: string; needs_reconciliation: boolean; reconciliation_reason: string | null }>(
+      `select booking_state, payment_state, needs_reconciliation, reconciliation_reason from bookings where assessment_id = $1 order by created_at`, [id])).rows;
     expect(bookings.map((b) => b.booking_state)).toEqual(["rescheduled", "confirmed"]);
     expect(bookings[1].payment_state).toBe("paid"); // carried over from the original payment
     expect(bookings[1].needs_reconciliation).toBe(false);
 
-    // genuine cancellation of a paid booking → flagged for refund decision
+    // genuine cancellation of a paid booking → flagged so Jana can decide about a refund in Stripe herself
     await webhook(inviteeCanceled(second.invitee));
-    // Stripe refund confirmation
-    const evt = { id: "evt_1", type: "charge.refunded", data: { object: { id: bookings[1].payment_reference, amount: 12500, amount_refunded: 12500, refunded: true } } };
-    const raw = JSON.stringify(evt);
-    expect(verifyStripeSignature(ENV.STRIPE_WEBHOOK_SECRET, stripeHeaders(raw), raw)).toBe(true);
-    expect(verifyStripeSignature(ENV.STRIPE_WEBHOOK_SECRET, stripeHeaders(raw, "whsec_wrong"), raw)).toBe(false);
-    expect(await handleStripeEvent(db, evt)).toEqual({ duplicate: false, updated: 2 });
-    expect((await handleStripeEvent(db, evt)).duplicate).toBe(true);
-
-    bookings = (await pg.query<never>(`select booking_state, payment_state, needs_reconciliation from bookings where assessment_id = $1 order by created_at`, [id])).rows;
+    bookings = (await pg.query<never>(`select booking_state, payment_state, needs_reconciliation, reconciliation_reason from bookings where assessment_id = $1 order by created_at`, [id])).rows;
     expect(bookings.map((b: { booking_state: string }) => b.booking_state)).toEqual(["rescheduled", "cancelled"]);
-    expect(bookings.map((b: { payment_state: string }) => b.payment_state)).toEqual(["refunded", "refunded"]);
+    expect(bookings[1]).toMatchObject({ payment_state: "paid", needs_reconciliation: true });
     const links = await pg.query(`select 1 from assessment_client_links where assessment_id = $1`, [id]);
     expect(links.rows).toHaveLength(1);
     expect((await pg.query(`select 1 from assessments where id = $1`, [id])).rows).toHaveLength(1);

@@ -23,11 +23,11 @@ export default function BookPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-[520px] flex-col justify-center px-6">
       {state === "working" ? (
-        <p className="text-[14px] text-mahogany/75" aria-live="polite">Opening the booking page…</p>
+        <p className="text-[14px] text-mahogany/75" aria-live="polite">Opening the scheduling page…</p>
       ) : (
         <>
           <h1 className="font-serif text-[32px] font-light leading-tight">
-            {state === "expired" ? "This booking link has expired or was already used." : "Booking isn't available just now."}
+            {state === "expired" ? "This link has expired or was already used." : "Scheduling isn't available just now."}
           </h1>
           <p className="mt-4 text-[14px] leading-relaxed text-mahogany/75">
             Reply to the email with your PDF, or write to{" "}

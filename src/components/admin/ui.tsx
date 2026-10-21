@@ -8,6 +8,8 @@ export const fmtDate = (s: string | null | undefined, tz?: string | null) => {
   } catch { return s; }
 };
 export const shortId = (id: string) => id.slice(0, 8);
+/** Payment state worth showing: only on earlier paid Life Map Deep Dive bookings (introductory conversations are free). */
+export const pastPayment = (s: string | null | undefined) => (s && ["paid", "refunded", "failed", "pending"].includes(s) ? s : null);
 
 const TONE: Record<string, string> = {
   confirmed: "bg-[#E6EFE3] text-[#3E5A36]", paid: "bg-[#E6EFE3] text-[#3E5A36]", delivered: "bg-[#E6EFE3] text-[#3E5A36]", sent: "bg-[#EEF2EA] text-[#4D6145]",

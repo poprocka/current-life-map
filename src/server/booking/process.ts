@@ -10,7 +10,8 @@ import type { NormalizedBookingEvent, SchedulingAdapter } from "./types";
 
 const secret = () => process.env.BOOKING_TOKEN_SECRET ?? "";
 
-/** Create the pending association server-side, then hand back the scheduler URL with the opaque token. */
+/** "Book an introductory conversation": create the pending association server-side, then hand back the Calendly URL
+ *  with the opaque token. The booking that comes back through the webhook is attached to this Self-Interview. */
 export async function createBookingLink(db: Db, adapter: SchedulingAdapter, accessToken: string) {
   if (!secret()) return { ok: false as const, error: "not_configured" as const };
   return db.tx(async (sql) => {
@@ -131,13 +132,11 @@ async function onCreated(sql: Sql, e: NormalizedBookingEvent): Promise<{ booking
     }
   }
 
-  // Payment: paid only on the provider's confirmation in a verified event
-  const required = process.env.CALENDLY_PAYMENT_REQUIRED !== "false";
-  let paymentState: string, paymentRef: string | null = e.payment?.reference ?? null;
+  // Payment (21 Oct): introductory conversations are complimentary and Stripe is no longer used. A payment block in the
+  // event, or one carried over by a reschedule, is still recorded so earlier paid Deep Dive bookings keep their history.
+  let paymentState = "not_required", paymentRef: string | null = e.payment?.reference ?? null;
   if (e.payment) paymentState = e.payment.successful ? "paid" : "pending";
   else if (carriedPayment) { paymentState = carriedPayment.state; paymentRef = carriedPayment.ref; }
-  else paymentState = required ? "unknown" : "not_required";
-  if (required && paymentState === "unknown") flags.push("No payment confirmation received for a paid session");
 
   const b = await sql.query<{ id: string }>(
     `insert into bookings (assessment_id, client_id, provider, provider_event_id, provider_invitee_id, scheduled_start, scheduled_end, timezone, meeting_url,

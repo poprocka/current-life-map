@@ -48,7 +48,7 @@ export function UnderstandingTab({ data, actions, title }: { data: WorkspaceData
       <div>
         {!shown ? (
           <Card title="Client Understanding & Coaching Direction">
-            <p className="text-[13.5px] leading-relaxed">After the Deep Dive, mark in the Coach Report which interpretations they <b className="font-normal">confirmed</b>, <b className="font-normal">clarified</b> or <b className="font-normal">challenged</b>, and record agreed next steps in Session Notes. Then build this document: it becomes the foundation of their potential 1:1 program.</p>
+            <p className="text-[13.5px] leading-relaxed">After a session together, mark in the Coach Report which interpretations they <b className="font-normal">confirmed</b>, <b className="font-normal">clarified</b> or <b className="font-normal">challenged</b>, and record agreed next steps in Session Notes. Then build this document: it becomes the foundation of their potential 1:1 program.</p>
             <p className="mt-3 font-serif text-[16px] italic text-burgundy">The assessment gives you a starting picture; the conversation reveals the person.</p>
             <button className={`${btnPrimary} mt-4`} onClick={generate}>Build from the session</button>
           </Card>

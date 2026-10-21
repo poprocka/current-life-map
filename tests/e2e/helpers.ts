@@ -8,7 +8,6 @@ export const ENV = {
   BOOKING_TOKEN_SECRET: "test-booking-secret",
   CALENDLY_WEBHOOK_SIGNING_KEY: "test-calendly-key",
   CALENDLY_SCHEDULING_URL: "https://calendly.com/jana/life-map-deep-dive",
-  STRIPE_WEBHOOK_SECRET: "whsec_test_stripe",
 };
 Object.assign(process.env, ENV);
 
@@ -60,7 +59,8 @@ export function inviteeCreated(opts: { token?: string | null; email?: string; na
         rescheduled: false, old_invitee: opts.oldInvitee ?? null,
         questions_and_answers: [{ question: "What would you most like to understand?", answer: "Why I feel stretched", position: 0 }],
         tracking: { utm_content: opts.token ?? null },
-        payment: opts.paid === false ? null : { external_id: `ch_${n}`, provider: "stripe", amount: 125, currency: "USD", successful: true },
+        // introductory conversations are free; paid: true reproduces an earlier paid Deep Dive booking
+        payment: opts.paid !== true ? null : { external_id: `ch_${n}`, provider: "stripe", amount: 125, currency: "USD", successful: true },
         scheduled_event: { uri: invitee.split("/invitees")[0], start_time: "2026-10-20T10:00:00.000000Z", end_time: "2026-10-20T11:00:00.000000Z", location: { join_url: "https://zoom.us/j/123" } },
       },
     }),
@@ -75,6 +75,3 @@ export function inviteeCanceled(invitee: string, rescheduled = false) {
   });
 }
 
-export function stripeHeaders(body: string, secret = ENV.STRIPE_WEBHOOK_SECRET, t = Math.floor(Date.now() / 1000)) {
-  return `t=${t},v1=${createHmac("sha256", secret).update(`${t}.${body}`).digest("hex")}`;
-}

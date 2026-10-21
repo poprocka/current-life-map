@@ -147,7 +147,7 @@ export function CoachReportView({ data, answers, actions }: { data: WorkspaceDat
               <p className="mt-1 text-[11px] text-taupe">No numerical score. The fit decision belongs to you and the prospective client, after a conversation.</p>
             </Section>
 
-            <Section n={10} title="Personalized Deep Dive Script"><p className="text-[13px] text-taupe">Editable in tab D. Every pattern and hypothesis above has a question there to confirm, refine or challenge it.</p></Section>
+            <Section n={10} title="Personalized Session Script"><p className="text-[13px] text-taupe">Editable in tab D. Every pattern and hypothesis above has a question there to confirm, refine or challenge it.</p></Section>
 
             <Section n={11} title="Potential Coaching Opportunity">
               <Lst title="Goals they may want help with" xs={intel.opportunity.goals} />

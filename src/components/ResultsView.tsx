@@ -7,6 +7,7 @@ import type { ResultInsights } from "@/engine/insights";
 import { OrbitList, PersonalInsights } from "@/components/PersonalInsights";
 import { QuestionBlock } from "@/components/QuestionBlock";
 import { SectionTabs } from "@/components/SectionTabs";
+import { COACHING_CARD } from "@/content/coaching";
 import { useBooking } from "@/lib/useBooking";
 import { ENERGY_SHORT, IMPORTANCE_SHORT } from "@/lib/pdf/model";
 import { useEffect, useState } from "react";
@@ -199,14 +200,14 @@ function MapReading({ paragraphs, open, onToggle }: { paragraphs: { text: string
   );
 }
 
-/** "Book a Deep Dive session" (Jana, 2026-10-15) under the closing question: opens Calendly directly, like the other Book buttons. */
+/** Under the closing question: apply for 1:1 coaching (21 Oct) — opens Calendly directly, like the other buttons. */
 function ClosingBookButton({ token }: { token?: string }) {
   const { state, book } = useBooking(token);
   return (
     <>
       <button type="button" onClick={book} disabled={state.kind === "working"}
         className="mt-6 inline-block rounded-full bg-burgundy px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany disabled:opacity-70">
-        {state.kind === "working" ? "Opening…" : "Book a Deep Dive session"}
+        {state.kind === "working" ? "Opening…" : COACHING_CARD.cta}
       </button>
       {state.kind === "error" && <p role="status" className="mt-3 text-[12.5px] text-burgundy">{state.message}</p>}
     </>

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { COACHING_CARD } from "@/content/coaching";
 import { useBooking } from "@/lib/useBooking";
 
 /**
@@ -17,8 +18,8 @@ const SECTIONS = [
 
 export function SectionTabs({ token }: { token?: string }) {
   const [present, setPresent] = useState(SECTIONS);
-  const [active, setActive] = useState<string | null>("your-map"); // Your Map is above the fold on every device
   const booking = useBooking(token);
+  const [active, setActive] = useState<string | null>("your-map"); // Your Map is above the fold on every device
 
   useEffect(() => {
     const els = SECTIONS.map((s) => document.getElementById(s.id)).filter((e): e is HTMLElement => !!e);
@@ -76,10 +77,9 @@ export function SectionTabs({ token }: { token?: string }) {
           </button>
         </li>
         <li className="shrink-0">
-          {/* Primary */}
-          {/* Opens Calendly directly (Jana, 2026-10-13) */}
+          {/* Primary: apply for 1:1 coaching (21 Oct) — opens Calendly directly */}
           <button type="button" onClick={booking.book} disabled={booking.state.kind === "working"} className={`${tab} border-burgundy bg-burgundy text-linen hover:bg-mahogany disabled:opacity-70`}>
-            {booking.state.kind === "working" ? "Opening…" : "Book a Deep Dive session"}
+            {booking.state.kind === "working" ? "Opening…" : COACHING_CARD.cta}
           </button>
         </li>
       </ul>

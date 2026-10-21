@@ -60,7 +60,7 @@ export interface WorkspaceData {
 export type Stage = "prospect" | "lead" | "client";
 export const STAGES: { value: Stage; label: string; hint: string }[] = [
   { value: "prospect", label: "Prospect", hint: "Did the Self-Interview" },
-  { value: "lead", label: "Lead", hint: "Booked a Life Map Deep Dive" },
+  { value: "lead", label: "Lead", hint: "Applied for 1:1 coaching" },
   { value: "client", label: "Client", hint: "On 1:1 coaching" },
 ];
 export interface ClientListRow {
@@ -89,3 +89,9 @@ export interface ClientProfileData {
   viewer: { userId: string; role: "coach" | "admin" };
 }
 export interface SessionInput { id?: string; session_date: string | null; title: string | null; kind: SessionView["kind"]; assessment_id: string | null; plan: string; notes: string; homework: string }
+
+/** Introductory conversation booked in Calendly (21 Oct), with the answers from Calendly's booking form. */
+export interface IntroRow {
+  id: string; created_at: string; booked_name: string | null; booked_email: string | null; scheduled_start: string | null; timezone: string | null;
+  booking_state: string; meeting_url: string | null; assessment_id: string | null; intake_answers: { question: string; answer: string }[] | null;
+}

@@ -71,7 +71,8 @@ const EVENTS = {
   interview_progress: ["step", "of"],  // a step number reached, for drop-off
   interview_complete: [],
   pdf_email_sent: [],
-  booking_open: ["from"],              // from: "results" | "email"
+  coaching_apply: [],                  // 1:1 coaching application received
+  booking_open: ["from"],              // Calendly opened after applying; from: "results" | "email"
 } as const;
 type EventName = keyof typeof EVENTS;
 type Param = string | number;
