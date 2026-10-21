@@ -17,27 +17,28 @@ export function CoachingCard({ token }: { token?: string }) {
   const { state, book } = useBooking(token);
   return (
     <section id="coaching" className="mt-8 scroll-mt-8 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-labelledby="coaching-h">
-      {/* Two columns (Jana, 21 Oct): the invitation on the left; the second paragraph above the button on the right.
-          Shorter lines, with both columns drawn in toward the centre of the banner. */}
-      <div className="grid gap-6 rounded-[28px] bg-burgundy p-8 text-linen sm:p-10 lg:grid-cols-[minmax(0,440px)_minmax(0,540px)] lg:items-end lg:justify-center lg:gap-16">
+      {/* Two columns (Jana, 21 Oct). The banner is as wide as the Map card above, but its content lines up with the page
+          content below (same left and right edges), so the inner padding mirrors the card's outward margins.
+          "Meet Jana" sits next to the eyebrow. */}
+      <div className="grid gap-6 rounded-[28px] bg-burgundy p-8 text-linen sm:p-10 lg:grid-cols-2 lg:items-end lg:gap-16 xl:px-12 min-[1400px]:px-24 2xl:px-36">
         <div>
-          <p className="text-[10.5px] uppercase tracking-eyebrow text-linen/70">{COACHING_CARD.eyebrow}</p>
+          <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10.5px] uppercase tracking-eyebrow text-linen/70">
+            <span>{COACHING_CARD.eyebrow}</span>
+            <span aria-hidden className="h-px w-6 bg-linen/40" />
+            <Link href="/meet-jana" className="text-linen underline decoration-linen/40 underline-offset-[6px] transition hover:decoration-linen">
+              {COACHING_CARD.secondary} <span aria-hidden>→</span>
+            </Link>
+          </p>
           <h2 id="coaching-h" className="mt-3 font-serif text-[30px] font-light leading-tight">{COACHING_CARD.title}</h2>
-          <p className="mt-3 text-[13.5px] leading-relaxed text-linen/85">{COACHING_CARD.body[0]}</p>
+          <p className="mt-3 max-w-[480px] text-[13.5px] leading-relaxed text-linen/85">{COACHING_CARD.body[0]}</p>
         </div>
         <div>
-          <p className="max-w-[400px] text-[13.5px] leading-relaxed text-linen/85">{COACHING_CARD.body[1]}</p>
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-            {/* Primary — opens Calendly directly (Jana, 21 Oct): Calendly's booking form collects their details */}
-            <button type="button" onClick={book} disabled={state.kind === "working"}
-              className="rounded-full bg-linen px-7 py-3 text-center text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-white disabled:opacity-70">
-              {state.kind === "working" ? "Opening…" : COACHING_CARD.cta}
-            </button>
-            {/* Secondary — the Meet Jana page (21 Oct) */}
-            <Link href="/meet-jana" className="rounded-full border border-linen/50 px-7 py-3 text-center text-[12px] uppercase tracking-[0.16em] text-linen transition hover:border-linen hover:bg-white/10">
-              {COACHING_CARD.secondary}
-            </Link>
-          </div>
+          <p className="max-w-[480px] text-[13.5px] leading-relaxed text-linen/85">{COACHING_CARD.body[1]}</p>
+          {/* Opens Calendly directly (Jana, 21 Oct): Calendly's booking form collects their details */}
+          <button type="button" onClick={book} disabled={state.kind === "working"}
+            className="mt-5 inline-block rounded-full bg-linen px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-white disabled:opacity-70">
+            {state.kind === "working" ? "Opening…" : COACHING_CARD.cta}
+          </button>
           {state.kind === "error" && <p role="status" className="mt-3 text-[12.5px] text-linen">{state.message}</p>}
         </div>
       </div>
