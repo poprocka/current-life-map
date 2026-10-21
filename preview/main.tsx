@@ -5,6 +5,7 @@ import Introduction from "@/app/page";
 import InterviewPage from "@/app/interview/page";
 import Results from "@/app/results/page";
 import Privacy from "@/app/privacy/page";
+import MeetJana from "@/app/meet-jana/page";
 import { ACTIVE_QUESTIONS } from "@/content/v10/question-bank";
 import { AdminDemo } from "./admin-demo";
 
@@ -51,7 +52,7 @@ function App() {
   const full = usePath();
   const p = full.split("?")[0];
   if (p.startsWith("/admin")) return <><AdminDemo path={p} /><PreviewBar /></>;
-  const Page = p === "/interview" ? InterviewPage : p === "/results" ? Results : p === "/privacy" ? Privacy : Introduction;
+  const Page = p === "/interview" ? InterviewPage : p === "/results" ? Results : p === "/privacy" ? Privacy : p === "/meet-jana" ? MeetJana : Introduction;
   return <><Page key={full} /><PreviewBar /></>;
 }
 createRoot(document.getElementById("root")!).render(<App />);

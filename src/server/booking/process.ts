@@ -100,7 +100,9 @@ async function onCreated(sql: Sql, e: NormalizedBookingEvent): Promise<{ booking
 
   // Otherwise: the opaque signed token created server-side before redirect
   if (!assessmentId && !rescheduledFrom) {
-    if (!e.linkToken) flags.push("No assessment link token on the booking");
+    // No code: booked without a Map (e.g. from "Meet Jana", or Calendly's page directly). Listed for Jana to link to their
+    // Self-Interview if they've taken one, or simply mark as done.
+    if (!e.linkToken) flags.push("Booked without a Map link — link their Self-Interview if they've taken one, or mark as done");
     else {
       const v = verifyBookingToken(secret(), e.linkToken);
       const row = (await sql.query<{ assessment_id: string; consumed_at: Date | null }>(

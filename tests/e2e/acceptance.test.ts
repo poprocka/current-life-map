@@ -176,7 +176,7 @@ describe("§9 acceptance", () => {
     const queue = await asJana((sql) => reconciliationQueue(sql));
     const pat = queue.find((q) => q.booked_email === "pat@example.com")!;
     expect(pat.assessment_id).toBeNull();
-    expect(pat.reconciliation_reason).toMatch(/No assessment link token/);
+    expect(pat.reconciliation_reason).toMatch(/Booked without a Map link/);
     // no client record was invented from an unmatched booking
     expect((await pg.query(`select 1 from clients where email = 'pat@example.com'`)).rows).toHaveLength(0);
 

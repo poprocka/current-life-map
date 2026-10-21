@@ -7,20 +7,20 @@ export type BookingState = { kind: "idle" | "working" } | { kind: "error"; messa
 /**
  * "Apply for 1:1 coaching" (21 Oct): opens Calendly's complimentary introductory conversation directly; Calendly's own
  * booking form collects the person's details. The server first creates a one-time link token for this Map, so the
- * booking that comes back is attached to it in the coach portal. No answers leave this site, and the private results
+ * booking that comes back is attached to it in the coach portal. Without a Map on this device (e.g. from "Meet Jana"),
+ * it opens the plain Calendly page. No answers leave this site, and the private results
  * token never appears in a URL.
  */
-export function useBooking(token?: string) {
+export function useBooking(token?: string, from: "results" | "meet_jana" = "results") {
   const [state, setState] = useState<BookingState>({ kind: "idle" });
   async function book() {
-    if (!token) return setState({ kind: "error", message: "Open your results on the device where you took the Self-Interview, or reply to your PDF email." });
     const win = window.open("", "_blank");
     setState({ kind: "working" });
     try {
-      const r = await fetch("/api/booking/link", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) });
+      const r = await fetch("/api/booking/link", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(token ? { token } : {}) });
       if (r.ok) {
         const { url } = await r.json();
-        track("booking_open", { from: "results" });
+        track("booking_open", { from });
         if (win) win.location.href = url; else window.location.href = url;
         return setState({ kind: "idle" });
       }

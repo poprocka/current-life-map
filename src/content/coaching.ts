@@ -7,5 +7,6 @@ export const COACHING_CARD = {
     "Apply for 1:1 coaching, and let's begin with a complimentary conversation to explore your aspirations, what you're looking for, and whether working together feels like the right fit.",
   ],
   cta: "Apply for 1:1 coaching",
+  secondary: "Who's Jana?",
 };
 

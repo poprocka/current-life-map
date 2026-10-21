@@ -72,7 +72,7 @@ const EVENTS = {
   interview_complete: [],
   pdf_email_sent: [],
   coaching_apply: [],                  // 1:1 coaching application received
-  booking_open: ["from"],              // Calendly opened after applying; from: "results" | "email"
+  booking_open: ["from"],              // Calendly opened; from: "results" | "email" | "meet_jana"
 } as const;
 type EventName = keyof typeof EVENTS;
 type Param = string | number;
