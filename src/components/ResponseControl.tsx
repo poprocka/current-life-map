@@ -77,7 +77,8 @@ export function ResponseControl({
       </div>
 
       {multi && q.maxSelections && (
-        <p className="mt-4 text-[12px] text-taupe" aria-live="polite">
+        // Not shown on screen (Jana, 21 Oct); still announced to screen readers
+        <p className="sr-only" aria-live="polite">
           {selected.size} of {q.maxSelections} chosen
         </p>
       )}
