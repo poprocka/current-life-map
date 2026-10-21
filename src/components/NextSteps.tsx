@@ -19,8 +19,9 @@ export function CoachingCard({ token }: { token?: string }) {
     <section id="coaching" className="mt-8 scroll-mt-8 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-labelledby="coaching-h">
       {/* Two columns (Jana, 21 Oct). The banner is as wide as the Map card above, but its content lines up with the page
           content below (same left and right edges), so the inner padding mirrors the card's outward margins.
-          "Meet Jana" sits next to the eyebrow. */}
-      <div className="grid gap-6 rounded-[28px] bg-burgundy p-8 text-linen sm:p-10 lg:grid-cols-2 lg:items-end lg:gap-16 xl:px-12 min-[1400px]:px-24 2xl:px-36">
+          "Meet Jana" sits next to the eyebrow. Eyebrow and headline on the left; all body text and the button on the right
+          (Jana, 21 Oct); the headline matches the other section headlines (36px). */}
+      <div className="grid gap-6 rounded-[28px] bg-burgundy p-8 text-linen sm:p-10 lg:grid-cols-2 lg:items-start lg:gap-16 xl:px-12 min-[1400px]:px-24 2xl:px-36">
         <div>
           <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10.5px] uppercase tracking-eyebrow text-linen/70">
             <span>{COACHING_CARD.eyebrow}</span>
@@ -29,11 +30,10 @@ export function CoachingCard({ token }: { token?: string }) {
               {COACHING_CARD.secondary} <span aria-hidden>→</span>
             </Link>
           </p>
-          <h2 id="coaching-h" className="mt-3 font-serif text-[30px] font-light leading-tight">{COACHING_CARD.title}</h2>
-          <p className="mt-3 max-w-[480px] text-[13.5px] leading-relaxed text-linen/85">{COACHING_CARD.body[0]}</p>
+          <h2 id="coaching-h" className="mt-3 font-serif text-[36px] font-light leading-tight">{COACHING_CARD.title}</h2>
         </div>
         <div>
-          <p className="max-w-[480px] text-[13.5px] leading-relaxed text-linen/85">{COACHING_CARD.body[1]}</p>
+          <div className="max-w-[480px] space-y-3 text-[13.5px] leading-relaxed text-linen/85">{COACHING_CARD.body.map((p) => <p key={p.slice(0, 20)}>{p}</p>)}</div>
           {/* Opens Calendly directly (Jana, 21 Oct): Calendly's booking form collects their details */}
           <button type="button" onClick={book} disabled={state.kind === "working"}
             className="mt-5 inline-block rounded-full bg-linen px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-white disabled:opacity-70">
