@@ -15,16 +15,16 @@ type SendState = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { k
 export function CoachingCard() {
   return (
     <section id="coaching" className="mt-8 scroll-mt-8 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-labelledby="coaching-h">
-      <div className="grid gap-6 rounded-[28px] bg-burgundy p-8 text-linen sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-16">
+      {/* Two columns (Jana, 21 Oct): the invitation on the left; the second paragraph sits above the button on the right */}
+      <div className="grid gap-6 rounded-[28px] bg-burgundy p-8 text-linen sm:p-10 lg:grid-cols-2 lg:items-end lg:gap-16">
         <div>
           <p className="text-[10.5px] uppercase tracking-eyebrow text-linen/70">{COACHING_CARD.eyebrow}</p>
           <h2 id="coaching-h" className="mt-3 font-serif text-[30px] font-light leading-tight">{COACHING_CARD.title}</h2>
-          <div className="mt-3 max-w-[640px] space-y-2.5 text-[13.5px] leading-relaxed text-linen/85">
-            {COACHING_CARD.body.map((p) => <p key={p.slice(0, 20)}>{p}</p>)}
-          </div>
+          <p className="mt-3 max-w-[560px] text-[13.5px] leading-relaxed text-linen/85">{COACHING_CARD.body[0]}</p>
         </div>
-        <div className="lg:text-right">
-          <Link href="/apply" className="inline-block rounded-full bg-linen px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-white">
+        <div>
+          <p className="max-w-[560px] text-[13.5px] leading-relaxed text-linen/85">{COACHING_CARD.body[1]}</p>
+          <Link href="/apply" className="mt-5 inline-block rounded-full bg-linen px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-white">
             {COACHING_CARD.cta}
           </Link>
         </div>
