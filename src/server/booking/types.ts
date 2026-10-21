@@ -31,6 +31,7 @@ export interface SchedulingAdapter {
   verify(headers: Headers, rawBody: string, now?: number): boolean;
   /** Map a verified payload to a normalized event; null for event types we ignore. */
   normalize(json: unknown): NormalizedBookingEvent | null;
-  /** Booking page URL carrying the opaque link token. */
-  schedulingUrl(linkToken: string): string;
+  /** Booking page URL carrying the opaque link token, with the person's name and email prefilled where supported.
+   *  Nothing else (answers, results, messages) ever goes into this URL. */
+  schedulingUrl(linkToken: string, prefill?: { name?: string; email?: string }): string;
 }

@@ -16,7 +16,8 @@ beforeAll(async () => {
     values ('h1', 'v10-with-approved-oct12-overrides', 'v10-oct12', 'completed') returning id`);
   assessmentId = r.rows[0].id;
   await db.exec(`insert into coach_reports (assessment_id, content, evidence_refs, template_version) values ('${assessmentId}', '{"x":1}', '[]', '1');
-    insert into session_notes (assessment_id, coach_id, notes_ciphertext) values ('${assessmentId}', '${COACH}', 'enc');`);
+    insert into session_notes (assessment_id, coach_id, notes_ciphertext) values ('${assessmentId}', '${COACH}', 'enc');
+    insert into coaching_applications (assessment_id, name, email, message_ciphertext, request_id) values ('${assessmentId}', 'Ana', 'ana@example.com', 'enc', gen_random_uuid());`);
 }, 60000);
 
 const count = (table: string) => db.query<{ n: number }>(`select count(*)::int as n from ${table}`).then((r) => r.rows[0].n);
@@ -51,6 +52,18 @@ describe("row level security", () => {
       const list = await db.query<{ assessment_id: string; client_email: string | null }>(`select assessment_id, client_email from admin_assessment_list`);
       expect(list.rows).toHaveLength(1);
       expect(list.rows[0].client_email).toBeNull(); // anonymous stays anonymous
+    });
+  });
+  it("coaching applications: only a coach with MFA can read them; nobody can insert through the API", async () => {
+    await as(db, { role: "anon" }, async () => {
+      expect(await count("coaching_applications")).toBe(0);
+      await expect(db.exec(`insert into coaching_applications (name, email, request_id) values ('x', 'x@y.z', gen_random_uuid())`)).rejects.toThrow();
+    });
+    await as(db, { role: "authenticated", sub: OTHER, aal: "aal2" }, async () => { expect(await count("coaching_applications")).toBe(0); });
+    await as(db, { role: "authenticated", sub: COACH, aal: "aal1" }, async () => { expect(await count("coaching_applications")).toBe(0); });
+    await as(db, { role: "authenticated", sub: COACH, aal: "aal2" }, async () => {
+      expect(await count("coaching_applications")).toBe(1);
+      await expect(db.exec(`insert into coaching_applications (name, email, request_id) values ('x', 'x@y.z', gen_random_uuid())`)).rejects.toThrow();
     });
   });
   it("booking link tokens are never readable by coaches through the API", async () => {

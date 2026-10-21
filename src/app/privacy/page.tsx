@@ -4,7 +4,8 @@ import { GA_SIGNALS } from "@/lib/analytics";
 // Privacy & Data Use Notice — text supplied by Jana (October 2026), verbatim.
 // The document's implementation note is intentionally not shown to respondents.
 // Section 8 (site analytics) added 20 Oct when the analytics banner was replaced by agreement on Begin.
-// Sections 7 and 9: Jana's wording, 20 Oct.
+// Sections 7 and 9: Jana's wording, 20 Oct. Section 4 and the provider list updated 21 Oct: 1:1 coaching applications
+// replace the paid Life Map Deep Dive; Stripe is no longer used.
 const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "1. Anonymous by default",
@@ -16,7 +17,7 @@ const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "2. Information we collect",
     body: [
-      "Depending on how you use the experience, information may include: your Self-Interview answers and optional reflections; the Current Life Map and its interpretations; technical information necessary to operate and secure the service; an email address if you request delivery; and contact, scheduling, and service information if you book coaching. We do not require contact details to complete the Self-Interview.",
+      "Depending on how you use the experience, information may include: your Self-Interview answers and optional reflections; the Current Life Map and its interpretations; technical information necessary to operate and secure the service; an email address if you request delivery; your name, email address and optional message if you apply for 1:1 coaching; and scheduling information if you book an introductory conversation. We do not require contact details to complete the Self-Interview.",
     ],
   },
   {
@@ -26,9 +27,10 @@ const SECTIONS: { title: string; body: string[] }[] = [
     ],
   },
   {
-    title: "4. Life Map Deep Dive and coaching",
+    title: "4. 1:1 coaching applications and introductory conversations",
     body: [
-      "If you book a Life Map Deep Dive from your Current Life Map experience, the contact information you provide during booking may be connected to your Map, answers, and optional reflections. This allows Jana to identify the correct Map, prepare for and provide the session, and maintain appropriate client records. The booking experience must disclose this connection before you confirm your booking. Once associated with an identified client, the Map may form part of that client's service record. Research and methodology analysis should use de-identified information rather than the client's identifying details.",
+      "If you apply for 1:1 coaching, we collect your name, your email address and, if you choose to share one, your message. We use this information to review your coaching inquiry, communicate with you about it, and arrange a complimentary introductory conversation. Applying does not add you to a mailing list.",
+      "When you apply from your Current Life Map or from your PDF email, your application is connected to your Map, answers, and optional reflections, so Jana can understand your inquiry and prepare for your conversation. If you schedule a conversation, the details you enter in our scheduling tool (Calendly) are connected in the same way. Once associated with an identified client, the Map may form part of that client's service record. Research and methodology analysis should use de-identified information rather than the client's identifying details.",
     ],
   },
   {
@@ -46,8 +48,8 @@ const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "7. Storage, service providers, and security",
     body: [
-      "We use trusted third-party service providers to operate The Self-Interview, securely store information, deliver reports, manage bookings, process payments, and analyze website usage.",
-      "These providers include Vercel, Supabase, Resend, Calendly, Stripe, and Google. They process personal information as necessary to provide their services, subject to applicable privacy and data protection requirements.",
+      "We use trusted third-party service providers to operate The Self-Interview, securely store information, deliver reports, schedule introductory conversations, and analyze website usage.",
+      "These providers include Vercel, Supabase, Resend, Calendly, and Google. They process personal information as necessary to provide their services, subject to applicable privacy and data protection requirements.",
       "Your information may be stored or processed in the United States, including when you access The Self-Interview from another country.",
       "We use reasonable technical and organizational safeguards to protect personal information, including encryption and restricted access. However, no method of electronic storage or transmission is completely secure.",
     ],
@@ -64,7 +66,7 @@ const SECTIONS: { title: string; body: string[] }[] = [
     title: "9. Data Retention",
     body: [
       "We retain personal information only for as long as reasonably necessary to provide our services, improve The Life System™, and fulfill applicable legal and business obligations.",
-      "This includes Self-Interview responses, Current Life Maps, optional reflections, email delivery records, bookings, payment-related information, and technical data. Retention depends on the purpose for which the information was collected and any applicable legal requirements.",
+      "This includes Self-Interview responses, Current Life Maps, optional reflections, email delivery records, coaching applications, bookings, and technical data. Retention depends on the purpose for which the information was collected and any applicable legal requirements.",
       "Third-party service providers may retain certain information in accordance with their own privacy policies.",
       "You may request deletion of your personal information by contacting talk@self-interview.com, subject to applicable legal requirements. We can process deletion requests where the information can reasonably be linked to you. Fully anonymous information may not be identifiable for deletion.",
     ],

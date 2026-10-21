@@ -31,7 +31,7 @@ export async function attachInviteAssessment(sql: Sql, clientId: string, assessm
   await audit(sql, null, "client.map_attached_by_invite", "client", clientId, { assessment: assessmentId });
 }
 
-/** A confirmed Deep Dive booking turns a Prospect into a Lead. Leads and Clients are never moved back. */
+/** A confirmed introductory conversation (or an earlier Deep Dive booking) turns a Prospect into a Lead. Leads and Clients are never moved back. */
 export async function promoteToLead(sql: Sql, assessmentId: string, actorId: string | null = null) {
   const r = await sql.query<{ id: string }>(
     `update clients set stage = 'lead', stage_changed_at = now()

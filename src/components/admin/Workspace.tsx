@@ -13,7 +13,7 @@ import { NOT_APPLICABLE } from "@/content/types";
 import { ResultsView } from "@/components/ResultsView";
 import { engineForTemplate, generateResultInsights } from "@/engine/insights";
 import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
-import { Badge, Card, btn, btnPrimary, fmtDate, input, shortId } from "./ui";
+import { Badge, Card, btn, btnPrimary, fmtDate, input, pastPayment, shortId } from "./ui";
 import { CoachReportView } from "./CoachReportView";
 import { UnderstandingTab } from "./UnderstandingTab";
 import type { CoachReport } from "@/engine/coach/report";
@@ -41,7 +41,7 @@ export interface WorkspaceActions {
 }
 
 const TABS = [
-  ["answers", "A · Answers"], ["map", "B · Client’s Map"], ["report", "C · Coach Report"], ["script", "D · Deep Dive Script"],
+  ["answers", "A · Answers"], ["map", "B · Client’s Map"], ["report", "C · Coach Report"], ["script", "D · Session Script"],
   ["contact", "E · Contact & Booking"], ["notes", "F · Session Notes"], ["activity", "G · Activity & Audit"], ["understanding", "H · Client Understanding"],
 ] as const;
 type Tab = (typeof TABS)[number][0];
@@ -64,7 +64,7 @@ export function Workspace({ data, actions }: { data: WorkspaceData; actions: Wor
           <ProfileLine data={data} actions={actions} />
           <p className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-taupe">
             <Badge v={data.assessment.status} /> {data.assessment.status === "completed" ? `Completed ${fmtDate(data.assessment.completed_at)}` : `${data.assessment.sections_completed}/10 sections`}
-            {booking && <> · Deep Dive <Badge v={booking.booking_state} /> {fmtDate(booking.scheduled_start, booking.timezone)} <Badge v={booking.payment_state} /></>}
+            {booking && <> · Intro call <Badge v={booking.booking_state} /> {fmtDate(booking.scheduled_start, booking.timezone)} {pastPayment(booking.payment_state) && <Badge v={pastPayment(booking.payment_state)} />}</>}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -290,7 +290,7 @@ function MapTab({ data, pdfHref }: { data: WorkspaceData; pdfHref: string | null
   );
 }
 
-// ── D. Personalised Deep Dive script ─────────────────────────────────────────
+// ── D. Personalised session script ─────────────────────────────────────────
 function ScriptTab({ data, answers, actions }: { data: WorkspaceData; answers: Record<string, string | string[] | undefined>; actions: WorkspaceActions }) {
   const [versions, setVersions] = useState<ScriptVersion[]>(data.scripts);
   const [selected, setSelected] = useState<number>(data.scripts[0]?.version ?? 0);
@@ -400,11 +400,11 @@ function ContactTab({ data, actions }: { data: WorkspaceData; actions: Workspace
         ) : <p className="text-[12.5px] text-taupe">No PDF requested by email.</p>}
       </Card>
       <div className="lg:col-span-2">
-        <Card title="Deep Dive bookings">
+        <Card title="Introductory conversations">
           {bookings.length ? bookings.map((b) => (
             <div key={b.id} className="border-t hairline py-4 first:border-0 first:pt-0">
               <div className="flex flex-wrap items-center gap-2 text-[13px]">
-                <Badge v={b.booking_state} /><Badge v={b.payment_state} />
+                <Badge v={b.booking_state} />{pastPayment(b.payment_state) && <Badge v={pastPayment(b.payment_state)} />}
                 <span>{fmtDate(b.scheduled_start, b.timezone)} – {b.scheduled_end ? fmtDate(b.scheduled_end, b.timezone).split(", ").pop() : ""}</span>
                 <span className="text-taupe">{b.timezone}</span>
                 {b.needs_reconciliation && <span className="text-[11.5px] text-[#8A6420]">⚑ {b.reconciliation_reason}</span>}
@@ -419,7 +419,7 @@ function ContactTab({ data, actions }: { data: WorkspaceData; actions: Workspace
                 <dt className="text-taupe">Booked as</dt><dd>{b.booked_name} · {b.booked_email}</dd>
                 <dt className="text-taupe">Meeting</dt><dd>{b.meeting_url ? <a className="underline" href={b.meeting_url} target="_blank" rel="noopener noreferrer">{b.meeting_url}</a> : "—"}</dd>
                 <dt className="text-taupe">Scheduler event</dt><dd className="break-all font-mono text-[10.5px]">{b.provider} · {b.provider_event_id}</dd>
-                <dt className="text-taupe">Payment reference</dt><dd className="font-mono text-[10.5px]">{b.payment_reference ?? "—"}</dd>
+                {b.payment_reference && <><dt className="text-taupe">Payment reference (earlier Deep Dive)</dt><dd className="font-mono text-[10.5px]">{b.payment_reference}</dd></>}
                 {b.rescheduled_from && <><dt className="text-taupe">Rescheduled from</dt><dd className="font-mono text-[10.5px]">{shortId(b.rescheduled_from)}</dd></>}
               </dl>
               {b.intake_answers?.length ? <div className="mt-3"><p className="text-[10.5px] uppercase tracking-[0.12em] text-taupe">Booking questions</p>
@@ -428,7 +428,7 @@ function ContactTab({ data, actions }: { data: WorkspaceData; actions: Workspace
                 <ul className="mt-1 space-y-0.5">{b.events.map((e, i) => <li key={i}>{fmtDate(e.received_at)} · {e.event_type} · {e.processed_at ? "processed" : "pending"}{e.processing_error ? ` · ${e.processing_error}` : ""}</li>)}</ul>
               </details>
             </div>
-          )) : <p className="text-[12.5px] text-taupe">No Deep Dive booked.</p>}
+          )) : <p className="text-[12.5px] text-taupe">No introductory conversation booked.</p>}
         </Card>
       </div>
       <div className="lg:col-span-2">

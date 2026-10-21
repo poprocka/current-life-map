@@ -4,13 +4,16 @@
  */
 import { describe, it, expect, beforeAll } from "vitest";
 import type { PGlite } from "@electric-sql/pglite";
-import { ENV, FakeEmail, fullAnswers, calendlyHeaders, inviteeCreated } from "./e2e/helpers";
+import { ENV, FakeEmail, fullAnswers, calendlyHeaders, inviteeCreated, inviteeCanceled } from "./e2e/helpers";
 import { freshDb, asAppDb, as } from "./db/pg";
 import { setDb, asCoach, type Db } from "@/server/db";
 import { createAssessment, saveAnswers, completeAssessment } from "@/server/assessments";
 import { requestPdfEmail, setEmailProvider } from "@/server/email";
 import { calendlyAdapter } from "@/server/booking/calendly";
-import { bookingUrlForLinkToken, createBookingLink, handleBookingWebhook } from "@/server/booking/process";
+import { createBookingLink, handleBookingWebhook } from "@/server/booking/process";
+import { submitApplication } from "@/server/coaching";
+import { coachingApplications } from "@/server/admin/queries";
+import { randomUUID } from "crypto";
 import { memoryFileStore } from "@/server/files";
 import {
   addAttachment, attachAssessment, createInvite, createProfileForAssessment, deleteAttachment, deleteClientProfile, deleteSession, getAttachment,
@@ -107,35 +110,80 @@ describe("client profiles", () => {
     expect((await asJana((sql) => profileForAssessment(sql, old.id))).profile?.client_id).toBe(cid);
   });
 
-  it("PDF email carries a one-time booking link in the fragment (when booking is on) and invites replies", async () => {
-    const adapter = calendlyAdapter(process.env)!;
+  it("PDF email invites to apply for 1:1 coaching with a one-time link in the fragment, and invites replies", async () => {
     const { id, token } = await completed();
-    await requestPdfEmail(db, token, "off@example.com", "https://map.example.com");
-    expect(email.sent.at(-1)!.text).not.toContain("/book#b=");
-    expect(email.sent.at(-1)!.text).toContain("Just reply to this email.");
-    process.env.NEXT_PUBLIC_BOOKING_ENABLED = "1";
-    try {
-      await requestPdfEmail(db, token, "on@example.com", "https://map.example.com");
-      const m = email.sent.at(-1)!.text.match(/https:\/\/map\.example\.com\/book#b=(\S+)/);
-      expect(m).toBeTruthy();
-      expect(email.sent.at(-1)!.text).not.toContain(id); // no assessment id in the email
-      const html = email.sent.at(-1)!.html!;
-      expect(html).toContain(`>Book a session</a>`);
-      expect(html).toContain(`href="https://map.example.com/book#b=${m![1]}"`);
-      expect(html.replace(/href="[^"]*"/g, "")).not.toContain("/book#b="); // the URL itself is never shown
-      const r = await bookingUrlForLinkToken(db, adapter, m![1]);
-      if (!r.ok) throw new Error(r.error);
-      expect(new URL(r.url).searchParams.get("utm_content")).toBe(m![1]);
-      // Booking through it links the assessment, then the link is spent
-      const { body } = inviteeCreated({ token: m![1], email: "on@example.com", name: "On" });
-      await handleBookingWebhook(db, adapter, calendlyHeaders(body), body);
-      expect((await pg.query(`select 1 from bookings where assessment_id = $1`, [id])).rows.length).toBe(1);
-      expect((await bookingUrlForLinkToken(db, adapter, m![1])).ok).toBe(false);
-      expect((await bookingUrlForLinkToken(db, adapter, "v1.forged.9999999999.sig")).ok).toBe(false);
-    } finally { delete process.env.NEXT_PUBLIC_BOOKING_ENABLED; }
+    await requestPdfEmail(db, token, "on@example.com", "https://map.example.com");
+    const sent = email.sent.at(-1)!;
+    expect(sent.text).toContain("Just reply to this email.");
+    expect(sent.text).not.toMatch(/Deep Dive|\$125|payment/i);
+    const m = sent.text.match(/https:\/\/map\.example\.com\/apply#b=(\S+)/);
+    expect(m).toBeTruthy();
+    expect(sent.text).not.toContain(id); // no assessment id in the email
+    expect(sent.html!).toContain(`>Apply for 1:1 coaching</a>`);
+    expect(sent.html!).toContain(`href="https://map.example.com/apply#b=${m![1]}"`);
+    expect(sent.html!.replace(/href="[^"]*"/g, "")).not.toContain("/apply#b="); // the URL itself is never shown
   });
 
-  it("a confirmed Deep Dive booking turns a Prospect into a Lead (never demotes a Client)", async () => {
+  it("coaching application: linked to the Self-Interview, message encrypted, no duplicates, Calendly link carries only name and email", async () => {
+    const adapter = calendlyAdapter(process.env)!;
+    const { id, token } = await completed();
+    const requestId = randomUUID();
+    const input = { requestId, name: "Ana Example", email: "ana@example.com", message: "I keep postponing rest.", token };
+    const r = await submitApplication(db, adapter, input);
+    if (!r.ok) throw new Error(r.error);
+    // A second tap / retry: same application, no second row
+    const again = await submitApplication(db, adapter, input);
+    expect(again.ok && again.applicationId).toBe(r.applicationId);
+    expect((await pg.query(`select 1 from coaching_applications where request_id = $1`, [requestId])).rows.length).toBe(1);
+    const row = (await pg.query<{ assessment_id: string; status: string; message_ciphertext: string; client_id: string }>(`select * from coaching_applications where id = $1`, [r.applicationId])).rows[0];
+    expect(row.assessment_id).toBe(id);
+    expect(row.status).toBe("submitted"); // applying is not booking
+    expect(JSON.stringify(row)).not.toContain("postponing");
+    const url = new URL(r.schedulingUrl!);
+    expect(url.searchParams.get("name")).toBe("Ana Example");
+    expect(url.searchParams.get("email")).toBe("ana@example.com");
+    expect(url.toString()).not.toMatch(/postponing|rest|answer/i);
+    expect(url.toString()).not.toContain(id);
+    expect([...url.searchParams.keys()].sort()).toEqual(["email", "name", "utm_content"]);
+    // The coach sees it (decrypted), as applied and not yet scheduled
+    const listed = (await asJana((sql) => coachingApplications(sql))).find((a) => a.id === r.applicationId)!;
+    expect(listed).toMatchObject({ name: "Ana Example", email: "ana@example.com", message: "I keep postponing rest.", status: "submitted", assessment_id: id });
+    // Booking through the link: linked to the application and Self-Interview, no payment needed, nothing to reconcile
+    const { body, invitee } = inviteeCreated({ token: url.searchParams.get("utm_content"), email: "ana@example.com", name: "Ana Example" });
+    await handleBookingWebhook(db, adapter, calendlyHeaders(body), body);
+    const b = (await pg.query<{ id: string; assessment_id: string; client_id: string; payment_state: string; needs_reconciliation: boolean; session_type: string }>(`select * from bookings where provider_invitee_id = $1`, [invitee])).rows[0];
+    expect(b).toMatchObject({ assessment_id: id, client_id: row.client_id, payment_state: "not_required", needs_reconciliation: false, session_type: "intro_conversation" });
+    expect((await pg.query<{ status: string; booking_id: string }>(`select status, booking_id from coaching_applications where id = $1`, [r.applicationId])).rows[0]).toEqual({ status: "scheduled", booking_id: b.id });
+    expect((await pg.query<{ stage: string }>(`select stage from clients where id = $1`, [row.client_id])).rows[0].stage).toBe("lead");
+    // Cancelling the conversation shows on the application
+    const c = inviteeCanceled(invitee);
+    await handleBookingWebhook(db, adapter, calendlyHeaders(c), c);
+    expect((await pg.query<{ status: string }>(`select status from coaching_applications where id = $1`, [r.applicationId])).rows[0].status).toBe("cancelled");
+  });
+
+  it("coaching application from the PDF email link, and one without a Self-Interview", async () => {
+    const adapter = calendlyAdapter(process.env)!;
+    const { id, token } = await completed();
+    await requestPdfEmail(db, token, "em@example.com", "https://map.example.com");
+    const b = email.sent.at(-1)!.text.match(/\/apply#b=(\S+)/)![1];
+    const viaEmail = await submitApplication(db, adapter, { requestId: randomUUID(), name: "Em", email: "em@example.com", message: "", b });
+    if (!viaEmail.ok) throw new Error(viaEmail.error);
+    expect((await pg.query<{ assessment_id: string; source: string; message_ciphertext: string | null }>(`select assessment_id, source, message_ciphertext from coaching_applications where id = $1`, [viaEmail.applicationId])).rows[0])
+      .toEqual({ assessment_id: id, source: "email", message_ciphertext: null });
+    // A forged link links nothing, and the application is still received
+    const direct = await submitApplication(db, adapter, { requestId: randomUUID(), name: "Dee", email: "dee@example.com", message: "", b: "v1.forged.9999999999.sig" });
+    if (!direct.ok) throw new Error(direct.error);
+    expect((await pg.query<{ assessment_id: string | null; source: string }>(`select assessment_id, source from coaching_applications where id = $1`, [direct.applicationId])).rows[0]).toEqual({ assessment_id: null, source: "direct" });
+    // Its booking is linked to the application, so it doesn't land in "Needs your attention"
+    const { body, invitee } = inviteeCreated({ token: new URL(direct.schedulingUrl!).searchParams.get("utm_content"), email: "dee@example.com", name: "Dee" });
+    await handleBookingWebhook(db, adapter, calendlyHeaders(body), body);
+    expect((await pg.query<{ needs_reconciliation: boolean }>(`select needs_reconciliation from bookings where provider_invitee_id = $1`, [invitee])).rows[0].needs_reconciliation).toBe(false);
+    // Without Calendly configured, the application is still saved; there is just no scheduling link
+    const noCal = await submitApplication(db, null, { requestId: randomUUID(), name: "Nia", email: "nia@example.com", message: "" });
+    expect(noCal.ok && noCal.schedulingUrl).toBe(null);
+  });
+
+  it("a confirmed booking turns a Prospect into a Lead (never demotes a Client)", async () => {
     const adapter = calendlyAdapter(process.env)!;
     const { id, token } = await completed();
     await requestPdfEmail(db, token, "lee@example.com");

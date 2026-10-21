@@ -1,6 +1,7 @@
 /** Preview-only coach workspace with invented sample data, clearly labelled. Same components as production. */
 import React, { useMemo, useState } from "react";
 import { ChannelSummary } from "@/components/admin/ChannelSummary";
+import { CoachingApplications } from "@/components/admin/CoachingApplications";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { Workspace } from "@/components/admin/Workspace";
 import { ClientProfile } from "@/components/admin/ClientProfile";
@@ -328,6 +329,10 @@ export function AdminDemo({ path }: { path: string }) {
       ) : (
         <main className="px-4 py-6 sm:px-10 sm:py-8">
           <h1 className="font-serif text-[32px] font-light">Assessments</h1>
+          <div className="mt-6"><CoachingApplications rows={[
+            { id: "app-1", created_at: new Date(Date.now() - 36e5 * 5).toISOString(), name: "Maya Chen", email: "maya@example.com", message: "I've built a life that looks right on paper, and I'd like it to feel like mine.", status: "scheduled", source: "results", assessment_id: null, scheduled_start: new Date(Date.now() + 864e5 * 3).toISOString(), timezone: "America/Los_Angeles", booking_state: "confirmed" },
+            { id: "app-2", created_at: new Date(Date.now() - 864e5).toISOString(), name: "Daniel Ortiz", email: "daniel@example.com", message: null, status: "submitted", source: "email", assessment_id: null, scheduled_start: null, timezone: null, booking_state: null },
+          ]} /></div>
           <div className="mt-6"><ChannelSummary rows={demoChannels(PEOPLE.map(listRow))} /></div>
           <div className="mt-6">
             <AdminTable rows={rows} total={rows.length} page={1} pages={1} filters={filters} recon={recon} canExport={false}

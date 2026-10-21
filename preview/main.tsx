@@ -5,13 +5,16 @@ import Introduction from "@/app/page";
 import InterviewPage from "@/app/interview/page";
 import Results from "@/app/results/page";
 import Privacy from "@/app/privacy/page";
+import Apply from "@/app/apply/page";
 import { ACTIVE_QUESTIONS } from "@/content/v10/question-bank";
 import { AdminDemo } from "./admin-demo";
 
 // No server in the preview: storage routes answer "not configured", so the UI says "Saved on this device".
 const realFetch = window.fetch.bind(window);
+// The coaching application answers "received" (no Calendly in the preview), so the whole form can be tried.
 window.fetch = (input: any, init?: any) =>
-  String(input).startsWith("/api/") ? Promise.resolve(new Response('{"error":"storage_not_configured"}', { status: 503 })) : realFetch(input, init);
+  String(input) === "/api/coaching/apply" ? Promise.resolve(new Response('{"received":true,"schedulingUrl":null}', { status: 200 }))
+  : String(input).startsWith("/api/") ? Promise.resolve(new Response('{"error":"storage_not_configured"}', { status: 503 })) : realFetch(input, init);
 
 const KEY = "clm:v10:session";
 function sampleAnswers() {
@@ -51,7 +54,7 @@ function App() {
   const full = usePath();
   const p = full.split("?")[0];
   if (p.startsWith("/admin")) return <><AdminDemo path={p} /><PreviewBar /></>;
-  const Page = p === "/interview" ? InterviewPage : p === "/results" ? Results : p === "/privacy" ? Privacy : Introduction;
+  const Page = p === "/interview" ? InterviewPage : p === "/results" ? Results : p === "/privacy" ? Privacy : p === "/apply" ? Apply : Introduction;
   return <><Page key={full} /><PreviewBar /></>;
 }
 createRoot(document.getElementById("root")!).render(<App />);

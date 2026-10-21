@@ -2,45 +2,32 @@
 import { useState } from "react";
 import { track } from "@/lib/analytics";
 
-import { BOOKING_ENABLED, useBooking } from "@/lib/useBooking";
+import Link from "next/link";
+import { COACHING_CARD } from "@/content/coaching";
 
 type SendState = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind: "error"; message: string };
 
 /**
- * Optional next steps (spec §7.7), now two separate cards (Jana, 2026-10-13):
- *  - DeepDiveCard: book the Life Map Deep Dive — placed directly below the Map
+ * Optional next steps (spec §7.7), two separate cards:
+ *  - CoachingCard: apply for 1:1 coaching with Jana (21 Oct; replaces the paid Life Map Deep Dive) — directly below the Map
  *  - PdfCard: receive the PDF by email (real delivery only; never a simulated "sent") — at the end, after the reflections
  */
-export function DeepDiveCard({ token }: { token?: string }) {
-  const { state: booking, book } = useBooking(token);
-
+export function CoachingCard() {
   return (
-    <section id="deep-dive" className="mt-8 scroll-mt-8 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-label="Life Map Deep Dive">
-      {/* Deep Dive */}
+    <section id="coaching" className="mt-8 scroll-mt-8 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-labelledby="coaching-h">
       <div className="grid gap-6 rounded-[28px] bg-burgundy p-8 text-linen sm:p-10 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-16">
         <div>
-        <p className="text-[10.5px] uppercase tracking-eyebrow text-linen/70">There is more to your story</p>
-        <h2 className="mt-3 font-serif text-[30px] font-light leading-tight">Want to talk about it?</h2>
-        <p className="mt-3 max-w-[640px] text-[13.5px] leading-relaxed text-linen/85">
-          Let&rsquo;s look beyond your answers to understand the choices, priorities, and experiences shaping your life
-          today &mdash; so you can move forward with greater clarity and intention.
-        </p>
+          <p className="text-[10.5px] uppercase tracking-eyebrow text-linen/70">{COACHING_CARD.eyebrow}</p>
+          <h2 id="coaching-h" className="mt-3 font-serif text-[30px] font-light leading-tight">{COACHING_CARD.title}</h2>
+          <div className="mt-3 max-w-[640px] space-y-2.5 text-[13.5px] leading-relaxed text-linen/85">
+            {COACHING_CARD.body.map((p) => <p key={p.slice(0, 20)}>{p}</p>)}
+          </div>
         </div>
         <div className="lg:text-right">
-        {BOOKING_ENABLED ? (
-          <>
-            <button type="button" onClick={book} disabled={booking.kind === "working"}
-              className="inline-block rounded-full bg-linen px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-white disabled:opacity-70">
-              {booking.kind === "working" ? "Opening…" : "Book a Deep Dive session"}
-            </button>
-            {booking.kind === "error" && <p role="status" className="mt-3 text-[12.5px] text-linen">{booking.message}</p>}
-          </>
-        ) : (
-          <span aria-disabled="true" className="inline-block cursor-not-allowed rounded-full bg-linen/30 px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen/80">
-            Booking opens soon
-          </span>
-        )}
-      </div>
+          <Link href="/apply" className="inline-block rounded-full bg-linen px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-white">
+            {COACHING_CARD.cta}
+          </Link>
+        </div>
       </div>
     </section>
   );

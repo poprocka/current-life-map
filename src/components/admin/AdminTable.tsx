@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useEffect } from "react";
 import type { ListFilters, ListRow, ReconRow, SearchHit } from "@/server/admin/types";
 import { sourceLabel } from "@/content/channels";
-import { Badge, btn, btnPrimary, fmtDate, input, shortId } from "./ui";
+import { Badge, btn, btnPrimary, fmtDate, input, pastPayment, shortId } from "./ui";
 
 const BOOKING_STATES = ["none", "pending", "confirmed", "rescheduled", "cancelled", "completed", "no_show"];
 
@@ -85,8 +85,8 @@ export function AdminTable(p: AdminTableProps) {
               <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[11px]">
                 {r.status === "completed" ? <Badge v="completed" /> : <Badge v="in_progress" label={`${r.sections_completed}/10 sections`} />}
                 {r.client_stage && <Badge v={r.client_stage === "client" ? "confirmed" : r.client_stage === "lead" ? "pending" : "unreviewed"} label={r.client_stage === "client" ? "Client" : r.client_stage === "lead" ? "Lead" : "Prospect"} />}
-                {r.booking_state && <Badge v={r.booking_state} label={`Deep Dive ${r.booking_state.replace("_", "-")}`} />}
-                {r.payment_state && r.payment_state !== "none" && <Badge v={r.payment_state} />}
+                {r.booking_state && <Badge v={r.booking_state} label={`Intro call ${r.booking_state.replace("_", "-")}`} />}
+                {pastPayment(r.payment_state) && <Badge v={pastPayment(r.payment_state)} />}
                 {r.email_delivery_state && <Badge v={r.email_delivery_state} label={`PDF ${r.email_delivery_state}`} />}
                 {r.coach_review_state && r.coach_review_state !== "unreviewed" && <Badge v={r.coach_review_state} label={`review ${r.coach_review_state.replace("_", " ")}`} />}
               </div>
@@ -105,7 +105,7 @@ export function AdminTable(p: AdminTableProps) {
             <tr>
               <Th>Assessment</Th><Th k="created_at">Created</Th><Th k="completed_at">Completed</Th><Th>Progress</Th><Th>Version</Th>
               <Th>Client</Th><Th>Email</Th><Th>Came from</Th><Th>Contact source</Th><Th>Email delivery</Th>
-              <Th>Booking</Th><Th k="scheduled_start">Session</Th><Th>Payment</Th>
+              <Th>Intro call</Th><Th k="scheduled_start">Scheduled</Th><Th>Payment (earlier)</Th>
               <Th>Report</Th><Th>Coach review</Th><Th>Follow-up</Th><Th>Stage</Th><Th k="last_activity_at">Last activity</Th>
             </tr>
           </thead>
@@ -124,7 +124,7 @@ export function AdminTable(p: AdminTableProps) {
                 <td className="px-3 py-2.5"><Badge v={r.email_delivery_state} /></td>
                 <td className="px-3 py-2.5">{r.booking_state ? <Badge v={r.booking_state} /> : <span className="text-taupe">none</span>}</td>
                 <td className="whitespace-nowrap px-3 py-2.5">{r.scheduled_start ? <>{fmtDate(r.scheduled_start, r.timezone)}<span className="block text-[10.5px] text-taupe">{r.timezone}</span></> : "—"}</td>
-                <td className="px-3 py-2.5"><Badge v={r.payment_state} /></td>
+                <td className="px-3 py-2.5">{pastPayment(r.payment_state) ? <Badge v={pastPayment(r.payment_state)} /> : <span className="text-taupe/70">—</span>}</td>
                 <td className="px-3 py-2.5"><Badge v={r.report_status} /></td>
                 <td className="px-3 py-2.5"><Badge v={r.coach_review_state} /></td>
                 <td className="px-3 py-2.5"><Badge v={r.follow_up_status === "none" ? null : r.follow_up_status} /></td>
@@ -152,7 +152,7 @@ function ReconQueue({ rows, onReconcile, onResolve, onSearch }: { rows: ReconRow
   return (
     <section className="rounded-[18px] border border-[#E7C98F] bg-[#FBF3E3] p-5" aria-labelledby="recon-h">
       <h2 id="recon-h" className="text-[10.5px] uppercase tracking-[0.16em] text-[#8A6420]">Needs your attention · {rows.length}</h2>
-      <p className="mt-1 text-[12px] text-mahogany/70">Bookings to check: ones that couldn’t be matched to a Self-Interview (find the right assessment and confirm the link; nothing is linked until you confirm), and paid bookings that were cancelled, refunded only in part or disputed. Mark each one as done once you’ve dealt with it.</p>
+      <p className="mt-1 text-[12px] text-mahogany/70">Bookings to check: ones that couldn’t be matched to a Self-Interview (find the right assessment and confirm the link; nothing is linked until you confirm), and earlier paid bookings that were cancelled. Mark each one as done once you’ve dealt with it.</p>
       <ul className="mt-4 divide-y divide-[#EBD9B4]">
         {rows.map((r) => <ReconItem key={r.id} r={r} onReconcile={onReconcile} onResolve={onResolve} onSearch={onSearch} />)}
       </ul>
@@ -178,7 +178,7 @@ function ReconItem({ r, onReconcile, onResolve, onSearch }: { r: ReconRow; onRec
       <div className="flex flex-wrap items-center gap-3">
         <span className="min-w-0 sm:min-w-[200px]"><b className="font-normal">{r.booked_name ?? "Unknown"}</b> <span className="text-taupe">{r.booked_email}</span></span>
         <span className="text-taupe">{fmtDate(r.scheduled_start)}</span>
-        <Badge v={r.booking_state} /><Badge v={r.payment_state} />
+        <Badge v={r.booking_state} />{pastPayment(r.payment_state) && <Badge v={pastPayment(r.payment_state)} />}
         <span className="flex-1 text-[#8A6420]">{r.reconciliation_reason}</span>
         {/* Done: closes the item; the booking and its history are kept (two taps, so it can't happen by accident) */}
         {confirming ? (

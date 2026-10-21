@@ -64,7 +64,7 @@ export function ClientsTable({ rows, profileHref }: { rows: ClientListRow[]; pro
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-[10.5px] text-taupe">A profile appears when someone requests their PDF, books a Deep Dive, or you create one from a Map. Booking a Deep Dive moves a Prospect to Lead automatically; Client is set by you.</p>
+      <p className="mt-2 text-[10.5px] text-taupe">A profile appears when someone requests their PDF, applies for 1:1 coaching, or you create one from a Map. Applying for coaching moves a Prospect to Lead automatically; Client is set by you.</p>
     </div>
   );
 }
