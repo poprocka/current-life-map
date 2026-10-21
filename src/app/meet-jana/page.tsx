@@ -50,8 +50,8 @@ export default function MeetJana() {
                 ? <p key={i}><Rich text={block} /></p>
                 : (
                   <blockquote key={i} className="!my-12 sm:-ml-10 sm:!my-14">
-                    <p className="font-serif text-[28px] font-light italic leading-[1.25] text-mahogany [text-wrap:balance] sm:text-[36px]">
-                      <span aria-hidden className="text-burgundy">“</span>{block.quote}<span aria-hidden className="text-burgundy">”</span>
+                    <p className="font-serif text-[28px] font-light italic leading-[1.25] text-burgundy [text-wrap:balance] sm:text-[36px]">
+                      <span aria-hidden>“</span>{block.quote}<span aria-hidden>”</span>
                     </p>
                   </blockquote>
                 ))}
