@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { COACHING_CARD } from "@/content/coaching";
+import { useBooking } from "@/lib/useBooking";
 
 /**
  * Tabs that jump to each section of the results page, plus the two actions (Jana, 2026-10-13). They stay at the top
@@ -16,8 +16,9 @@ const SECTIONS = [
   { id: "reflections", label: "Reflections" },
 ];
 
-export function SectionTabs() {
+export function SectionTabs({ token }: { token?: string }) {
   const [present, setPresent] = useState(SECTIONS);
+  const booking = useBooking(token);
   const [active, setActive] = useState<string | null>("your-map"); // Your Map is above the fold on every device
 
   useEffect(() => {
@@ -76,10 +77,13 @@ export function SectionTabs() {
           </button>
         </li>
         <li className="shrink-0">
-          {/* Primary: apply for 1:1 coaching (21 Oct) */}
-          <Link href="/apply" className={`${tab} border-burgundy bg-burgundy text-linen hover:bg-mahogany`}>{COACHING_CARD.cta}</Link>
+          {/* Primary: apply for 1:1 coaching (21 Oct) — opens Calendly directly */}
+          <button type="button" onClick={booking.book} disabled={booking.state.kind === "working"} className={`${tab} border-burgundy bg-burgundy text-linen hover:bg-mahogany disabled:opacity-70`}>
+            {booking.state.kind === "working" ? "Opening…" : COACHING_CARD.cta}
+          </button>
         </li>
       </ul>
+      {booking.state.kind === "error" && <p role="status" className="mt-2 text-right text-[12px] text-burgundy">{booking.state.message}</p>}
     </nav>
   );
 }

@@ -57,12 +57,6 @@ export function calendlyAdapter(env = process.env): SchedulingAdapter | null {
     verify: (h, body, now) => verifyCalendlySignature(key, h.get("calendly-webhook-signature"), body, now),
     normalize: normalizeCalendly,
     // utm_content is Calendly's supported pass-through field; it carries only the opaque signed token.
-    // name and email: Calendly's supported prefill fields (Jana, 21 Oct)
-    schedulingUrl: (t, prefill) => {
-      const u = new URL(url); u.searchParams.set("utm_content", t);
-      if (prefill?.name) u.searchParams.set("name", prefill.name);
-      if (prefill?.email) u.searchParams.set("email", prefill.email);
-      return u.toString();
-    },
+    schedulingUrl: (t) => { const u = new URL(url); u.searchParams.set("utm_content", t); return u.toString(); },
   };
 }

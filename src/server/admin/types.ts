@@ -90,9 +90,8 @@ export interface ClientProfileData {
 }
 export interface SessionInput { id?: string; session_date: string | null; title: string | null; kind: SessionView["kind"]; assessment_id: string | null; plan: string; notes: string; homework: string }
 
-/** 1:1 coaching application (21 Oct), as the coach portal shows it. The message is decrypted server-side for the coach. */
-export interface ApplicationRow {
-  id: string; created_at: string; name: string; email: string; message: string | null;
-  status: "submitted" | "scheduled" | "cancelled"; source: string; assessment_id: string | null;
-  scheduled_start: string | null; timezone: string | null; booking_state: string | null;
+/** Introductory conversation booked in Calendly (21 Oct), with the answers from Calendly's booking form. */
+export interface IntroRow {
+  id: string; created_at: string; booked_name: string | null; booked_email: string | null; scheduled_start: string | null; timezone: string | null;
+  booking_state: string; meeting_url: string | null; assessment_id: string | null; intake_answers: { question: string; answer: string }[] | null;
 }

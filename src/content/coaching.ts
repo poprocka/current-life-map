@@ -9,13 +9,3 @@ export const COACHING_CARD = {
   cta: "Apply for 1:1 coaching",
 };
 
-export const COACHING_FORM = {
-  eyebrow: "1:1 Coaching with Jana",
-  title: "Let's get to know each other.",
-  intro: "I'd love to learn a little about you before we speak.",
-  nameLabel: "Name",
-  emailLabel: "Email address",
-  messageLabel: "What brings you to coaching at this point in your life? (Optional)",
-  messagePlaceholder: "Share whatever feels relevant to you.",
-  submit: "Continue to scheduling",
-};

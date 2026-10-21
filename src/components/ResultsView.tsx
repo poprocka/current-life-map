@@ -7,8 +7,8 @@ import type { ResultInsights } from "@/engine/insights";
 import { OrbitList, PersonalInsights } from "@/components/PersonalInsights";
 import { QuestionBlock } from "@/components/QuestionBlock";
 import { SectionTabs } from "@/components/SectionTabs";
-import Link from "next/link";
 import { COACHING_CARD } from "@/content/coaching";
+import { useBooking } from "@/lib/useBooking";
 import { ENERGY_SHORT, IMPORTANCE_SHORT } from "@/lib/pdf/model";
 import { useEffect, useState } from "react";
 import { snapshotFingerprint } from "@/lib/stable";
@@ -48,7 +48,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
       )}
 
       {/* Section tabs: anchor links to every section below (Jana, 2026-10-13); not in the coach view */}
-      {!embedded && <SectionTabs />}
+      {!embedded && <SectionTabs token={token} />}
 
       {/* B. Map — in its own block so it stands out (Jana, 2026-10-12) */}
       <section id="your-map" className="scroll-mt-24 mt-[18px] rounded-[32px] border hairline bg-linen-deep/70 px-5 pb-10 pt-10 shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_24px_60px_-40px_rgba(84,15,38,0.25)] sm:px-10 lg:px-14 lg:pb-14 lg:pt-12 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-labelledby="map-h">
@@ -132,7 +132,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
             <>
               <p className="mx-auto mt-6 max-w-[600px] text-[13.5px] leading-relaxed text-mahogany/70">{insights.deepDiveBridge}</p>
               {/* Primary CTA under the bridge text (Jana, 2026-10-13) */}
-              <ClosingBookButton />
+              <ClosingBookButton token={token} />
             </>
           )}
         </section>
@@ -200,11 +200,16 @@ function MapReading({ paragraphs, open, onToggle }: { paragraphs: { text: string
   );
 }
 
-/** Under the closing question: apply for 1:1 coaching (21 Oct; replaces "Book a Deep Dive session"). */
-function ClosingBookButton() {
+/** Under the closing question: apply for 1:1 coaching (21 Oct) — opens Calendly directly, like the other buttons. */
+function ClosingBookButton({ token }: { token?: string }) {
+  const { state, book } = useBooking(token);
   return (
-    <Link href="/apply" className="mt-6 inline-block rounded-full bg-burgundy px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany">
-      {COACHING_CARD.cta}
-    </Link>
+    <>
+      <button type="button" onClick={book} disabled={state.kind === "working"}
+        className="mt-6 inline-block rounded-full bg-burgundy px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany disabled:opacity-70">
+        {state.kind === "working" ? "Opening…" : COACHING_CARD.cta}
+      </button>
+      {state.kind === "error" && <p role="status" className="mt-3 text-[12.5px] text-burgundy">{state.message}</p>}
+    </>
   );
 }

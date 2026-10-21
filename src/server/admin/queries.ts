@@ -3,7 +3,7 @@ import type { Sql } from "../db";
 import { decrypt } from "../crypto";
 import { audit } from "../audit";
 import { profileForAssessment } from "./clients";
-import type { ApplicationRow, ListFilters, ListRow, ReconRow, WorkspaceData } from "./types";
+import type { IntroRow, ListFilters, ListRow, ReconRow, WorkspaceData } from "./types";
 
 const PAGE = 25;
 const iso = (d: unknown) => (d instanceof Date ? d.toISOString() : (d as string | null));
@@ -131,12 +131,10 @@ export async function coachRole(sql: Sql): Promise<"coach" | "admin" | null> {
 
 export { iso };
 
-/** Coaching applications, newest first (RLS: coach with two-factor only). */
-export async function coachingApplications(sql: Sql, limit = 50): Promise<ApplicationRow[]> {
-  const r = await sql.query<Omit<ApplicationRow, "message"> & { message_ciphertext: string | null }>(
-    `select a.id, a.created_at, a.name, a.email, a.message_ciphertext, a.status, a.source, a.assessment_id,
-            b.scheduled_start, b.timezone, b.booking_state
-     from coaching_applications a left join bookings b on b.id = a.booking_id
-     order by a.created_at desc limit $1`, [limit]);
-  return r.rows.map(isoRow).map(({ message_ciphertext, ...row }) => ({ ...row, message: decryptOr(message_ciphertext) }));
+/** Introductory conversations booked through Calendly, newest first (RLS: coach with two-factor only). Rescheduled
+ *  originals are left out; the new time is the one shown. */
+export async function introConversations(sql: Sql, limit = 50): Promise<IntroRow[]> {
+  return (await sql.query<IntroRow>(
+    `select id, created_at, booked_name, booked_email, scheduled_start, timezone, booking_state, meeting_url, assessment_id, intake_answers
+     from bookings where booking_state <> 'rescheduled' order by created_at desc limit $1`, [limit])).rows.map(isoRow);
 }

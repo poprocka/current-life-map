@@ -14,7 +14,7 @@ export async function freshDb() {
     grant usage on schema auth to anon, authenticated;
   `);
   // 0002 (storage bucket) needs Supabase's storage schema, which the embedded database doesn't have.
-  for (const f of ["0001_initial.sql", "0003_channels.sql", "0004_retention.sql", "0005_coach_grants.sql", "0006_coaching_applications.sql"])
+  for (const f of ["0001_initial.sql", "0003_channels.sql", "0004_retention.sql", "0005_coach_grants.sql"])
     await db.exec(fs.readFileSync(path.join(__dirname, "../../supabase/migrations", f), "utf8"));
   await db.exec(`
     grant usage on schema public to anon, authenticated;

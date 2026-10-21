@@ -7,6 +7,7 @@ import { POST_MAP_REFLECTIONS } from "@/content/v10/reflections";
 import { engineForTemplate, generateResultInsights } from "@/engine/insights";
 import { audit } from "./audit";
 import { hmacB64, safeEqual, sha256, signBookingToken } from "./crypto";
+import { calendlyAdapter } from "./booking/calendly";
 
 export interface OutgoingEmail {
   to: string; subject: string; text: string; html?: string;
@@ -91,9 +92,9 @@ export function emailHtml(bookUrl: string | null) {
  * the email the person typed (never merged with other records), and tracks the provider's response.
  * "sent" means the provider accepted the message; delivery is confirmed only by the provider's webhook.
  */
-/** "Apply for 1:1 coaching" from the email (21 Oct): opens the application. With BOOKING_TOKEN_SECRET set, the link carries
- *  a one-time code in the URL fragment (#b=…), which browsers never send to servers or logs, so the application is
- *  linked to this Self-Interview. */
+/** "Apply for 1:1 coaching" from the email (21 Oct): opens Calendly's introductory conversation. The link carries a
+ *  one-time code in the URL fragment (#b=…), which browsers never send to servers or logs; /book exchanges it, so the
+ *  booking is linked to this Self-Interview. Included only when booking links and Calendly are configured. */
 const BOOK_LINK_TTL = 60 * 60 * 24 * 30; // 30 days
 
 export async function requestPdfEmail(db: Db, token: string, email: string, siteOrigin?: string): Promise<PdfEmailResult> {
@@ -124,14 +125,11 @@ export async function requestPdfEmail(db: Db, token: string, email: string, site
     const insights = generateResultInsights(frozen.snapshot, stored, { engine: engineForTemplate(frozen.narrativeVersion) });
     let bookUrl: string | null = null;
     const origin = process.env.NEXT_PUBLIC_SITE_URL || process.env.PUBLIC_SITE_URL || siteOrigin;
-    if (origin) {
-      bookUrl = `${origin.replace(/\/$/, "")}/apply`;
-      if (process.env.BOOKING_TOKEN_SECRET) {
-        const b = signBookingToken(process.env.BOOKING_TOKEN_SECRET, BOOK_LINK_TTL);
-        await sql.query(`insert into booking_link_tokens (token_hash, assessment_id, expires_at) values ($1,$2,$3)`, [sha256(b.token), a.id, b.expiresAt]);
-        await audit(sql, null, "coaching.email_link_created", "assessment", a.id);
-        bookUrl += `#b=${b.token}`;
-      }
+    if (origin && process.env.BOOKING_TOKEN_SECRET && calendlyAdapter()) {
+      const b = signBookingToken(process.env.BOOKING_TOKEN_SECRET, BOOK_LINK_TTL);
+      await sql.query(`insert into booking_link_tokens (token_hash, assessment_id, expires_at) values ($1,$2,$3)`, [sha256(b.token), a.id, b.expiresAt]);
+      await audit(sql, null, "booking.link_created", "assessment", a.id, { via: "pdf_email" });
+      bookUrl = `${origin.replace(/\/$/, "")}/book#b=${b.token}`;
     }
     return { assessmentId: a.id, requestId: req.rows[0].id, frozen, email: normalized, reflections, insights, bookUrl };
   });

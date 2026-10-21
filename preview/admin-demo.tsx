@@ -1,7 +1,7 @@
 /** Preview-only coach workspace with invented sample data, clearly labelled. Same components as production. */
 import React, { useMemo, useState } from "react";
 import { ChannelSummary } from "@/components/admin/ChannelSummary";
-import { CoachingApplications } from "@/components/admin/CoachingApplications";
+import { IntroConversations } from "@/components/admin/IntroConversations";
 import { AdminTable } from "@/components/admin/AdminTable";
 import { Workspace } from "@/components/admin/Workspace";
 import { ClientProfile } from "@/components/admin/ClientProfile";
@@ -329,9 +329,9 @@ export function AdminDemo({ path }: { path: string }) {
       ) : (
         <main className="px-4 py-6 sm:px-10 sm:py-8">
           <h1 className="font-serif text-[32px] font-light">Assessments</h1>
-          <div className="mt-6"><CoachingApplications rows={[
-            { id: "app-1", created_at: new Date(Date.now() - 36e5 * 5).toISOString(), name: "Maya Chen", email: "maya@example.com", message: "I've built a life that looks right on paper, and I'd like it to feel like mine.", status: "scheduled", source: "results", assessment_id: null, scheduled_start: new Date(Date.now() + 864e5 * 3).toISOString(), timezone: "America/Los_Angeles", booking_state: "confirmed" },
-            { id: "app-2", created_at: new Date(Date.now() - 864e5).toISOString(), name: "Daniel Ortiz", email: "daniel@example.com", message: null, status: "submitted", source: "email", assessment_id: null, scheduled_start: null, timezone: null, booking_state: null },
+          <div className="mt-6"><IntroConversations rows={[
+            { id: "b-1", created_at: new Date(Date.now() - 36e5 * 5).toISOString(), booked_name: "Maya Chen", booked_email: "maya@example.com", scheduled_start: new Date(Date.now() + 864e5 * 3).toISOString(), timezone: "America/Los_Angeles", booking_state: "confirmed", meeting_url: "https://meet.google.com/abc-defg-hij", assessment_id: "3f2b9c1e-0000-4000-8000-000000000001", intake_answers: [{ question: "What brings you to coaching at this point in your life?", answer: "I've built a life that looks right on paper, and I'd like it to feel like mine." }] },
+            { id: "b-2", created_at: new Date(Date.now() - 864e5).toISOString(), booked_name: "Daniel Ortiz", booked_email: "daniel@example.com", scheduled_start: new Date(Date.now() + 864e5 * 6).toISOString(), timezone: "America/Los_Angeles", booking_state: "confirmed", meeting_url: null, assessment_id: null, intake_answers: null },
           ]} /></div>
           <div className="mt-6"><ChannelSummary rows={demoChannels(PEOPLE.map(listRow))} /></div>
           <div className="mt-6">

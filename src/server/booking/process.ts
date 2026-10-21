@@ -10,8 +10,8 @@ import type { NormalizedBookingEvent, SchedulingAdapter } from "./types";
 
 const secret = () => process.env.BOOKING_TOKEN_SECRET ?? "";
 
-/** A scheduling link tied straight to a completed Self-Interview, without an application. The app now creates links
- *  through coaching applications (server/coaching.ts); this remains for direct links and tests. */
+/** "Book an introductory conversation": create the pending association server-side, then hand back the Calendly URL
+ *  with the opaque token. The booking that comes back through the webhook is attached to this Self-Interview. */
 export async function createBookingLink(db: Db, adapter: SchedulingAdapter, accessToken: string) {
   if (!secret()) return { ok: false as const, error: "not_configured" as const };
   return db.tx(async (sql) => {
@@ -24,6 +24,17 @@ export async function createBookingLink(db: Db, adapter: SchedulingAdapter, acce
     await audit(sql, null, "booking.link_created", "assessment", a.id);
     return { ok: true as const, url: adapter.schedulingUrl(token) };
   });
+}
+
+/** /book (from the PDF email): exchange a one-time booking token for the scheduler URL. Never creates an association;
+ *  the token was already stored, hashed, when the email was sent. Unknown, expired or used tokens are refused. */
+export async function bookingUrlForLinkToken(db: Db, adapter: SchedulingAdapter, linkToken: string) {
+  if (!secret()) return { ok: false as const, error: "not_configured" as const };
+  if (!verifyBookingToken(secret(), linkToken).ok) return { ok: false as const, error: "invalid" as const };
+  const row = (await db.query<{ consumed_at: Date | null; expires_at: Date }>(
+    `select consumed_at, expires_at from booking_link_tokens where token_hash = $1`, [sha256(linkToken)])).rows[0];
+  if (!row || row.consumed_at || new Date(row.expires_at).getTime() < Date.now()) return { ok: false as const, error: "invalid" as const };
+  return { ok: true as const, url: adapter.schedulingUrl(linkToken) };
 }
 
 type Outcome = { status: 200 | 400 | 401 | 500; outcome: string };
@@ -72,7 +83,7 @@ async function onCreated(sql: Sql, e: NormalizedBookingEvent): Promise<{ booking
   const dup = await bookingByInvitee(sql, e.inviteeId);
   if (dup) return { bookingId: dup.id, outcome: "already_recorded" };
 
-  let assessmentId: string | null = null, clientId: string | null = null, rescheduledFrom: string | null = null, applicationId: string | null = null;
+  let assessmentId: string | null = null, clientId: string | null = null, rescheduledFrom: string | null = null;
   let carriedPayment: { state: string; ref: string | null } | null = null;
   const flags: string[] = [];
 
@@ -82,28 +93,26 @@ async function onCreated(sql: Sql, e: NormalizedBookingEvent): Promise<{ booking
     if (old) {
       assessmentId = old.assessment_id; clientId = old.client_id; rescheduledFrom = old.id;
       carriedPayment = { state: old.payment_state, ref: old.payment_reference };
-      applicationId = (await sql.query<{ id: string }>(`select id from coaching_applications where booking_id = $1`, [old.id])).rows[0]?.id ?? null;
       await sql.query(`update bookings set booking_state = 'rescheduled', updated_at = now() where id = $1`, [old.id]);
       if (!old.assessment_id) flags.push("Rescheduled from a booking that is itself unmatched");
     } else flags.push("Reschedule of a booking we have no record of");
   }
 
   // Otherwise: the opaque signed token created server-side before redirect
-  if (!assessmentId && !rescheduledFrom && !e.linkToken) flags.push("No assessment link token on the booking");
-  if (!assessmentId && !rescheduledFrom && e.linkToken) {
-    const v = verifyBookingToken(secret(), e.linkToken);
-    const row = (await sql.query<{ assessment_id: string | null; application_id: string | null; consumed_at: Date | null }>(
-      `select assessment_id, application_id, consumed_at from booking_link_tokens where token_hash = $1`, [sha256(e.linkToken)])).rows[0];
-    if (!v.ok && v.reason !== "expired") flags.push("Assessment link token failed verification");
-    else if (!row) flags.push("Assessment link token not recognised");
+  if (!assessmentId && !rescheduledFrom) {
+    if (!e.linkToken) flags.push("No assessment link token on the booking");
     else {
-      assessmentId = row.assessment_id;
-      applicationId = row.application_id;
-      // Booked from a coaching application: use the client record made from that application
-      if (applicationId) clientId = (await sql.query<{ client_id: string | null }>(`select client_id from coaching_applications where id = $1`, [applicationId])).rows[0]?.client_id ?? null;
-      if (!v.ok) flags.push("Booked with an expired link — please confirm the association");
-      if (row.consumed_at) flags.push("Link already used for another booking — possible duplicate");
-      await sql.query(`update booking_link_tokens set consumed_at = coalesce(consumed_at, now()) where token_hash = $1`, [sha256(e.linkToken)]);
+      const v = verifyBookingToken(secret(), e.linkToken);
+      const row = (await sql.query<{ assessment_id: string; consumed_at: Date | null }>(
+        `select assessment_id, consumed_at from booking_link_tokens where token_hash = $1`, [sha256(e.linkToken)])).rows[0];
+      if (!v.ok && v.reason !== "expired") flags.push("Assessment link token failed verification");
+      else if (!row) flags.push("Assessment link token not recognised");
+      else {
+        assessmentId = row.assessment_id;
+        if (!v.ok) flags.push("Booked with an expired link — please confirm the association");
+        if (row.consumed_at) flags.push("Link already used for another booking — possible duplicate");
+        await sql.query(`update booking_link_tokens set consumed_at = coalesce(consumed_at, now()) where token_hash = $1`, [sha256(e.linkToken)]);
+      }
     }
   }
   if (assessmentId) {
@@ -134,12 +143,9 @@ async function onCreated(sql: Sql, e: NormalizedBookingEvent): Promise<{ booking
        booking_state, booked_name, booked_email, intake_answers, payment_reference, payment_state, rescheduled_from, needs_reconciliation, reconciliation_reason)
      values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) returning id`,
     [assessmentId, clientId, e.provider, e.eventId, e.inviteeId, e.start, e.end, e.timezone, e.meetingUrl, e.active ? "confirmed" : "pending",
-      e.name, e.email, JSON.stringify(e.intake), paymentRef, paymentState, rescheduledFrom, (!assessmentId && !applicationId) || flags.length > 0, flags.join("; ") || null]);
+      e.name, e.email, JSON.stringify(e.intake), paymentRef, paymentState, rescheduledFrom, !assessmentId || flags.length > 0, flags.join("; ") || null]);
   const bookingId = b.rows[0].id;
-  // The application this booking came from is now scheduled (submitting an application alone never counts as booked)
-  if (applicationId && e.active)
-    await sql.query(`update coaching_applications set status = 'scheduled', booking_id = $2, updated_at = now() where id = $1`, [applicationId, bookingId]);
-  await audit(sql, null, "booking.created", "booking", bookingId, { matched: !!assessmentId, application: !!applicationId, rescheduled: !!rescheduledFrom });
+  await audit(sql, null, "booking.created", "booking", bookingId, { matched: !!assessmentId, rescheduled: !!rescheduledFrom });
   if (assessmentId && e.active) await promoteToLead(sql, assessmentId);
 
   // Regenerate the personalised script with the booking intake; earlier and coach-edited versions are kept
@@ -147,7 +153,7 @@ async function onCreated(sql: Sql, e: NormalizedBookingEvent): Promise<{ booking
     const frozen = await frozenResult(sql, assessmentId);
     if (frozen) await writeCoachMaterial(sql, assessmentId, frozen.snapshot, await loadAnswers(sql, assessmentId, { includeText: true }), { bookingId, intake: e.intake });
   }
-  return { bookingId, outcome: assessmentId || applicationId ? (rescheduledFrom ? "rescheduled" : "linked") : "quarantined" };
+  return { bookingId, outcome: assessmentId ? (rescheduledFrom ? "rescheduled" : "linked") : "quarantined" };
 }
 
 async function onCanceled(sql: Sql, e: NormalizedBookingEvent): Promise<{ bookingId: string; outcome: string }> {
@@ -165,7 +171,6 @@ async function onCanceled(sql: Sql, e: NormalizedBookingEvent): Promise<{ bookin
     `update bookings set booking_state = $2, updated_at = now(),
        needs_reconciliation = needs_reconciliation or $3, reconciliation_reason = case when $3 then concat_ws('; ', reconciliation_reason, $4::text) else reconciliation_reason end
      where id = $1`, [b.id, state, paidCancelled, PAID_CANCEL_REASON]);
-  if (!e.rescheduled) await sql.query(`update coaching_applications set status = 'cancelled', updated_at = now() where booking_id = $1`, [b.id]);
   await audit(sql, null, `booking.${state}`, "booking", b.id);
   return { bookingId: b.id, outcome: state };
 }

@@ -5,7 +5,7 @@ import { GA_SIGNALS } from "@/lib/analytics";
 // The document's implementation note is intentionally not shown to respondents.
 // Section 8 (site analytics) added 20 Oct when the analytics banner was replaced by agreement on Begin.
 // Sections 7 and 9: Jana's wording, 20 Oct. Section 4 and the provider list updated 21 Oct: 1:1 coaching applications
-// replace the paid Life Map Deep Dive; Stripe is no longer used.
+// (a complimentary introductory conversation booked in Calendly) replace the paid Life Map Deep Dive; Stripe is no longer used.
 const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "1. Anonymous by default",
@@ -17,7 +17,7 @@ const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "2. Information we collect",
     body: [
-      "Depending on how you use the experience, information may include: your Self-Interview answers and optional reflections; the Current Life Map and its interpretations; technical information necessary to operate and secure the service; an email address if you request delivery; your name, email address and optional message if you apply for 1:1 coaching; and scheduling information if you book an introductory conversation. We do not require contact details to complete the Self-Interview.",
+      "Depending on how you use the experience, information may include: your Self-Interview answers and optional reflections; the Current Life Map and its interpretations; technical information necessary to operate and secure the service; an email address if you request delivery; and your name, email address, scheduling details and any answers you give in the booking form if you apply for 1:1 coaching by booking an introductory conversation. We do not require contact details to complete the Self-Interview.",
     ],
   },
   {
@@ -29,8 +29,8 @@ const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "4. 1:1 coaching applications and introductory conversations",
     body: [
-      "If you apply for 1:1 coaching, we collect your name, your email address and, if you choose to share one, your message. We use this information to review your coaching inquiry, communicate with you about it, and arrange a complimentary introductory conversation. Applying does not add you to a mailing list.",
-      "When you apply from your Current Life Map or from your PDF email, your application is connected to your Map, answers, and optional reflections, so Jana can understand your inquiry and prepare for your conversation. If you schedule a conversation, the details you enter in our scheduling tool (Calendly) are connected in the same way. Once associated with an identified client, the Map may form part of that client's service record. Research and methodology analysis should use de-identified information rather than the client's identifying details.",
+      "If you apply for 1:1 coaching, you book a complimentary introductory conversation through our scheduling tool (Calendly). It collects your name, your email address, the time you choose and any answers you give in its booking form. We use this information to review your coaching inquiry, communicate with you about it, and hold the conversation. Booking does not add you to a mailing list.",
+      "When you book from your Current Life Map or from your PDF email, your booking is connected to your Map, answers, and optional reflections, so Jana can understand your inquiry and prepare for your conversation. Once associated with an identified client, the Map may form part of that client's service record. Research and methodology analysis should use de-identified information rather than the client's identifying details.",
     ],
   },
   {
@@ -66,7 +66,7 @@ const SECTIONS: { title: string; body: string[] }[] = [
     title: "9. Data Retention",
     body: [
       "We retain personal information only for as long as reasonably necessary to provide our services, improve The Life System™, and fulfill applicable legal and business obligations.",
-      "This includes Self-Interview responses, Current Life Maps, optional reflections, email delivery records, coaching applications, bookings, and technical data. Retention depends on the purpose for which the information was collected and any applicable legal requirements.",
+      "This includes Self-Interview responses, Current Life Maps, optional reflections, email delivery records, bookings, and technical data. Retention depends on the purpose for which the information was collected and any applicable legal requirements.",
       "Third-party service providers may retain certain information in accordance with their own privacy policies.",
       "You may request deletion of your personal information by contacting talk@self-interview.com, subject to applicable legal requirements. We can process deletion requests where the information can reasonably be linked to you. Fully anonymous information may not be identifiable for deletion.",
     ],

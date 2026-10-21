@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { track } from "@/lib/analytics";
 
-import Link from "next/link";
 import { COACHING_CARD } from "@/content/coaching";
+import { useBooking } from "@/lib/useBooking";
 
 type SendState = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind: "error"; message: string };
 
@@ -12,7 +12,8 @@ type SendState = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { k
  *  - CoachingCard: apply for 1:1 coaching with Jana (21 Oct; replaces the paid Life Map Deep Dive) — directly below the Map
  *  - PdfCard: receive the PDF by email (real delivery only; never a simulated "sent") — at the end, after the reflections
  */
-export function CoachingCard() {
+export function CoachingCard({ token }: { token?: string }) {
+  const { state, book } = useBooking(token);
   return (
     <section id="coaching" className="mt-8 scroll-mt-8 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36" aria-labelledby="coaching-h">
       {/* Two columns (Jana, 21 Oct): the invitation on the left; the second paragraph sits above the button on the right */}
@@ -24,9 +25,12 @@ export function CoachingCard() {
         </div>
         <div>
           <p className="max-w-[560px] text-[13.5px] leading-relaxed text-linen/85">{COACHING_CARD.body[1]}</p>
-          <Link href="/apply" className="mt-5 inline-block rounded-full bg-linen px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-white">
-            {COACHING_CARD.cta}
-          </Link>
+          {/* Opens Calendly directly (Jana, 21 Oct): Calendly's booking form collects their details */}
+          <button type="button" onClick={book} disabled={state.kind === "working"}
+            className="mt-5 inline-block rounded-full bg-linen px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-white disabled:opacity-70">
+            {state.kind === "working" ? "Opening…" : COACHING_CARD.cta}
+          </button>
+          {state.kind === "error" && <p role="status" className="mt-3 text-[12.5px] text-linen">{state.message}</p>}
         </div>
       </div>
     </section>
