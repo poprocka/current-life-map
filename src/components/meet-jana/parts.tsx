@@ -39,7 +39,7 @@ export function Portrait({ className }: { className?: string }) {
   return (
     <figure className={className}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={PORTRAIT.src} alt={PORTRAIT.alt} onError={() => setMissing(true)} decoding="async" fetchPriority="high"
+      <img src={PORTRAIT.src} alt={PORTRAIT.alt} width={PORTRAIT.width} height={PORTRAIT.height} onError={() => setMissing(true)} decoding="async" fetchPriority="high"
         sizes="(min-width: 1024px) 44vw, 100vw" className="h-auto w-full rounded-[4px]" />
     </figure>
   );

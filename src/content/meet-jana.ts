@@ -66,6 +66,8 @@ export const MEET_JANA = {
 
 /** The one portrait on the page: Jana seated in a wooden chair, looking at the camera. File: public/jana.jpg. */
 export const PORTRAIT = {
-  src: "/jana.jpg",
+  src: "/jana.jpg",   // from Jana.png, resized to 1200 × 1800 (original proportions), JPEG ~165 KB
+  width: 1200,
+  height: 1800,
   alt: "Jana Poprocka seated in a wooden chair, looking directly at the camera",
 };
