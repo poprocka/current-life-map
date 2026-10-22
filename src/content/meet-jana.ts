@@ -46,7 +46,7 @@ export const MEET_JANA = {
         "I don't believe in a one-size-fits-all formula for life.",
         "We start with your Current Life Map, exploring where you stand today and how the different parts of your life connect.",
         "From there, our work is personal. I ask questions, offer perspective, challenge assumptions, and support you as you discover what matters to you and make choices that reflect it.",
-        "Along the way, I share tools and practices that are appropriate for you and your situation.",
+        "And because understanding yourself is only the beginning, we'll find practical ways to put those insights into action — with tools and practices tailored to who you are, what you need, and the life you're actually living.",
         "I'm not here to tell you who to become.",
         { quote: "I'm here to help you see what you're capable of — and support you as you find your own way." },
       ],
