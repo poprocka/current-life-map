@@ -1,17 +1,17 @@
 import Link from "next/link";
-import { GA_SIGNALS } from "@/lib/analytics";
+import { Fragment } from "react";
 
 // Privacy & Data Use Notice — text supplied by Jana (October 2026), verbatim.
 // The document's implementation note is intentionally not shown to respondents.
 // Section 8 (site analytics) added 20 Oct when the analytics banner was replaced by agreement on Begin.
-// Sections 7 and 9: Jana's wording, 20 Oct. Section 4 and the provider list updated 21 Oct: 1:1 coaching applications
+// Sections 7 and 9: Jana's wording, 20 Oct. Section 8: Jana's wording, 22 Oct. Section 4 and the provider list updated 21 Oct: 1:1 coaching applications
 // (a complimentary introductory conversation booked in Calendly) replace the paid Life Map Deep Dive; Stripe is no longer used.
 const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "1. Anonymous by default",
     body: [
       "Your Current Life Map is anonymous by default. You do not need to provide your name or email address to complete the Self-Interview or view your results. Your responses, including optional reflections, may be stored under a technical record that does not require your name or email. This record supports the generation of your Current Life Map and the internal uses described below.",
-      "Please avoid entering identifying details in open-response fields. If you voluntarily include identifying information, it may be stored as part of your response. Anonymous by default does not mean that technical information or information you choose to provide can never identify you.",
+      "Please avoid entering identifying details in open-response fields. If you voluntarily include identifying information, it may be stored as part of your response.",
     ],
   },
   {
@@ -57,9 +57,10 @@ const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "8. Site analytics",
     body: [
-      "We use Google Analytics, a service provided by Google, to understand how people find and use this site: for example, which pages are visited, which channel a visit came from (such as Instagram, LinkedIn or a printed card), how far people progress through the Self-Interview, and general device, browser and approximate location information. Google Analytics uses cookies and similar technologies on your device.",
-      "Google Analytics runs from your first visit to this site, so we can see both how many people arrive and how many begin the Self-Interview. By using this site and selecting Begin on the welcome page, you agree to this use of Google Analytics. Your answers, optional reflections, results, name and email address are never sent to Google Analytics, and we do not use it for advertising." + (GA_SIGNALS ? " Google signals is enabled, so reports may include Google's broad estimates of visitors' age range, gender and interests." : ""),
-      "If your browser sends a Global Privacy Control signal, analytics stays off. You can also block Google Analytics on any site with Google's browser add-on (tools.google.com/dlpage/gaoptout), or by blocking cookies in your browser settings. Google's own handling of this information is described in Google's privacy policy (policies.google.com/privacy).",
+      "We use Google Analytics to understand how visitors find and use our website and to improve the experience. This may include information about pages visited, traffic sources, device and browser types, approximate location, and interactions with the Self-Interview.",
+      "Google Analytics uses cookies and similar technologies. We do not share your Self-Interview answers, reflections, results, name, or email address with Google Analytics, and we do not use analytics data for advertising.",
+      "You can manage or block analytics cookies through your browser settings or [Google's opt-out tool](https://tools.google.com/dlpage/gaoptout). We also honor Global Privacy Control signals.",
+      "For more information, see [Google's Privacy Policy](https://policies.google.com/privacy).",
     ],
   },
   {
@@ -87,6 +88,14 @@ const SECTIONS: { title: string; body: string[] }[] = [
   { title: "13. Contact", body: ["For privacy requests, support, or inquiries, email talk@self-interview.com."] },
 ];
 
+/** [label](https://…) in the notice text → an external link (opens in a new tab). */
+function Linked({ text }: { text: string }) {
+  return <>{text.split(/(\[[^\]]+\]\(https:\/\/[^)]+\))/).map((part, i) => {
+    const m = part.match(/^\[([^\]]+)\]\((https:\/\/[^)]+)\)$/);
+    return m ? <a key={i} href={m[2]} target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 hover:text-burgundy">{m[1]}</a> : <Fragment key={i}>{part}</Fragment>;
+  })}</>;
+}
+
 export default function Privacy() {
   return (
     <main className="mx-auto max-w-[680px] px-6 pb-24 pt-14">
@@ -104,7 +113,7 @@ export default function Privacy() {
           <section key={s.title}>
             <h2 className="font-serif text-[22px] font-normal text-burgundy">{s.title}</h2>
             <div className="mt-3 space-y-3 text-[14px] leading-[1.75] text-mahogany/85">
-              {s.body.map((p) => <p key={p.slice(0, 40)} className="whitespace-pre-line">{p}</p>)}
+              {s.body.map((p) => <p key={p.slice(0, 40)} className="whitespace-pre-line"><Linked text={p} /></p>)}
             </div>
           </section>
         ))}
