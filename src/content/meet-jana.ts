@@ -20,7 +20,7 @@ export const MEET_JANA = {
         "Today, I call Newport Beach, California, home. A place I once dreamed of living.",
         "I've always been curious about what becomes possible when we take our dreams seriously — and actually do something about them.",
         "As a little girl, I dreamed of studying abroad. At eighteen, I made it happen. I also dreamed of speaking English fluently enough to have the deep conversations I love. Today, I speak four languages, and English has become the language I think in.",
-        "That same curiosity led me into entrepreneurship. I've worked with more than 30 startups, scale-ups, corporations and celebrities, founded a design studio, led creative teams, and co-founded an EdTech startup. I built a six-figure creative career almost entirely through referrals, giving me the freedom to choose projects and people I genuinely believed in.",
+        "That same curiosity led me into entrepreneurship. I've worked with more than 30 startups, scale-ups, corporations and celebrities, founded a design studio, led creative teams, and co-founded an EdTech startup. I built a highly successful creative career almost entirely through referrals, giving me the freedom to choose projects and people I genuinely believed in.",
         "Eventually, I wanted to create something people could touch and experience, so I launched The Pearl Kit and my Jasia clothing collection. I also fulfilled another dream: earning an MBA in the United States.",
         "But some of my favorite achievements are much more personal.",
         "I once dreamed of having a beautiful green property where I could walk my dogs. Years later, walking down a path toward the lake on my property in Austin, I suddenly realized I was living that exact dream.",
