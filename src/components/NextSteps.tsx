@@ -27,7 +27,7 @@ export function CoachingCard({ token }: { token?: string }) {
           <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10.5px] uppercase tracking-eyebrow text-linen/70">
             <span>{COACHING_CARD.eyebrow}</span>
             {/* Small avatar between the eyebrow and "Meet Jana": the Meet Jana portrait, cropped wider around the face (Jana, 21 Oct) */}
-            <Link href="/meet-jana" className="shrink-0" aria-label="Meet Jana">
+            <Link href="/meet-jana" className="shrink-0 sm:ml-8" aria-label="Meet Jana">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={AVATAR.src} alt={AVATAR.alt} width={44} height={44} className="h-11 w-11 rounded-full object-cover ring-1 ring-linen/40" />
             </Link>

@@ -36,7 +36,7 @@ export const MEET_JANA = {
         "People have always been my favorite part of building anything.",
         "I've led teams, mentored professionals, facilitated workshops, and helped women build confidence through wellbeing programs.",
         "I love discovering what makes someone unique — their strengths, talents, ambitions, contradictions, and possibilities.",
-        "My own coach calls me **“a harmony coach.”** I liked that.",
+        "My own coach once called me a **harmony coach**, and I liked that.",
         "Because to me, success isn't just about what you achieve. It's about creating a life where the things that matter to you can coexist — in a way that feels right for you.",
       ],
     },
