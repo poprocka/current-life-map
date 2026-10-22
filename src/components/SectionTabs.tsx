@@ -62,7 +62,7 @@ export function SectionTabs({ token }: { token?: string }) {
     <nav aria-label="Sections of your results" className="sticky top-0 z-30 -mx-6 mt-10 bg-linen/90 py-3 backdrop-blur sm:-mx-10 lg:mx-0 xl:-mx-12 min-[1400px]:-mx-24 2xl:-mx-36">
       {/* Same width as the Map card: sections on the left, the two actions on the right */}
       {/* Phones and tablets: the row scrolls edge to edge across the full screen (Jana, 21 Oct) */}
-      <ul className="flex items-center gap-2 overflow-x-auto px-6 [scrollbar-width:none] sm:px-10 lg:overflow-visible lg:px-0">
+      <ul className="-my-1 flex items-center gap-2 overflow-x-auto px-6 py-1 [scrollbar-width:none] sm:px-10 lg:overflow-visible lg:px-0">{/* py-1: the scrolling row would otherwise clip the tabs' bottom borders */}
         {present.map((s) => (
           <li key={s.id} className="shrink-0">
             <a href={`#${s.id}`} onClick={go(s.id)} aria-current={active === s.id ? "true" : undefined}

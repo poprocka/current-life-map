@@ -36,7 +36,7 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
       {insights && (
         <section className="mx-auto mt-10 max-w-[1000px] lg:mt-14" aria-labelledby="open-h">
           <p className="eyebrow text-center">Your Current Life Map</p>
-          <h1 id="open-h" className="mt-3 text-center font-serif text-[32px] font-light leading-[1.1] [text-wrap:balance] sm:text-[40px]">{insights.opening.title}.</h1>
+          <h1 id="open-h" className="mx-auto mt-3 max-w-[720px] text-center font-serif text-[32px] font-light leading-[1.1] [text-wrap:pretty] sm:text-[40px]">{/* same width as the paragraph below (Jana, 21 Oct) */}{insights.opening.title}.</h1>
           {/* Short personalized opening restored (Jana, 2026-10-15, Decision 7): 2–3 sentences from the central thread */}
           {insights.opening.paragraphs.length > 0 && (
             <div className="mx-auto mt-6 max-w-[720px] space-y-3 text-center text-[13px] leading-relaxed text-mahogany/85 [text-wrap:pretty] lg:text-[15px] lg:leading-[1.75]">{/* same size as the area descriptions in the Self-Interview on phones and tablets (Jana, 21 Oct) */}
