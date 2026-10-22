@@ -6,9 +6,10 @@ import InterviewPage from "@/app/interview/page";
 import Results from "@/app/results/page";
 import Privacy from "@/app/privacy/page";
 import MeetJana from "@/app/meet-jana/page";
-import { PORTRAIT } from "@/content/meet-jana";
-// In the published preview the portrait is a file beside the page
+import { AVATAR, PORTRAIT } from "@/content/meet-jana";
+// In the published preview the photographs are files beside the page
 PORTRAIT.src = "jana.jpg";
+AVATAR.src = "jana-avatar.jpg";
 import { ACTIVE_QUESTIONS } from "@/content/v10/question-bank";
 import { AdminDemo } from "./admin-demo";
 

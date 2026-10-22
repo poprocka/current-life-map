@@ -4,6 +4,7 @@ import { track } from "@/lib/analytics";
 
 import Link from "next/link";
 import { COACHING_CARD } from "@/content/coaching";
+import { AVATAR } from "@/content/meet-jana";
 import { useBooking } from "@/lib/useBooking";
 
 type SendState = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind: "error"; message: string };
@@ -24,6 +25,11 @@ export function CoachingCard({ token }: { token?: string }) {
       <div className="grid gap-6 rounded-[28px] bg-burgundy p-8 text-linen sm:p-10 lg:grid-cols-2 lg:items-start lg:gap-16 xl:px-12 min-[1400px]:px-24 2xl:px-36">
         <div>
           <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10.5px] uppercase tracking-eyebrow text-linen/70">
+            {/* Small avatar: the Meet Jana portrait, cropped to the face (Jana, 21 Oct) */}
+            <Link href="/meet-jana" className="shrink-0" aria-label="Meet Jana">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={AVATAR.src} alt={AVATAR.alt} width={44} height={44} className="h-11 w-11 rounded-full object-cover ring-1 ring-linen/40" />
+            </Link>
             <span>{COACHING_CARD.eyebrow}</span>
             <span aria-hidden className="h-px w-6 bg-linen/40" />
             <Link href="/meet-jana" className="text-linen underline decoration-linen/40 underline-offset-[6px] transition hover:decoration-linen">

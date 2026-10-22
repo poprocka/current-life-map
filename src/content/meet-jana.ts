@@ -77,3 +77,6 @@ export const PORTRAIT = {
   height: 1800,
   alt: "Jana Poprocka seated in a wooden chair, looking directly at the camera",
 };
+
+/** Small round avatar (the same photograph, cropped to the face) for the coaching banner. File: public/jana-avatar.jpg. */
+export const AVATAR = { src: "/jana-avatar.jpg", alt: "Jana Poprocka" };
