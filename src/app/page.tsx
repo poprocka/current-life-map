@@ -7,20 +7,23 @@ import { OPENING, PRIVACY_LINE } from "@/content/v10/opening";
 
 export default function Introduction() {
   return (
-    <main className="min-h-dvh lg:grid lg:grid-cols-[1.15fr_1fr]">
-      {/* Desktop: the Life System beside the text. Phones and tablets: it sits under the italic line instead (Jana, 21 Oct) */}
-      <section className="hidden items-center justify-center bg-linen-deep/60 px-4 py-10 lg:flex lg:border-r hairline">
-        <LifeSystem labels="full" className="w-full max-w-[780px]" />
-      </section>
-
-      <section className="flex items-center px-6 py-10 sm:px-12 lg:px-20 lg:py-14">
-        <div className="max-w-[500px] animate-rise">
+    // One Life System only (two copies would share the SVG gradient ids and lose the Sun's glow and the shading).
+    // Phones and tablets: it sits under the italic line. Desktop: it fills the left column (Jana, 21 Oct).
+    <main className="flex min-h-dvh flex-col lg:grid lg:grid-cols-[1.15fr_1fr] lg:grid-rows-[1fr_auto_auto_1fr]">
+      <div className="animate-rise px-6 pt-10 sm:px-12 lg:col-start-2 lg:row-start-2 lg:px-20 lg:pt-14">
+        <div className="max-w-[500px]">
           <p className="eyebrow mb-3.5 lg:mb-7">The Current Life Map</p>
           <h1 className="font-serif text-[46px] font-light leading-[1.04] sm:text-[58px]">{OPENING.title}</h1>
           <p className="mt-7 font-serif text-[21px] italic leading-snug text-burgundy">{OPENING.lead}</p>
-          <div className="-mx-6 mt-8 bg-linen-deep/60 px-6 py-8 sm:-mx-12 sm:px-12 lg:hidden">
-            <LifeSystem labels="full" className="mx-auto w-full max-w-[560px]" />
-          </div>
+        </div>
+      </div>
+
+      <section className="mt-8 flex items-center justify-center bg-linen-deep/60 px-6 py-8 sm:px-12 lg:col-start-1 lg:row-span-4 lg:row-start-1 lg:mt-0 lg:border-r lg:border-linen-line lg:px-4 lg:py-10">
+        <LifeSystem labels="full" className="w-full max-w-[560px] lg:max-w-[780px]" />
+      </section>
+
+      <div className="animate-rise px-6 pb-10 sm:px-12 lg:col-start-2 lg:row-start-3 lg:px-20 lg:pb-14">
+        <div className="max-w-[500px]">
           <div className="mt-8 space-y-4 text-[14.5px] leading-[1.75] text-mahogany/85">
             {OPENING.paragraphs.map((p) => <p key={p}>{p}</p>)}
           </div>
@@ -42,7 +45,7 @@ export default function Introduction() {
             {PRIVACY_LINE.agreeAfter}
           </p>
         </div>
-      </section>
+      </div>
     </main>
   );
 }

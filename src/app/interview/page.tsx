@@ -122,7 +122,7 @@ function Interview() {
         {/* Phones and tablets: only the top part, with "More info" to open the description and the themes (Jana, 21 Oct) */}
         <button type="button" onClick={() => setMoreFor((m) => (m === chapter.id ? null : chapter.id))} aria-expanded={more} aria-controls="area-more"
           className="mt-4 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-burgundy lg:hidden">
-          {more ? "Less info" : "More info"} <span aria-hidden className={`transition-transform ${more ? "rotate-45" : ""}`}>+</span>
+          {more ? "Show less" : "Show more"} <span aria-hidden className={`transition-transform ${more ? "rotate-45" : ""}`}>+</span>
         </button>
         <div key={`${chapter.id}-d`} id="area-more" className={`animate-rise ${more ? "" : "hidden"} lg:block`}>
           <p className="mt-4 max-w-[460px] text-[13px] leading-relaxed text-mahogany/75 lg:mt-5 lg:text-[13.5px]">{chapter.description}</p>
