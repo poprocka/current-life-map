@@ -58,11 +58,12 @@ export function stabilityStagnation(e: E): Decision<"stagnation" | "stability"> 
 
 /** Independence vs isolation: self-reliance held together with closeness, or distance from others. */
 export function independenceIsolation(e: E): Decision<"integrated" | "isolated"> {
-  const together = ["love.05", "sun.09"].filter(e.yes);
+  // sun.09 left out since 22 Oct: it now asks about accepting all sides of oneself, not independence with closeness
+  const together = ["love.05"].filter(e.yes);
   const apart = [...["social.02", "social.06"].filter(e.no), ...(e.c.tones("social").ids.includes("loneliness") || e.c.tones("love").ids.includes("loneliness") ? ["social.emotion"] : [])];
   const evidence = e.ev(...together, ...apart);
   if (apart.length >= 2) return { module: "independence-isolation", side: "isolated", evidence };
-  if (together.length === 2 && !apart.length) return { module: "independence-isolation", side: "integrated", evidence };
+  if (together.length === 1 && !apart.length) return { module: "independence-isolation", side: "integrated", evidence };
   return { module: "independence-isolation", side: "open", evidence };
 }
 

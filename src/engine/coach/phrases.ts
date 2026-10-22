@@ -16,7 +16,7 @@ export const PHRASES: Record<string, Phrase> = {
   "sun.06": { cap: "standing by their needs when it might disappoint someone" },
   "sun.07": { cap: "taking responsibility for mistakes without being defined by them" },
   "sun.08": { cap: "following through on promises made to themselves" },
-  "sun.09": { cap: "accepting that they can be ambitious and sensitive, independent and still need closeness" },
+  "sun.09": { cap: "recognizing and accepting the different sides of themselves, strengths, flaws and contradictions included" },
   "sun.10": { cap: "keeping their own wellbeing a priority when life gets difficult" },
   "sun.11": { cap: "a sense of what gives their life meaning, even as direction changes" },
   // Mind

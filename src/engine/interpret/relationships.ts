@@ -548,7 +548,7 @@ const sun: Rel = (e) => {
       "Where does knowing what you want stop, and acting on it begin to feel costly?", 0.68));
   if (e.sunStrong.length >= 8)
     out.push(mk("integrated", ["sun.04", "sun.07", "sun.09", "sun.11", "sun.03"].filter(e.yes), "A steady and kind relationship with yourself",
-      `Your relationship with yourself reads as steady and kind: ${list([e.yes("sun.04") ? "you trust yourself with important decisions" : "", e.yes("sun.07") ? "you own mistakes without letting them become your identity" : "", e.yes("sun.09") ? "you hold seemingly opposite qualities together, ambitious and sensitive, independent and still wanting closeness" : ""].filter(Boolean))}.`,
+      `Your relationship with yourself reads as steady and kind: ${list([e.yes("sun.04") ? "you trust yourself with important decisions" : "", e.yes("sun.07") ? "you own mistakes without letting them become your identity" : "", e.yes("sun.09") ? "you accept the different sides of yourself, strengths, flaws and contradictions included" : ""].filter(Boolean))}.`,
       "When you don't have to choose between parts of yourself, the parts of your life may not have to compete either. Your footing seems to come from who you are rather than where you're heading.",
       "When you're at your steadiest, what are you doing differently from your harder days?", 0.64, "strength"));
   if (!out.length) {
@@ -577,7 +577,7 @@ const supports: Rel = (e) => {
   if (e.yes("social.05")) facts.push({ id: ["social.05"], text: "you make room to contribute to people or communities beyond your work" });
   if (e.yes("resources.03")) facts.push({ id: ["resources.03"], text: "your home supports your wellbeing and everyday routines" });
   if (e.yes("mind.06")) facts.push({ id: ["mind.06"], text: "you take your feelings seriously before deciding how to respond" });
-  if (e.yes("sun.09")) facts.push({ id: ["sun.09"], text: "you accept that you can be ambitious and sensitive, independent and still need closeness" });
+  if (e.yes("sun.09")) facts.push({ id: ["sun.09"], text: "you recognize and accept the different sides of yourself, including your strengths, flaws and contradictions" });
   if (e.yes("sun.11")) facts.push({ id: ["sun.11"], text: "you have a sense of what gives your life meaning, even as your direction changes" });
   if (e.yes("growth.01") && e.yes("growth.04")) facts.push({ id: ["growth.01", "growth.04"], text: "you're actively learning and deliberately trying new things" });
   if (facts.length < 2) return [];

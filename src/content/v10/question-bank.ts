@@ -32,7 +32,7 @@ const STATEMENTS: Record<Exclude<ChapterId, "interconnections">, Row[]> = {
     ["I can stand by my needs, even when it might disappoint someone or make things uncomfortable.", "Self-loyalty", "Standing by needs"],
     ["I take responsibility for my mistakes without letting them define who I am.", "Accountability", "Responsibility without shame"],
     ["When I make a promise to myself, I follow through.", "Accountability", "Self-follow-through"],
-    ["I accept that I can be ambitious and sensitive, independent and still need closeness.", "Self-acceptance", "Identity integration"],
+    ["I recognize and accept the different sides of myself, including my strengths, flaws, and contradictions.", "Self-acceptance", "Identity integration"], // Jana, 22 Oct
     ["When life gets difficult, I still make my own wellbeing a priority.", "Self-care", "Wellbeing under pressure"],
     ["I have a sense of what gives my life meaning, even when my direction is changing.", "Meaning", "Personal meaning"],
   ],
