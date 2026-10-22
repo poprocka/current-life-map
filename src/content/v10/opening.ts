@@ -19,9 +19,9 @@ export const OPENING = {
  */
 export const PRIVACY_LINE = {
   status: "draft" as const,
-  text: "Your Self-Interview is anonymous. You don't need to share your name or email to see your Map.",
-  // Selecting Begin is the agreement (Jana, 20 Oct): no analytics banner
-  agreeBefore: "By selecting Begin, you agree to the ",
+  // Jana's wording, 22 Oct. Selecting Begin is the acknowledgement (no analytics banner).
+  text: "You can complete your Self-Interview without sharing your name or email. Your responses are private, and you'll receive your Current Life Map without creating an account.",
+  agreeBefore: "By clicking “Begin Self-Interview,” you acknowledge our ",
   linkLabel: "Privacy & Data Use Notice",
-  agreeAfter: ".", // short on the welcome page; the analytics detail is in the notice (section 8)
+  agreeAfter: ".",
 };

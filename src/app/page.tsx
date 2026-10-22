@@ -40,7 +40,9 @@ export default function Introduction() {
           </div>
 
           <p className="mt-10 border-t hairline pt-5 text-[12.5px] leading-relaxed text-taupe">
-            {PRIVACY_LINE.text} {PRIVACY_LINE.agreeBefore}
+            {PRIVACY_LINE.text}
+            <br />
+            {PRIVACY_LINE.agreeBefore}
             <Link href="/privacy" className="underline underline-offset-4 hover:text-burgundy">{PRIVACY_LINE.linkLabel}</Link>
             {PRIVACY_LINE.agreeAfter}
           </p>
