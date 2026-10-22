@@ -158,7 +158,8 @@ const SOCIAL_SUBTHEME: Record<string, "career" | "community" | "both"> = {
 };
 
 /** Draft wording from the F4/F5 design pack; Jana may refine. Shown on each Orbit's screen, so "this area" names the Orbit. */
-export const CONGRUENCE_PROMPT = "The way I currently live this area of my life reflects what genuinely matters to me, not what I feel I should do.";
+// Wording updated by Jana, 22 Oct (same question id and scale, so stored answers and scoring are unchanged)
+export const CONGRUENCE_PROMPT = "The way I live this part of my life feels true to who I am, rather than who I think I should be.";
 
 function build(): Question[] {
   const out: Question[] = [];
