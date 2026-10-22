@@ -27,6 +27,7 @@ function Interview() {
   const { ready, answers, step, answer, goTo, flush } = useInterview({ fresh });
   const [error, setError] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
+  const [moreFor, setMoreFor] = useState<string | null>(null); // which area's "More info" is open (phones/tablets)
   const headingRef = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
 
@@ -50,6 +51,7 @@ function Interview() {
   const q = questionAt(step);
   const chapter = chapterById(q.chapterId);
   const value = answers[q.id];
+  const more = moreFor === chapter.id;
   const last = step === TOTAL_STEPS - 1;
   // Shows the current position from the first question; never drops below what has been answered.
   const pct = Math.round(Math.max(progress(answers), (step + 1) / TOTAL_STEPS) * 100);
@@ -82,41 +84,9 @@ function Interview() {
     setTimeout(() => goTo(missing), 900);
   };
 
-  return (
-    <main className="min-h-dvh lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-      {/* Left: area */}
-      <aside className="border-b hairline bg-linen-deep/60 px-6 pb-6 pt-6 lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:[justify-content:safe_center] lg:overflow-y-auto lg:py-10 lg:border-b-0 lg:border-r lg:px-14">
-        {/* Visual + text form one block, centred vertically in the pane (Jana, 2026-10-12) */}
-        <div className="flex items-center gap-5 lg:flex-col lg:items-stretch lg:gap-0">
-          <LifeSystem active={q.chapterId} labels="none" className="w-[84px] shrink-0 lg:mx-auto lg:w-full lg:max-w-[min(430px,48vh)]"
-            title={`The Life System, currently showing ${chapter.name}.`} />
-          <div key={chapter.id} className="animate-rise lg:mt-10">
-            <p className="eyebrow">{eyebrowFor(chapter.kind, chapter.id)}</p>
-            <h2 className="mt-1.5 font-serif text-[30px] font-light leading-none lg:mt-3 lg:text-[44px]">{chapter.name}</h2>
-            {chapter.subtitle && <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-burgundy">{chapter.subtitle}</p>}
-          </div>
-        </div>
-        <div key={`${chapter.id}-d`} className="animate-rise">
-          <p className="mt-4 max-w-[460px] text-[13px] leading-relaxed text-mahogany/75 lg:mt-5 lg:text-[13.5px]">{chapter.description}</p>
-          {chapter.explores.length > 0 && (
-            <p id="explore-h" className="eyebrow mt-6">Explore</p>
-          )}
-          {chapter.explores.length > 0 && (
-            <ul aria-labelledby="explore-h" className="-mx-6 mt-3 flex gap-2 overflow-x-auto px-6 pb-1 lg:mx-0 lg:max-w-[460px] lg:flex-wrap lg:px-0">
-              {/* Static, all equally readable — no per-question highlight (Jana, 2026-10-12) */}
-              {chapter.explores.map((e) => (
-                <li key={e} className="shrink-0 rounded-full border border-taupe-light px-3 py-1 text-[11px] tracking-wide text-mahogany/80">
-                  {e}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </aside>
-
-      {/* Right: question */}
-      <section className="flex min-h-[60dvh] flex-col px-6 py-6 sm:px-12 lg:h-dvh lg:px-20 lg:py-10">
-        <header>
+  // Section progress: first thing on the screen on phones and tablets; above the question on desktop (Jana, 21 Oct)
+  const progressHeader = (
+    <header>
           <div className="flex items-baseline justify-between text-[12px] text-taupe">
             <span aria-live="polite" className="eyebrow">
               Section {chapterIndex + 1} of {CHAPTERS.length}
@@ -131,10 +101,53 @@ function Interview() {
               </div>
             ))}
           </div>
-        </header>
+    </header>
+  );
+
+  return (
+    <main className="min-h-dvh pb-[calc(76px+env(safe-area-inset-bottom))] lg:pb-0 lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+      <div className="bg-linen-deep/60 px-6 pt-5 sm:px-12 lg:hidden">{progressHeader}</div>
+      {/* Left: area */}
+      <aside className="border-b hairline bg-linen-deep/60 px-6 pb-5 pt-5 lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:[justify-content:safe_center] lg:overflow-y-auto lg:py-10 lg:border-b-0 lg:border-r lg:px-14">
+        {/* Visual + text form one block, centred vertically in the pane (Jana, 2026-10-12) */}
+        <div className="flex items-center gap-5 lg:flex-col lg:items-stretch lg:gap-0">
+          <LifeSystem active={q.chapterId} labels="none" className="w-[84px] shrink-0 lg:mx-auto lg:w-full lg:max-w-[min(430px,48vh)]"
+            title={`The Life System, currently showing ${chapter.name}.`} />
+          <div key={chapter.id} className="animate-rise lg:mt-10">
+            <p className="eyebrow">{eyebrowFor(chapter.kind, chapter.id)}</p>
+            <h2 className="mt-1.5 font-serif text-[30px] font-light leading-none lg:mt-3 lg:text-[44px]">{chapter.name}</h2>
+            {chapter.subtitle && <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-burgundy">{chapter.subtitle}</p>}
+          </div>
+        </div>
+        {/* Phones and tablets: only the top part, with "More info" to open the description and the themes (Jana, 21 Oct) */}
+        <button type="button" onClick={() => setMoreFor((m) => (m === chapter.id ? null : chapter.id))} aria-expanded={more} aria-controls="area-more"
+          className="mt-4 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-burgundy lg:hidden">
+          {more ? "Less info" : "More info"} <span aria-hidden className={`transition-transform ${more ? "rotate-45" : ""}`}>+</span>
+        </button>
+        <div key={`${chapter.id}-d`} id="area-more" className={`animate-rise ${more ? "" : "hidden"} lg:block`}>
+          <p className="mt-4 max-w-[460px] text-[13px] leading-relaxed text-mahogany/75 lg:mt-5 lg:text-[13.5px]">{chapter.description}</p>
+          {chapter.explores.length > 0 && (
+            <p id="explore-h" className="eyebrow mt-6">Explore</p>
+          )}
+          {chapter.explores.length > 0 && (
+            <ul aria-labelledby="explore-h" className="mt-3 flex flex-wrap gap-2 lg:max-w-[460px]">
+              {/* Static, all equally readable — no per-question highlight (Jana, 2026-10-12) */}
+              {chapter.explores.map((e) => (
+                <li key={e} className="rounded-full border border-taupe-light px-3 py-1 text-[11px] tracking-wide text-mahogany/80">
+                  {e}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </aside>
+
+      {/* Right: question */}
+      <section className="flex flex-col px-6 py-5 sm:px-12 lg:h-dvh lg:px-20 lg:py-10">
+        <div className="hidden lg:block">{progressHeader}</div>
 
         <form className="flex flex-1 flex-col" onSubmit={(e) => { e.preventDefault(); next(); }}>
-          <div key={q.id} className="my-auto animate-rise py-10">
+          <div key={q.id} className="animate-rise py-2 lg:my-auto lg:py-10">
             <h1 id="prompt" ref={headingRef} tabIndex={-1}
               className="max-w-[580px] font-serif text-[27px] font-light leading-[1.22] outline-none sm:text-[33px]">
               {q.prompt}
@@ -142,14 +155,15 @@ function Interview() {
             {q.instruction && (
               <p id="prompt-hint" className="mt-3 text-[13px] text-taupe">{q.instruction}</p>
             )}
-            <div className={`${q.instruction ? "mt-7" : "mt-9"} max-w-[580px]`}>
+            <div className={`${q.instruction ? "mt-3.5 lg:mt-7" : "mt-4 lg:mt-9"} max-w-[580px]`}>
               <ResponseControl q={q} value={value} labelledBy="prompt"
                 onChange={(v) => { setError(null); answer(q.id, v); }} />
             </div>
             <p role="alert" className="mt-4 min-h-[20px] text-[13px] text-burgundy">{error}</p>
           </div>
 
-          <nav className="flex items-center justify-between border-t hairline pt-5" aria-label="Question navigation">
+          {/* Always in reach: a fixed bar at the bottom on phones and tablets (Jana, 21 Oct); in the page on desktop */}
+          <nav className="fixed inset-x-0 bottom-0 z-20 flex items-center justify-between border-t hairline bg-linen/95 px-6 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 backdrop-blur sm:px-12 lg:static lg:z-auto lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-5 lg:backdrop-blur-none" aria-label="Question navigation">
             {/* On the first question, Back returns to the introduction; answers stay saved */}
             <button type="button" onClick={() => (step === 0 ? router.push("/") : goTo(step - 1))}
               aria-label={step === 0 ? "Back to the introduction" : "Back to the previous question"}

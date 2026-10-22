@@ -25,15 +25,17 @@ export default function MeetJana() {
       <div className="mx-auto max-w-[1180px] px-6 pt-8 sm:px-10 sm:pt-10"><BackLink /></div>
 
       {/* ── Opening: portrait and introduction ── */}
-      <header className="mx-auto mt-8 grid max-w-[1180px] gap-10 px-6 sm:px-10 lg:mt-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1fr)] lg:items-end lg:gap-20">
-        <Portrait className="mx-auto w-full max-w-[520px] lg:max-w-none" />
-        <div className="lg:pb-6">
+      {/* Phones and tablets: name and roles first, then the portrait, then the introduction (no rule above it).
+          Desktop: portrait on the left; name, roles and introduction on the right (Jana, 21 Oct). */}
+      <header className="mx-auto mt-8 grid max-w-[1180px] gap-8 px-6 sm:px-10 lg:mt-12 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1fr)] lg:grid-rows-[1fr_auto] lg:gap-x-20 lg:gap-y-0">
+        <div className="lg:col-start-2 lg:row-start-1 lg:self-end">
           <p className="eyebrow">Meet Jana</p>
           <h1 className="mt-4 font-serif text-[44px] font-light leading-[1.02] tracking-[-0.01em] sm:text-[60px] lg:text-[76px]">{M.title}</h1>
           <p className="mt-5 max-w-[460px] text-[11.5px] uppercase leading-[1.9] tracking-[0.2em] text-burgundy">{M.roles}</p>
-          <div className={`mt-8 max-w-[520px] space-y-4 border-t hairline pt-7 ${answer}`}>
-            {M.intro.map((p) => <p key={p.slice(0, 24)}><Rich text={p} /></p>)}
-          </div>
+        </div>
+        <Portrait className="mx-auto w-full max-w-[520px] lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:max-w-none lg:self-end" />
+        <div className={`max-w-[520px] space-y-4 lg:col-start-2 lg:row-start-2 lg:mt-8 lg:border-t lg:border-linen-line lg:pb-6 lg:pt-7 ${answer}`}>
+          {M.intro.map((p) => <p key={p.slice(0, 24)}><Rich text={p} /></p>)}
         </div>
       </header>
 

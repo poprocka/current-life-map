@@ -58,7 +58,7 @@ function InsightDialog({ insights, index, onIndex, onClose }: { insights: Result
         </div>
         {/* All five insights as tabs, so any can be opened from here (Jana, 2026-10-13); replaces "Next insight" */}
         {/* Tabs styled like the insight cards on the page (Jana, 2026-10-13) */}
-        <div role="tablist" aria-label="Your personal insights" className="sticky top-0 z-10 -mx-1 mt-4 flex gap-2 overflow-x-auto bg-[#F7F1EA] px-1 py-1 lg:static lg:grid lg:grid-cols-5 lg:overflow-visible">
+        <div role="tablist" aria-label="Your personal insights" className="sticky top-0 z-10 -mx-6 mt-4 flex gap-2 overflow-x-auto bg-[#F7F1EA] px-6 py-1 [scrollbar-width:none] sm:-mx-12 sm:px-12 lg:static lg:mx-0 lg:grid lg:grid-cols-5 lg:overflow-visible lg:px-0">{/* tabs scroll edge to edge on phones and tablets (Jana, 21 Oct) */}
           {insights.cards.map((t, i) => (
             <button key={t.key} role="tab" aria-selected={i === index} onClick={() => onIndex(i)}
               className={`flex min-h-[60px] w-[160px] shrink-0 items-center rounded-[14px] border px-4 py-2.5 text-left font-serif text-[16px] leading-snug transition lg:w-auto [@media(min-width:1024px)_and_(max-height:1100px)]:min-h-[46px] [@media(min-width:1024px)_and_(max-height:1100px)]:py-1.5 [@media(min-width:1024px)_and_(max-height:1100px)]:text-[15px] ${i === index ? "border-burgundy/60 bg-white text-burgundy" : "hairline bg-white/40 text-mahogany hover:border-burgundy/40 hover:bg-white/70"}`}>
