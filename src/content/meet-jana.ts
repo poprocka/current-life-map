@@ -65,7 +65,7 @@ export const MEET_JANA = {
   closing: {
     q: "Now, it's your turn. I'd love to hear your story.",
     text: "If you're curious about what we could explore together, let's talk.",
-    cta: "Apply for 1:1 coaching",
+    cta: "Schedule a meeting", // Jana, 21 Oct (same Calendly introductory conversation)
     hello: "Or come say hello:",
     instagram: { label: "@poprotska", href: "https://www.instagram.com/poprotska/" },
     email: { label: "jana@jasia.beauty", href: "mailto:jana@jasia.beauty" },
