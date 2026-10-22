@@ -244,7 +244,7 @@ function build(): Question[] {
         version: CONTENT_VERSION,
         chapterId: chapter.id,
         order: n + 2,
-        prompt: `As ${chapter.name} exists in your life today, what happens to your energy?`,
+        prompt: "How does this area of your life currently affect your energy?", // Jana, 22 Oct (same id and scale)
         responseType: "energy",
         options: ENERGY_SCALE,
         exploreCategory: "energy",
