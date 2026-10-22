@@ -32,7 +32,7 @@ export default function MeetJana() {
           <h1 className="mt-4 font-serif text-[44px] font-light leading-[1.02] tracking-[-0.01em] sm:text-[60px] lg:text-[76px]">{M.title}</h1>
           <p className="mt-5 max-w-[460px] text-[11.5px] uppercase leading-[1.9] tracking-[0.2em] text-burgundy">{M.roles}</p>
           <div className={`mt-8 max-w-[520px] space-y-4 border-t hairline pt-7 ${answer}`}>
-            {M.intro.map((p) => <p key={p.slice(0, 24)}>{p}</p>)}
+            {M.intro.map((p) => <p key={p.slice(0, 24)}><Rich text={p} /></p>)}
           </div>
         </div>
       </header>
