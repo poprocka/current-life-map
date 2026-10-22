@@ -64,8 +64,8 @@ export const MEET_JANA = {
   ] as { q: string; a: (string | { quote: string })[] }[],
   closing: {
     q: "Now, it's your turn. I'd love to hear your story.",
-    text: "If you're curious about what we could explore together, let's talk.",
-    cta: "Schedule a call", // Jana, 21 Oct (same Calendly introductory conversation)
+    text: "I'd love to hear where you are in life, what's on your mind, and what you'd like to create next. Let's see what we might discover together.",
+    cta: "Let's Talk", // Jana, 21 Oct (same Calendly introductory conversation)
     hello: "Or come say hello:",
     instagram: { label: "@poprotska", href: "https://www.instagram.com/poprotska/" },
     email: { label: "jana@jasia.beauty", href: "mailto:jana@jasia.beauty" },
