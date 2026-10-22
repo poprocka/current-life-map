@@ -47,8 +47,8 @@ export const MEET_JANA = {
         "We start with your Current Life Map, exploring where you stand today and how the different parts of your life connect.",
         "From there, our work is personal. I ask questions, offer perspective, challenge assumptions, and support you as you discover what matters to you and make choices that reflect it.",
         "Along the way, I share tools and practices that are appropriate for you and your situation.",
-        { quote: "I'm not here to tell you who to become." },
-        "I'm here to help you see what you're capable of — and support you as you find your own way.",
+        "I'm not here to tell you who to become.",
+        { quote: "I'm here to help you see what you're capable of — and support you as you find your own way." },
       ],
     },
     {
