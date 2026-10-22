@@ -55,8 +55,9 @@ export const MEET_JANA = {
       q: "And what's Jana like outside of coaching?",
       a: [
         "Curious. Playful. Direct. Warm. A little Viking energy, courtesy of my Slavic roots.",
-        "I love the gym, beautiful design, meaningful conversations, the ocean, my dogs, and creating things that make life a little more interesting.",
-        "I can talk about business strategy, relationships, wellbeing, or the meaning of life over coffee.",
+        "I love staying active, whether it's a good workout, a sport, or simply spending time outdoors. I'm drawn to aesthetics in all their forms — the human body, design, architecture, art, and the little details that make everyday life more interesting.",
+        "I appreciate depth. In conversations, relationships, books, and the way people think. I'm equally happy discussing business ideas, human nature, or the meaning of life over coffee.",
+        "Nature keeps me grounded, my dachshund keeps me entertained, and creating things that make life more beautiful and meaningful is something I never seem to get tired of.",
         "And I'll probably ask you more questions than you expected.",
       ],
     },
