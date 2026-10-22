@@ -1,7 +1,7 @@
 /** "Meet Jana" (Jana's copy, 21 Oct). Verbatim: wording, paragraph breaks and emphasis (**bold**) are hers. */
 export const MEET_JANA = {
   title: "Hi, I'm Jana.",
-  roles: "Coach. Founder & Creative Director. Creator of The Life System™.", // order changed by Jana, 21 Oct
+  roles: "Coach. Founder. Creator of The Life System™.", // Jana, 21 Oct
   intro: [
     "I'm a cosmopolitan at heart. Having lived in six places across Europe and the United States, I've learned to feel at home almost anywhere.",
     "Every new place has taught me something about people, cultures, perspectives, and myself. I've always loved immersing myself in a new environment, building meaningful connections, and finding ways to grow and contribute wherever I am.",
