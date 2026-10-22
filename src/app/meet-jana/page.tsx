@@ -41,9 +41,11 @@ export default function MeetJana() {
       <article className="mx-auto mt-20 max-w-[680px] px-6 sm:mt-28 sm:px-10">
         {M.interview.map((item, n) => (
           <section key={item.q} className={n ? "mt-16 sm:mt-20" : ""} aria-labelledby={`q-${n}`}>
-            <div className="border-t hairline pt-6">
-              <span aria-hidden className="block font-serif text-[15px] italic text-taupe">{String(n + 1).padStart(2, "0")}</span>
-              <h2 id={`q-${n}`} className="mt-2 font-serif text-[30px] font-light italic leading-[1.15] text-burgundy sm:text-[38px]">{item.q}</h2>
+            {/* Number to the left of the question (Jana, 21 Oct): inline on phones, hanging in the margin from tablet up,
+                so the question text keeps the same left edge as the answers */}
+            <div className="relative flex items-baseline gap-3 border-t hairline pt-6 sm:block">
+              <span aria-hidden className="shrink-0 font-serif text-[15px] italic text-taupe sm:absolute sm:right-full sm:top-[2.35rem] sm:mr-5">{String(n + 1).padStart(2, "0")}</span>
+              <h2 id={`q-${n}`} className="font-serif text-[30px] font-light italic leading-[1.15] text-burgundy sm:text-[38px]">{item.q}</h2>
             </div>
             <div className={`mt-7 space-y-5 ${answer}`}>
               {item.a.map((block, i) => typeof block === "string"

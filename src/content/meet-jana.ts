@@ -15,10 +15,10 @@ export const MEET_JANA = {
     {
       q: "So, what's your story?",
       a: [
-        "I've always been curious about what becomes possible when we take our dreams seriously — and actually do something about them.",
         "I'm a cosmopolitan at heart. Having lived in six places across Europe and the United States, I've learned to feel at home almost anywhere.",
         "Every new place has taught me something about people, cultures, perspectives, and myself. I've always loved immersing myself in a new environment, building meaningful connections, and finding ways to grow and contribute wherever I am.",
         "Today, I call Newport Beach, California, home. A place I once dreamed of living.",
+        "I've always been curious about what becomes possible when we take our dreams seriously — and actually do something about them.",
         "As a little girl, I dreamed of studying abroad. At eighteen, I made it happen. I also dreamed of speaking English fluently enough to have the deep conversations I love. Today, I speak four languages, and English has become the language I think in.",
         "That same curiosity led me into entrepreneurship. I've worked with more than 30 startups and scale-ups, founded a design studio, led creative teams, and co-founded an EdTech startup. I built a six-figure creative career almost entirely through referrals, giving me the freedom to choose projects and people I genuinely believed in.",
         "Eventually, I wanted to create something people could touch and experience, so I launched The Pearl Kit and my Jasia clothing collection. I also fulfilled another dream: earning an MBA in the United States.",
