@@ -63,8 +63,8 @@ export const MEET_JANA = {
     },
   ] as { q: string; a: (string | { quote: string })[] }[],
   closing: {
-    q: "Enough about me. I'd love to hear your story.",
-    text: "If you're curious about what we could explore together, let's get to know each other.",
+    q: "Now, it's your turn. I'd love to hear your story.",
+    text: "If you're curious about what we could explore together, let's talk.",
     cta: "Apply for 1:1 coaching",
     hello: "Or come say hello:",
     instagram: { label: "@poprotska", href: "https://www.instagram.com/poprotska/" },
