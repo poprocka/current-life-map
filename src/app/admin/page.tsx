@@ -22,7 +22,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       <AdminHeader email={s.email} role={s.role} active="assessments" />
       <main className="px-4 py-6 sm:px-10 sm:py-8">
         <h1 className="font-serif text-[32px] font-light">Assessments</h1>
-        <div className="mt-6"><IntroConversations rows={apps} /></div>
+        <div className="mt-6"><IntroConversations rows={apps} canDelete={s.role === "admin"} /></div>
         <div className="mt-6"><ChannelSummary rows={channels} /></div>
         <div className="mt-6"><ConnectedTable {...list} filters={filters} recon={recon} canExport={s.role === "admin"} /></div>
       </main>

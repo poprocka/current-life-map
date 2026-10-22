@@ -27,6 +27,8 @@ export interface ProfileActions {
   listHref: string;
   /** Reload after changes the page can't patch locally (e.g. a Map attached). */
   refresh(): void;
+  /** Admin only: delete the whole profile (notes, sessions, files). Their Self-Interviews are kept. */
+  deleteProfile(): Promise<void>;
 }
 
 const ACCEPT = ".pdf,.png,.jpg,.jpeg,.webp,.heic,.txt,.csv,.md,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp3,.m4a";
@@ -48,7 +50,10 @@ export function ClientProfile({ data, actions }: { data: ClientProfileData; acti
     <div className="mx-auto max-w-[1280px] px-4 pb-24 pt-5 sm:px-10 sm:pt-6">
       <Link href={actions.listHref} className="text-[11px] uppercase tracking-[0.14em] text-taupe hover:text-burgundy">← All clients</Link>
       <header className="mt-4 border-b hairline pb-5">
-        <p className="eyebrow">Client profile <span className="font-mono normal-case tracking-normal">{shortId(c.id)}</span> · private to coaches</p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <p className="eyebrow">Client profile <span className="font-mono normal-case tracking-normal">{shortId(c.id)}</span> · private to coaches</p>
+          {data.viewer.role === "admin" && <DeleteProfile onDelete={actions.deleteProfile} />}
+        </div>
         <Details client={c} onSave={(d) => guard(() => actions.saveDetails(d))} />
         <div className="mt-3 flex flex-wrap items-center gap-3 text-[12.5px]">
           <div role="radiogroup" aria-label="Stage" className="inline-flex overflow-hidden rounded-full border border-linen-line">
@@ -414,5 +419,22 @@ function FileList({ initial, purpose, ids, actions, compact, onChange }: {
       </label>
       {err && <p role="alert" className="text-[11px] text-burgundy">{err}</p>}
     </div>
+  );
+}
+
+/** Delete a whole client profile (Jana, 22 Oct). Typing DELETE confirms; their Self-Interviews stay (delete those from the Map). */
+function DeleteProfile({ onDelete }: { onDelete: () => Promise<void> }) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  if (!open) return <button className={`${btn} hover:border-[#7A2E2E] hover:text-[#7A2E2E]`} onClick={() => setOpen(true)}>Delete client…</button>;
+  return (
+    <span className="flex flex-wrap items-center gap-2 rounded-[14px] bg-[#F3E2E2] px-3 py-1.5 text-[11.5px] text-[#7A2E2E]">
+      Permanently delete this client with their notes, sessions and files? Their Self-Interviews are kept. Type DELETE
+      <input aria-label="Type DELETE to confirm" className={`${input} w-[90px]`} value={text} onChange={(e) => setText(e.target.value)} />
+      <button className={btn} disabled={text !== "DELETE"} onClick={async () => { try { await onDelete(); } catch { setErr("Delete failed."); } }}>Delete</button>
+      <button className="underline" onClick={() => setOpen(false)}>Cancel</button>
+      {err && <span role="alert">{err}</span>}
+    </span>
   );
 }

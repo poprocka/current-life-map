@@ -12,6 +12,7 @@ import { requestPdfEmail, setEmailProvider } from "@/server/email";
 import { calendlyAdapter } from "@/server/booking/calendly";
 import { bookingUrlForLinkToken, createBookingLink, handleBookingWebhook } from "@/server/booking/process";
 import { introConversations } from "@/server/admin/queries";
+import { deleteCancelledBooking } from "@/server/admin/mutations";
 import { memoryFileStore } from "@/server/files";
 import {
   addAttachment, attachAssessment, createInvite, createProfileForAssessment, deleteAttachment, deleteClientProfile, deleteSession, getAttachment,
@@ -135,6 +136,26 @@ describe("client profiles", () => {
     const listed = (await asJana((sql) => introConversations(sql))).find((x) => x.assessment_id === id)!;
     expect(listed).toMatchObject({ booked_name: "On", booked_email: "on@example.com", booking_state: "confirmed" });
     expect(listed.intake_answers?.[0].answer).toBe("Why I feel stretched");
+  });
+
+  it("an admin can delete a cancelled booking (with the times it was rescheduled from), never an active one", async () => {
+    const adapter = calendlyAdapter(process.env)!;
+    const { token } = await completed();
+    const link = await createBookingLink(db, adapter, token);
+    if (!link.ok) throw new Error(link.error);
+    const t = new URL(link.url).searchParams.get("utm_content")!;
+    const first = inviteeCreated({ token: t, email: "del@example.com", name: "Del" });
+    await handleBookingWebhook(db, adapter, calendlyHeaders(first.body), first.body);
+    const id1 = (await pg.query<{ id: string }>(`select id from bookings where provider_invitee_id = $1`, [first.invitee])).rows[0].id;
+    expect(await deleteCancelledBooking(db, JANA, id1)).toBe(false); // still confirmed
+    const r1 = inviteeCanceled(first.invitee, true); await handleBookingWebhook(db, adapter, calendlyHeaders(r1), r1);
+    const second = inviteeCreated({ token: t, email: "del@example.com", name: "Del", oldInvitee: first.invitee });
+    await handleBookingWebhook(db, adapter, calendlyHeaders(second.body), second.body);
+    const c2 = inviteeCanceled(second.invitee); await handleBookingWebhook(db, adapter, calendlyHeaders(c2), c2);
+    const id2 = (await pg.query<{ id: string }>(`select id from bookings where provider_invitee_id = $1`, [second.invitee])).rows[0].id;
+    expect(await deleteCancelledBooking(db, JANA, id2)).toBe(true);
+    expect((await pg.query(`select 1 from bookings where id = any($1::uuid[])`, [[id1, id2]])).rows).toHaveLength(0);
+    expect((await pg.query(`select 1 from booking_events where booking_id = any($1::uuid[])`, [[id1, id2]])).rows).toHaveLength(0);
   });
 
   it("a confirmed booking turns a Prospect into a Lead (never demotes a Client)", async () => {

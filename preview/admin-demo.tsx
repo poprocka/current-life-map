@@ -303,6 +303,7 @@ export function AdminDemo({ path }: { path: string }) {
           inviteUrl: (token) => `https://self-interview.com/#invite=${token}`,
           listHref: "/admin/clients",
           refresh,
+          deleteProfile: async () => { await later(); navigate("/admin/clients"); },
         }} />;
       })() : person ? (
         <Workspace key={person.id} data={workspace(person)} actions={{

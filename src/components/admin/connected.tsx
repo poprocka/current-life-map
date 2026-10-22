@@ -96,6 +96,7 @@ export function ConnectedProfile({ data }: { data: ClientProfileData }) {
       inviteUrl: (token) => `${(process.env.NEXT_PUBLIC_SITE_URL || window.location.origin).replace(/\/$/, "")}/#invite=${token}`,
       listHref: "/admin/clients",
       refresh: () => router.refresh(),
+      deleteProfile: async () => { await act({ action: "delete_profile", confirm: "DELETE" }); router.push("/admin/clients"); router.refresh(); },
     }} />
   );
 }

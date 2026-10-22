@@ -1,5 +1,5 @@
 import "server-only";
-import type { Sql } from "../db";
+import type { Db, Sql } from "../db";
 import { audit } from "../audit";
 import { encrypt } from "../crypto";
 import type { DeepDiveScript } from "@/engine/coach/script";
@@ -44,6 +44,26 @@ export async function resolveBooking(sql: Sql, coachId: string, bookingId: strin
      where b.id = old.id and b.needs_reconciliation returning old.reason`, [bookingId]);
   if (r.rows.length) await audit(sql, coachId, "booking.resolved", "booking", bookingId, { reason: r.rows[0].reason });
   return r.rows.length > 0;
+}
+
+/**
+ * Admin only (Jana, 22 Oct): permanently delete a cancelled booking, together with the earlier times it was rescheduled
+ * from and their provider events. Only cancelled bookings can be deleted. Runs on the server's own connection after the
+ * route has checked the admin session (bookings have no delete rights through the coach role). Calendly keeps its own record.
+ */
+export async function deleteCancelledBooking(db: Db, actorId: string, bookingId: string) {
+  return db.tx(async (sql) => {
+    const b = (await sql.query<{ id: string }>(`select id from bookings where id = $1 and booking_state = 'cancelled'`, [bookingId])).rows[0];
+    if (!b) return false;
+    const chain = (await sql.query<{ id: string }>(
+      `with recursive c(id) as (select $1::uuid union select b.rescheduled_from from bookings b join c on b.id = c.id where b.rescheduled_from is not null)
+       select id from c`, [bookingId])).rows.map((r) => r.id);
+    await sql.query(`update bookings set rescheduled_from = null where rescheduled_from = any($1::uuid[])`, [chain]);
+    await sql.query(`delete from booking_events where booking_id = any($1::uuid[])`, [chain]);
+    await sql.query(`delete from bookings where id = any($1::uuid[])`, [chain]);
+    await audit(sql, actorId, "booking.deleted", "booking", bookingId, { removed: chain.length });
+    return true;
+  });
 }
 
 export async function setBookingOutcome(sql: Sql, coachId: string, bookingId: string, state: "completed" | "no_show") {

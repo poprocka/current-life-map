@@ -1,23 +1,25 @@
 "use client";
 import { sourceLabel } from "@/content/channels";
 import type { ChannelRow } from "@/server/admin/types";
+import { useOpen } from "./useCollapsed";
 
-/** "Where people come from": one row per channel, from first visit to paid session. Phone: stacked cards. */
+/** "Where people come from": one row per channel, from first visit to booked introductory conversation. Phone: stacked cards. */
 export function ChannelSummary({ rows, days = 90 }: { rows: ChannelRow[]; days?: number }) {
+  const [open, setOpen] = useOpen("channels");
   if (!rows.length) return null;
   const pct = (n: number, of: number) => (of ? `${Math.round((n / of) * 100)}%` : "—");
-  const cols: [keyof ChannelRow, string][] = [["started", "Started"], ["completed", "Completed"], ["pdf", "PDF"], ["booked", "Booked"], ["paid", "Paid"]];
+  const cols: [keyof ChannelRow, string][] = [["started", "Started"], ["completed", "Completed"], ["pdf", "PDF"], ["booked", "Booked"]];
   return (
-    <details className="group rounded-[18px] border hairline bg-white/40 p-4 sm:p-5" open>
+    <details className="group rounded-[18px] border hairline bg-white/40 p-4 sm:p-5" open={open} onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}>
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
         <h2 className="text-[10.5px] uppercase tracking-[0.16em] text-burgundy">Where people come from · last {days} days</h2>
-        <span className="text-[11px] text-taupe group-open:hidden">Show</span>
+        <span className="text-[11px] uppercase tracking-[0.12em] text-taupe hover:text-burgundy"><span className="group-open:hidden">Show</span><span className="hidden group-open:inline">Hide</span></span>
       </summary>
       <ul className="mt-3 space-y-2 sm:hidden">
         {rows.map((r) => (
           <li key={r.source} className="rounded-xl bg-white/60 px-3 py-2.5 text-[12px]">
             <div className="flex items-baseline justify-between"><b className="font-normal text-mahogany">{sourceLabel(r.source)}</b><span className="text-taupe">{r.started} started</span></div>
-            <p className="mt-1 text-taupe">{r.completed} completed ({pct(r.completed, r.started)}) · {r.pdf} PDF · {r.booked} booked · {r.paid} paid</p>
+            <p className="mt-1 text-taupe">{r.completed} completed ({pct(r.completed, r.started)}) · {r.pdf} PDF · {r.booked} booked</p>
           </li>
         ))}
       </ul>
