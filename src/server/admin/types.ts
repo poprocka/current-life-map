@@ -79,6 +79,11 @@ export interface SessionView {
 }
 export interface ClientNoteView { id: string; body: string; created_at: string; updated_at: string; attachments: AttachmentView[] }
 export interface PossibleMatch { client_id: string; name: string | null; email: string | null; stage: Stage; assessments: { id: string; created_at: string; status: string }[] }
+/** Records sharing an email (22 Oct): shown as a merge suggestion, merged only when Jana confirms. First = suggested to keep. */
+export interface DuplicateGroup {
+  email: string;
+  clients: { client_id: string; name: string | null; email: string | null; stage: Stage; maps: number; sessions: number; created_at: string }[];
+}
 export interface ClientProfileData {
   client: { id: string; name: string | null; email: string | null; phone: string | null; stage: Stage; stage_changed_at: string | null; created_at: string; coaching_enrolled_at: string | null; invite: { token: string | null; created_at: string } | null };
   maps: ClientMap[];

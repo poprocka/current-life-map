@@ -4,7 +4,7 @@ import { asCoach } from "@/server/db";
 import { coachForApi } from "@/server/auth";
 import { fileStoreForRequest } from "@/server/files";
 import {
-  attachAssessment, createInvite, deleteClientNote, deleteClientProfile, deleteSession, detachAssessment, revokeInvite,
+  attachAssessment, createInvite, deleteClientNote, deleteClientProfile, deleteSession, detachAssessment, mergeClients, revokeInvite,
   saveClientNote, saveSession, setClientDetails, setStage,
 } from "@/server/admin/clients";
 
@@ -25,6 +25,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("note"), id: uuid.optional(), body: text }),
   z.object({ action: z.literal("delete_note"), id: uuid }),
   z.object({ action: z.literal("delete_profile"), confirm: z.literal("DELETE") }),
+  z.object({ action: z.literal("merge"), mergeId: uuid }),
 ]);
 
 /** Every client-profile action. Same-origin, verified coach with MFA; RLS applies underneath. Deleting a profile is admin-only. */
@@ -37,6 +38,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "not_found" }, { status: 404 });
   const me = s.ctx.userId, d = b.data;
+  if (d.action === "merge") {
+    const r = await mergeClients(s.db, me, id, d.mergeId);
+    return NextResponse.json(r, { status: r.ok ? 200 : r.error === "not_found" ? 404 : 400 });
+  }
   const needsStore = d.action === "delete_session" || d.action === "delete_note" || d.action === "delete_profile";
   const store = needsStore ? await fileStoreForRequest() : null;
   if (needsStore && !store) return NextResponse.json({ error: "storage_not_configured" }, { status: 503 });

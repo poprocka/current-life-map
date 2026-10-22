@@ -1,12 +1,12 @@
 import "server-only";
 import { randomUUID } from "crypto";
-import type { Sql } from "../db";
+import type { Db, Sql } from "../db";
 import { audit } from "../audit";
 import { decrypt, decryptBytes, encrypt, encryptBytes, randomToken, sha256 } from "../crypto";
 import type { FileStore } from "../files";
 import type { LifeMapResult } from "@/engine/compute";
 import type {
-  AttachmentView, ClientListRow, ClientMap, ClientNoteView, ClientProfileData, PossibleMatch, SessionInput, SessionView, Stage,
+  AttachmentView, ClientListRow, DuplicateGroup, ClientMap, ClientNoteView, ClientProfileData, PossibleMatch, SessionInput, SessionView, Stage,
 } from "./types";
 
 /**
@@ -268,4 +268,75 @@ async function removeFiles(sql: Sql, store: FileStore, query: string, params: un
 export async function deleteClientProfile(sql: Sql, store: FileStore, clientId: string) {
   await removeFiles(sql, store, `select storage_path from client_attachments where client_id = $1`, [clientId]);
   await sql.query(`select delete_client($1)`, [clientId]);
+}
+
+// ── Same email on more than one record (22 Oct) ─────────────────────────────
+const STAGE_RANK: Record<Stage, number> = { prospect: 0, lead: 1, client: 2 };
+
+/**
+ * Records that share an email. Shown to Jana as a suggestion at the top of the overview — never merged automatically.
+ * The suggested record to keep comes first: the furthest stage, then one with a name, then sessions, then the oldest.
+ */
+export async function duplicateClients(sql: Sql): Promise<DuplicateGroup[]> {
+  const rows = (await sql.query<DuplicateGroup["clients"][number] & { key: string }>(
+    `select lower(trim(l.email)) as key, l.client_id, l.name, l.email, l.stage, l.maps, l.sessions, l.created_at
+     from admin_client_list l
+     where l.email is not null and trim(l.email) <> ''
+       and lower(trim(l.email)) in (select lower(trim(email)) from admin_client_list where email is not null and trim(email) <> ''
+                                    group by lower(trim(email)) having count(*) > 1)
+     order by key, l.created_at`)).rows.map(isoRow);
+  const groups = new Map<string, DuplicateGroup>();
+  for (const { key, ...c } of rows) {
+    const g = groups.get(key) ?? { email: c.email ?? key, clients: [] };
+    g.clients.push(c);
+    groups.set(key, g);
+  }
+  for (const g of groups.values()) g.clients.sort((a, b) =>
+    STAGE_RANK[b.stage] - STAGE_RANK[a.stage] || Number(!!b.name) - Number(!!a.name) || b.sessions - a.sessions || a.created_at.localeCompare(b.created_at));
+  return [...groups.values()];
+}
+
+/**
+ * Jana merges one record into another (both must share the email). Everything moves to the record she keeps —
+ * Maps, sessions, notes, files, bookings, consents and the private link if it has none — and missing name or phone
+ * are filled in; the stage becomes the furthest of the two. The other record is folded (merged_into_client_id), not
+ * deleted, so its history stays traceable and its old address redirects to the kept profile.
+ * Runs on the server's own connection in one transaction, after the route has checked the coach session (the coach
+ * role cannot re-point files, consents or provider-made links).
+ */
+export async function mergeClients(db: Db, coachId: string, keepId: string, mergeId: string) {
+  if (!UUID.test(keepId) || !UUID.test(mergeId) || keepId === mergeId) return { ok: false as const, error: "invalid" as const };
+  return db.tx((sql) => mergeIn(sql, coachId, keepId, mergeId));
+}
+async function mergeIn(sql: Sql, coachId: string, keepId: string, mergeId: string) {
+  const both = (await sql.query<{ id: string; name: string | null; email: string | null; phone: string | null; stage: Stage; coaching_enrolled_at: string | null; invite_token_hash: string | null; invite_token_ciphertext: string | null; invite_created_at: string | null }>(
+    `select id, name, email, phone, stage, coaching_enrolled_at::text, invite_token_hash, invite_token_ciphertext, invite_created_at
+     from clients where id = any($1::uuid[]) and merged_into_client_id is null and privacy_status = 'active'`, [[keepId, mergeId]])).rows;
+  const keep = both.find((c) => c.id === keepId), other = both.find((c) => c.id === mergeId);
+  if (!keep || !other) return { ok: false as const, error: "not_found" as const };
+  if (!keep.email?.trim() || keep.email.trim().toLowerCase() !== other.email?.trim().toLowerCase()) return { ok: false as const, error: "different_email" as const };
+
+  await sql.query(
+    `insert into assessment_client_links (assessment_id, client_id, link_source, legal_basis, linked_at, verified_at)
+     select assessment_id, $1, link_source, legal_basis, linked_at, coalesce(verified_at, now()) from assessment_client_links where client_id = $2
+     on conflict do nothing`, [keepId, mergeId]);
+  for (const t of ["coaching_sessions", "client_notes", "client_attachments", "bookings"]) await sql.query(`update ${t} set client_id = $1 where client_id = $2`, [keepId, mergeId]);
+  await sql.query(`update consents set subject_id = $1 where subject_type = 'client' and subject_id = $2`, [keepId, mergeId]);
+  await sql.query(`update clients set merged_into_client_id = $1 where merged_into_client_id = $2`, [keepId, mergeId]);
+
+  const stage = STAGE_RANK[other.stage] > STAGE_RANK[keep.stage] ? other.stage : keep.stage;
+  const moveInvite = !keep.invite_token_hash && !!other.invite_token_hash;
+  // The folded record gives up its private link first (the hash is unique), then is pointed at the kept profile.
+  await sql.query(`update clients set merged_into_client_id = $1, invite_token_hash = null, invite_token_ciphertext = null, invite_created_at = null where id = $2`, [keepId, mergeId]);
+  await sql.query(
+    `update clients set name = coalesce(name, $2), phone = coalesce(phone, $3),
+       stage = $4, stage_changed_at = case when stage <> $4 then now() else stage_changed_at end,
+       coaching_enrolled = ($4 = 'client'), coaching_enrolled_at = case when $4 = 'client' then coalesce(coaching_enrolled_at, $5::date, current_date) else null end,
+       invite_token_hash = case when $6 then $7 else invite_token_hash end,
+       invite_token_ciphertext = case when $6 then $8 else invite_token_ciphertext end,
+       invite_created_at = case when $6 then $9::timestamptz else invite_created_at end
+     where id = $1`,
+    [keepId, other.name, other.phone, stage, other.coaching_enrolled_at, moveInvite, other.invite_token_hash, other.invite_token_ciphertext, other.invite_created_at]);
+  await audit(sql, coachId, "client.merged", "client", keepId, { merged: mergeId });
+  return { ok: true as const };
 }

@@ -16,7 +16,7 @@ import { deleteCancelledBooking } from "@/server/admin/mutations";
 import { memoryFileStore } from "@/server/files";
 import {
   addAttachment, attachAssessment, createInvite, createProfileForAssessment, deleteAttachment, deleteClientProfile, deleteSession, getAttachment,
-  listClients, loadClientProfile, profileForAssessment, revokeInvite, saveClientNote, saveSession, setStage,
+  duplicateClients, listClients, loadClientProfile, mergeClients, profileForAssessment, revokeInvite, saveClientNote, saveSession, setStage,
 } from "@/server/admin/clients";
 import { loadWorkspace } from "@/server/admin/queries";
 
@@ -232,5 +232,29 @@ describe("client profiles", () => {
     await expect(as(pg, { role: "anon" }, () => pg.query(`insert into client_notes (client_id, coach_id, body_ciphertext) values ($1, $2, 'x')`, [anyClient, JANA]))).rejects.toThrow();
     await expect(as(pg, { role: "authenticated", sub: JANA, aal: "aal1" }, () => pg.query(`insert into client_notes (client_id, coach_id, body_ciphertext) values ($1, $2, 'x')`, [anyClient, JANA]))).rejects.toThrow();
     expect((await as(pg, { role: "anon" }, () => pg.query(`select * from admin_client_list`))).rows).toHaveLength(0);
+  });
+  it("same email on two records is suggested on the overview; merging moves everything to the kept record and folds the other", async () => {
+    const { id: mapId } = await completed();
+    const ins = async (name: string | null, mail: string, stage: string) => (await pg.query<{ id: string }>(
+      `insert into clients (name, email, stage) values ($1, $2, $3) returning id`, [name, mail, stage])).rows[0].id;
+    const prospect = await ins(null, "Dup@Example.com", "prospect");          // from the PDF request
+    const lead = await ins("Dee Dup", "dup@example.com", "lead");             // from the Calendly booking
+    await pg.query(`insert into assessment_client_links (assessment_id, client_id, link_source, legal_basis) values ($1,$2,'pdf_request','consent'), ($1,$3,'booking','consent')`, [mapId, prospect, lead]);
+    await asJana((sql) => saveClientNote(sql, JANA, prospect, { body: "note on the PDF record" }));
+
+    const groups = await asJana((sql) => duplicateClients(sql));
+    const g = groups.find((x) => x.email.toLowerCase() === "dup@example.com")!;
+    expect(g.clients.map((c) => c.client_id)).toEqual([lead, prospect]);     // the Lead with a name is suggested to keep
+
+    expect((await mergeClients(db, JANA, lead, await ins("Other", "other@example.com", "prospect"))).ok).toBe(false); // different email
+    expect((await mergeClients(db, JANA, lead, prospect)).ok).toBe(true);
+    const p = (await asJana((sql) => loadClientProfile(sql, viewer, prospect)))!;
+    expect(p.client.id).toBe(lead);                                            // old address opens the kept profile
+    expect(p.client.name).toBe("Dee Dup");
+    expect(p.maps.map((m) => m.assessment_id)).toEqual([mapId]);
+    expect(p.notes.map((n) => n.body)).toEqual(["note on the PDF record"]);
+    expect((await asJana((sql) => duplicateClients(sql))).some((x) => x.email.toLowerCase() === "dup@example.com")).toBe(false);
+    expect((await asJana((sql) => listClients(sql, { q: "dup@example.com" }))).map((c) => c.client_id)).toEqual([lead]);
+    expect((await pg.query(`select 1 from clients where id = $1`, [prospect])).rows).toHaveLength(1); // folded, not deleted
   });
 });
