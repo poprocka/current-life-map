@@ -2,9 +2,16 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Analytics } from "@/components/Analytics";
 
+const TITLE = "The Current Life Map";
+const DESCRIPTION = "A guided Self-Interview based on the Life System.";
+
+/** Link previews (Jana, 23 Oct): the image is app/opengraph-image.png (the Life System map from the welcome screen). */
 export const metadata: Metadata = {
-  title: "The Current Life Map",
-  description: "A guided Self-Interview based on the Life System.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://self-interview.com"),
+  title: TITLE,
+  description: DESCRIPTION,
+  openGraph: { type: "website", siteName: "The Self-Interview", title: TITLE, description: DESCRIPTION },
+  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

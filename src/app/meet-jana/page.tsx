@@ -6,6 +6,13 @@ import { ApplyButton, BackLink, Portrait, SelfInterviewInvite } from "@/componen
 export const metadata: Metadata = {
   title: "Meet Jana Poprocka | Creator of The Life System™",
   description: "Meet Jana Poprocka — founder, creative director, and coach. Discover the story, experiences, and philosophy behind The Life System™ and her personalized approach to coaching.",
+  // Shared on its own (Jana, 23 Oct): the preview carries this page's title and description (image: the site's map)
+  openGraph: {
+    type: "profile", siteName: "The Self-Interview", url: "/meet-jana",
+    title: "Meet Jana Poprocka | Creator of The Life System™",
+    description: "Meet Jana Poprocka — founder, creative director, and coach. Discover the story, experiences, and philosophy behind The Life System™ and her personalized approach to coaching.",
+  },
+  twitter: { card: "summary_large_image", title: "Meet Jana Poprocka | Creator of The Life System™" },
 };
 
 /** **bold** in Jana's copy → emphasis, kept exactly where she put it. */
