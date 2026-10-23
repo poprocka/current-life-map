@@ -11,8 +11,10 @@ export const metadata: Metadata = {
     type: "profile", siteName: "The Self-Interview", url: "/meet-jana",
     title: "Meet Jana Poprocka | Creator of The Life System™",
     description: "Meet Jana Poprocka — founder, creative director, and coach. Discover the story, experiences, and philosophy behind The Life System™ and her personalized approach to coaching.",
+    // A page-level openGraph replaces the site's, so the map image is named here too
+    images: [{ url: "/opengraph-image.png", width: 1200, height: 630, alt: "The Life System: You at the centre, with eight Orbits around it." }],
   },
-  twitter: { card: "summary_large_image", title: "Meet Jana Poprocka | Creator of The Life System™" },
+  twitter: { card: "summary_large_image", title: "Meet Jana Poprocka | Creator of The Life System™", images: ["/twitter-image.png"] },
 };
 
 /** **bold** in Jana's copy → emphasis, kept exactly where she put it. */
