@@ -43,7 +43,8 @@ export default function MeetJana() {
       {/* ── The interview ── */}
       <article className="mx-auto mt-20 max-w-[680px] px-6 sm:mt-28 sm:px-10">
         {M.interview.map((item, n) => (
-          <section key={item.q} className={n ? "mt-16 sm:mt-20" : ""} aria-labelledby={`q-${n}`}>
+          <Fragment key={item.q}>
+          <section className={n ? "mt-16 sm:mt-20" : ""} aria-labelledby={`q-${n}`}>
             {/* Number to the left of the question (Jana, 21 Oct): inline on phones, hanging in the margin from tablet up,
                 so the question text keeps the same left edge as the answers */}
             <div className="relative flex items-baseline gap-3 border-t hairline pt-6 sm:block">
@@ -62,6 +63,9 @@ export default function MeetJana() {
                 ))}
             </div>
           </section>
+          {/* Self-Interview banner after "What's your approach?" — hidden only when opened from the results page (Jana, 23 Oct) */}
+          {item.q === "What's your approach?" && <SelfInterviewInvite {...M.selfInterview} />}
+          </Fragment>
         ))}
 
         {/* ── Invitation ── */}
@@ -81,9 +85,6 @@ export default function MeetJana() {
           </div>
         </section>
       </article>
-
-      {/* Standalone visitors only (shared link): an invitation to the Self-Interview (Jana, 23 Oct) */}
-      <SelfInterviewInvite />
     </main>
   );
 }

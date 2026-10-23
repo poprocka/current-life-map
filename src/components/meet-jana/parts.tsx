@@ -25,23 +25,20 @@ export function BackLink() {
 }
 
 /**
- * For visitors who arrive on the standalone page and haven't taken the Self-Interview on this device: a quiet
- * invitation to it at the very end, in the homepage's own words. Hidden for anyone who already has a Map.
+ * Invitation to the Self-Interview after "What's your approach?" (Jana, 23 Oct). Shown to everyone except visitors who
+ * opened this page from their results (they've already taken it).
  */
-export function SelfInterviewInvite() {
+export function SelfInterviewInvite({ title, text, cta }: { title: string; text: string; cta: string }) {
   const [show, setShow] = useState(false);
-  useEffect(() => { setShow(!hasStoredMap()); }, []);
+  useEffect(() => { try { setShow(sessionStorage.getItem(FROM_MAP_KEY) !== "1"); } catch { setShow(true); } }, []);
   if (!show) return null;
   return (
-    <aside className="mx-auto mt-20 max-w-[680px] px-6 sm:mt-24 sm:px-10" aria-labelledby="si-invite">
-      <div className="rounded-[24px] border hairline bg-linen-deep/60 p-8 sm:p-10">
-        <p className="eyebrow">The Self-Interview</p>
-        <h2 id="si-invite" className="mt-3 font-serif text-[30px] font-light leading-tight sm:text-[34px]">See your life as it is.</h2>
-        <p className="mt-3 max-w-[460px] text-[15px] leading-[1.75] text-mahogany/80">You don&rsquo;t need to change anything right now. First, see it clearly.</p>
-        <Link href="/" className="mt-6 inline-block rounded-full border border-burgundy px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-burgundy hover:text-linen">
-          Begin Self-Interview
-        </Link>
-      </div>
+    <aside className="mt-16 rounded-[24px] bg-burgundy p-8 text-linen sm:mt-20 sm:p-10" aria-labelledby="si-invite">
+      <h2 id="si-invite" className="font-serif text-[28px] font-light leading-tight [text-wrap:balance] sm:text-[34px]">{title}</h2>
+      <p className="mt-4 max-w-[500px] text-[15px] leading-[1.75] text-linen/85">{text}</p>
+      <Link href="/" className="mt-7 inline-block rounded-full bg-linen px-7 py-3 text-[12px] uppercase tracking-[0.16em] text-burgundy transition hover:bg-white">
+        {cta} <span aria-hidden>→</span>
+      </Link>
     </aside>
   );
 }

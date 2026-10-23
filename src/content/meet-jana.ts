@@ -66,6 +66,12 @@ export const MEET_JANA = {
       ],
     },
   ] as { q: string; a: (string | { quote: string })[] }[],
+  /** Banner after "What's your approach?" (Jana, 23 Oct). Shown unless the page was opened from the results page. */
+  selfInterview: {
+    title: "Curious where you stand in your own life?",
+    text: "I created The Self-Interview as a starting point for that exploration. It's a free, guided conversation with yourself that helps you see the different parts of your life and how they connect.",
+    cta: "Begin Self-Interview",
+  },
   closing: {
     q: "Now, it's your turn. I'd love to hear your story.",
     text: "I'd love to hear where you are in life, what's on your mind, and what you'd like to create next. Let's see what we might discover together.",
