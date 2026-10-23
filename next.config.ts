@@ -10,10 +10,14 @@ const nextConfig: NextConfig = {
   },
   // Channel short links: /ig, /li, /card … → the public page with UTM tags (temporary redirects, so they can change later).
   async redirects() {
-    return SHORT_LINKS.map((l) => ({
-      source: `/${l.path}`, permanent: false,
-      destination: `/?utm_source=${l.source}&utm_medium=${l.medium}${l.campaign ? `&utm_campaign=${l.campaign}` : ""}`,
-    }));
+    return [
+      ...SHORT_LINKS.map((l) => ({
+        source: `/${l.path}`, permanent: false,
+        destination: `/?utm_source=${l.source}&utm_medium=${l.medium}${l.campaign ? `&utm_campaign=${l.campaign}` : ""}`,
+      })),
+      // Short link to the standalone Meet Jana page (Jana, 23 Oct). Instagram and LinkedIn visits are still recognised by referrer.
+      { source: "/jana", destination: "/meet-jana", permanent: false },
+    ];
   },
   async headers() {
     return [{ source: "/(.*)", headers: [

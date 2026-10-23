@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Fragment } from "react";
 import { MEET_JANA as M } from "@/content/meet-jana";
-import { ApplyButton, BackLink, Portrait } from "@/components/meet-jana/parts";
+import { ApplyButton, BackLink, Portrait, SelfInterviewInvite } from "@/components/meet-jana/parts";
 
 export const metadata: Metadata = {
   title: "Meet Jana Poprocka | Creator of The Life System™",
@@ -22,6 +22,7 @@ export default function MeetJana() {
   const answer = "text-[16px] leading-[1.8] text-mahogany/85 sm:text-[16.5px]";
   return (
     <main className="pb-24">
+      {/* Back to the Map only when opened from the results page (Jana, 23 Oct) */}
       <div className="mx-auto max-w-[1180px] px-6 pt-8 sm:px-10 sm:pt-10"><BackLink /></div>
 
       {/* ── Opening: portrait and introduction ── */}
@@ -80,6 +81,9 @@ export default function MeetJana() {
           </div>
         </section>
       </article>
+
+      {/* Standalone visitors only (shared link): an invitation to the Self-Interview (Jana, 23 Oct) */}
+      <SelfInterviewInvite />
     </main>
   );
 }

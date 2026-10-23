@@ -5,6 +5,7 @@ import { track } from "@/lib/analytics";
 import Link from "next/link";
 import { COACHING_CARD } from "@/content/coaching";
 import { AVATAR } from "@/content/meet-jana";
+import { FROM_MAP_KEY } from "@/components/meet-jana/parts";
 import { useBooking } from "@/lib/useBooking";
 
 type SendState = { kind: "idle" } | { kind: "sending" } | { kind: "sent" } | { kind: "error"; message: string };
@@ -27,7 +28,7 @@ export function CoachingCard({ token }: { token?: string }) {
           <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[10.5px] uppercase tracking-eyebrow text-linen/70">
             <span>{COACHING_CARD.eyebrow}</span>
             {/* One component (Jana, 21 Oct): avatar + "Meet Jana →" together, so they always stay side by side */}
-            <Link href="/meet-jana" className="group inline-flex shrink-0 items-center gap-3 sm:ml-8">
+            <Link href="/meet-jana" onClick={() => { try { sessionStorage.setItem(FROM_MAP_KEY, "1"); } catch { /* private mode */ } }} className="group inline-flex shrink-0 items-center gap-3 sm:ml-8">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={AVATAR.src} alt="" width={44} height={44} className="h-11 w-11 rounded-full object-cover ring-1 ring-linen/40" />
               <span className="text-linen underline decoration-linen/40 underline-offset-[6px] transition group-hover:decoration-linen">
