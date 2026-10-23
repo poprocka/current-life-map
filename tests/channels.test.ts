@@ -49,6 +49,7 @@ describe("acquisition channels", () => {
     const ig = r.find((x) => x.source === "/ig")!;
     expect(ig.destination).toBe("/?utm_source=instagram&utm_medium=social");
     expect(ig.permanent).toBe(false);
-    expect(r.map((x) => x.source)).toEqual(SHORT_LINKS.map((l) => `/${l.path}`));
+    expect(r.filter((x) => x.source !== "/jana").map((x) => x.source)).toEqual(SHORT_LINKS.map((l) => `/${l.path}`));
+    expect(r.find((x) => x.source === "/jana")?.destination).toBe("/meet-jana"); // Meet Jana short link (23 Oct)
   });
 });
