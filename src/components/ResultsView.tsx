@@ -12,9 +12,6 @@ import { useBooking } from "@/lib/useBooking";
 import { ENERGY_SHORT, IMPORTANCE_SHORT } from "@/lib/pdf/model";
 import { useEffect, useState } from "react";
 import { snapshotFingerprint } from "@/lib/stable";
-import Link from "next/link";
-import { GUIDE_NAV } from "@/content/before-you-begin";
-import { GUIDE_FROM_MAP_KEY } from "@/components/guide/nav";
 
 /**
  * Exactly what the respondent sees (results page) — also rendered read-only in the coach workspace
@@ -61,22 +58,25 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
             {insights?.mapIntro ?? "Here's how the different parts of your life look together, based on what you've shared."}
           </h2>
         </header>
-        {/* Left: the Map with the legend beneath, as one block that never moves. Right: the table, then "Show Map interpretation"
-            beneath it, which opens the written reading in place (Jana, 2026-10-13). */}
-        <div className="grid gap-10 lg:grid-cols-[1.35fr_1fr] lg:items-start lg:gap-x-16">
-          <div className="min-w-0">
+        {/* Desktop: a 2×2 grid, so the rule above the legend (left) and the rule above "Show Map interpretation" (right)
+            sit on one line, under the Map and the table (Jana, 25 Oct). Phones and tablets: Map, legend, table, then the
+            interpretation. */}
+        <div className="grid lg:grid-cols-[1.35fr_1fr] lg:items-start lg:gap-x-16 lg:gap-y-10">
+          <div className="min-w-0 lg:col-start-1 lg:row-start-1">
             <PersonalMap result={result} />
-            <div className="mt-3 border-t hairline pt-6"><MapLegend distancePending={distancePending} columns={2} /></div>
-            {/* The guide's section on the eight dimensions (Jana, 25 Oct). Results stay on this device, so coming back loses nothing. */}
-            {!embedded && <GuideLink />}
           </div>
-          <div className="min-w-0 lg:pt-[8px]">
+          <div className="mt-3 min-w-0 border-t hairline pt-6 lg:col-start-1 lg:row-start-2 lg:mt-0">
+            <MapLegend distancePending={distancePending} columns={2} />
+          </div>
+          <div className="mt-10 min-w-0 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:pt-[8px]">
             {/* Visible title removed (Jana, 2026-10-12); the table keeps an accessible name */}
             <MapTable result={result} />
-            {hasReading && (
-              <div className="mt-6 border-t hairline pt-5"><MapReading paragraphs={insights!.mapReading.paragraphs} open={readingOpen} onToggle={() => setReadingOpen((v) => !v)} /></div>
-            )}
           </div>
+          {hasReading && (
+            <div className="mt-6 min-w-0 border-t hairline pt-6 lg:col-start-2 lg:row-start-2 lg:mt-0">
+              <MapReading paragraphs={insights!.mapReading.paragraphs} open={readingOpen} onToggle={() => setReadingOpen((v) => !v)} />
+            </div>
+          )}
         </div>
 
       </section>
@@ -216,15 +216,5 @@ function ClosingBookButton({ token }: { token?: string }) {
       </button>
       {state.kind === "error" && <p role="status" className="mt-3 text-[12.5px] text-burgundy">{state.message}</p>}
     </>
-  );
-}
-
-/** "Understanding Your Life Map ↗": opens the Before You Begin guide at the eight dimensions; the guide then offers the way back. */
-function GuideLink() {
-  return (
-    <Link href="/before-you-begin#eight-dimensions" onClick={() => { try { sessionStorage.setItem(GUIDE_FROM_MAP_KEY, "1"); } catch { /* private mode */ } }}
-      className="mt-6 inline-block text-[12px] uppercase tracking-[0.14em] text-burgundy underline decoration-burgundy/30 underline-offset-[6px] transition hover:decoration-burgundy">
-      {GUIDE_NAV.resultsLink} <span aria-hidden>↗</span>
-    </Link>
   );
 }
