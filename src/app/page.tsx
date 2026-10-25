@@ -31,21 +31,19 @@ export default function Introduction() {
           <p className="mt-8 font-serif text-[21px] italic leading-snug text-burgundy">{OPENING.closing}</p>
           <InviteCapture />
 
-          <p className="mt-10 text-[12px] uppercase tracking-[0.14em] text-taupe">{OPENING.estimatedTime}</p>
-          <div className="mt-4 flex flex-wrap items-center gap-x-7 gap-y-4">
+          {/* Begin, with the optional guide link beside it; under them either "Continue where you left off" or the
+              estimated time, in the same place (Jana, 25 Oct) */}
+          <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4">
             <BeginLink
               className="rounded-full bg-burgundy px-8 py-[15px] text-[13px] font-normal uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-burgundy">
               {OPENING.cta}
             </BeginLink>
-            <ResumeLink />
-          </div>
-
-          {/* Optional guide (Jana, 25 Oct): secondary to Begin, no extra step before the interview */}
-          <div className="mt-7">
             <Link href="/before-you-begin" className="text-[12px] uppercase tracking-[0.14em] text-burgundy underline decoration-burgundy/30 underline-offset-[6px] transition hover:decoration-burgundy">
               {GUIDE_NAV.welcomeLink} <span aria-hidden>↗</span>
             </Link>
-            <p className="mt-2.5 max-w-[420px] text-[13px] leading-relaxed text-mahogany/65">{GUIDE_NAV.welcomeNote}</p>
+          </div>
+          <div className="mt-5">
+            <ResumeLink fallback={<p className="text-[12px] uppercase tracking-[0.14em] text-taupe">{OPENING.estimatedTime}</p>} />
           </div>
 
           <p className="mt-10 border-t hairline pt-5 text-[12.5px] leading-relaxed text-taupe">
