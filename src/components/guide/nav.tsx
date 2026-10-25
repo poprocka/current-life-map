@@ -45,8 +45,8 @@ export function GuideEndNav() {
   }
   return (
     <div>
-      <p className="text-[12px] uppercase tracking-[0.14em] text-taupe">{OPENING.estimatedTime}</p>
-      <BeginLink className="mt-4 inline-block rounded-full bg-burgundy px-8 py-[15px] text-[13px] uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-burgundy">
+      {/* No estimated time here: the guide's checklist above already says 20–25 minutes (Jana, 25 Oct) */}
+      <BeginLink className="inline-block rounded-full bg-burgundy px-8 py-[15px] text-[13px] uppercase tracking-[0.16em] text-linen transition hover:bg-mahogany focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-burgundy">
         {OPENING.cta}
       </BeginLink>
       <p className="mt-8 max-w-[520px] border-t hairline pt-5 text-[12.5px] leading-relaxed text-taupe">
