@@ -4,6 +4,7 @@ import { ResumeLink } from "@/components/ResumeLink";
 import { BeginLink } from "@/components/BeginLink";
 import { InviteCapture } from "@/components/InviteCapture";
 import { OPENING, PRIVACY_LINE } from "@/content/v10/opening";
+import { GUIDE_NAV } from "@/content/before-you-begin";
 
 export default function Introduction() {
   return (
@@ -37,6 +38,14 @@ export default function Introduction() {
               {OPENING.cta}
             </BeginLink>
             <ResumeLink />
+          </div>
+
+          {/* Optional guide (Jana, 25 Oct): secondary to Begin, no extra step before the interview */}
+          <div className="mt-7">
+            <Link href="/before-you-begin" className="text-[12px] uppercase tracking-[0.14em] text-burgundy underline decoration-burgundy/30 underline-offset-[6px] transition hover:decoration-burgundy">
+              {GUIDE_NAV.welcomeLink} <span aria-hidden>↗</span>
+            </Link>
+            <p className="mt-2.5 max-w-[420px] text-[13px] leading-relaxed text-mahogany/65">{GUIDE_NAV.welcomeNote}</p>
           </div>
 
           <p className="mt-10 border-t hairline pt-5 text-[12.5px] leading-relaxed text-taupe">

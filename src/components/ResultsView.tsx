@@ -12,6 +12,9 @@ import { useBooking } from "@/lib/useBooking";
 import { ENERGY_SHORT, IMPORTANCE_SHORT } from "@/lib/pdf/model";
 import { useEffect, useState } from "react";
 import { snapshotFingerprint } from "@/lib/stable";
+import Link from "next/link";
+import { GUIDE_NAV } from "@/content/before-you-begin";
+import { GUIDE_FROM_MAP_KEY } from "@/components/guide/nav";
 
 /**
  * Exactly what the respondent sees (results page) — also rendered read-only in the coach workspace
@@ -64,6 +67,8 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
           <div className="min-w-0">
             <PersonalMap result={result} />
             <div className="mt-3 border-t hairline pt-6"><MapLegend distancePending={distancePending} columns={2} /></div>
+            {/* The guide's section on the eight dimensions (Jana, 25 Oct). Results stay on this device, so coming back loses nothing. */}
+            {!embedded && <GuideLink />}
           </div>
           <div className="min-w-0 lg:pt-[8px]">
             {/* Visible title removed (Jana, 2026-10-12); the table keeps an accessible name */}
@@ -211,5 +216,15 @@ function ClosingBookButton({ token }: { token?: string }) {
       </button>
       {state.kind === "error" && <p role="status" className="mt-3 text-[12.5px] text-burgundy">{state.message}</p>}
     </>
+  );
+}
+
+/** "Understanding Your Life Map ↗": opens the Before You Begin guide at the eight dimensions; the guide then offers the way back. */
+function GuideLink() {
+  return (
+    <Link href="/before-you-begin#eight-dimensions" onClick={() => { try { sessionStorage.setItem(GUIDE_FROM_MAP_KEY, "1"); } catch { /* private mode */ } }}
+      className="mt-6 inline-block text-[12px] uppercase tracking-[0.14em] text-burgundy underline decoration-burgundy/30 underline-offset-[6px] transition hover:decoration-burgundy">
+      {GUIDE_NAV.resultsLink} <span aria-hidden>↗</span>
+    </Link>
   );
 }
