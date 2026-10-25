@@ -1,7 +1,7 @@
 /**
  * "Before You Begin" guide (Jana, 25 Oct). Source of truth: Understanding Your Current Life Map.pdf.
- * Every word below is copied verbatim from the PDF, in its order — including its spelling ("authenticly") and its
- * punctuation. Do not edit wording here; change it in the PDF first. **bold** marks the PDF's bold runs.
+ * Every word below is copied verbatim from the PDF, in its order — including its
+ * punctuation (typos "authenticly" and the infographic's "reallty" corrected at Jana's request, 25 Oct). Do not edit wording here; change it in the PDF first. **bold** marks the PDF's bold runs.
  */
 export const GUIDE = {
   title: "Understanding Your Current Life Map: A Guide to Self-Reflection and Interconnected Life Dimensions",
@@ -10,7 +10,7 @@ export const GUIDE = {
     width: 1361,
     height: 759,
     // Full text of the infographic, so its information is available to screen readers too.
-    alt: "The Current Life Map: See Your Life as It Is. 8 Interconnected Life Domains: Mind, Body, Restoration, Growth, Love, Social World, Resources, and Joy interact continuously. Joy: Pleasure & Experience. Mind: Awareness & Identity. Resources: Money & Environment. Body: Nourishment & Vitality. Social World: Community & Career. Restoration: Recovery & Self-Care. Love: Intimacy & Partnership. Growth: Learning & Evolution. At the centre, Relationship with Yourself at the Core: The quality of conversation with yourself directly transforms your self-relationship and reality. The Guided Self-Interview Process. Engage in Honest Assessment: Answer what is true about energy givers, takers, and personal alignment. First Clarity, Then Action: Focus on seeing reallty clearly before attempting to change anything. 20–25 Minute Private Session: No account or email is required to complete the interview privately. The Whole Picture: Life isn't separate pieces; every domain influences the others simultaneously.",
+    alt: "The Current Life Map: See Your Life as It Is. 8 Interconnected Life Domains: Mind, Body, Restoration, Growth, Love, Social World, Resources, and Joy interact continuously. Joy: Pleasure & Experience. Mind: Awareness & Identity. Resources: Money & Environment. Body: Nourishment & Vitality. Social World: Community & Career. Restoration: Recovery & Self-Care. Love: Intimacy & Partnership. Growth: Learning & Evolution. At the centre, Relationship with Yourself at the Core: The quality of conversation with yourself directly transforms your self-relationship and reality. The Guided Self-Interview Process. Engage in Honest Assessment: Answer what is true about energy givers, takers, and personal alignment. First Clarity, Then Action: Focus on seeing reality clearly before attempting to change anything. 20–25 Minute Private Session: No account or email is required to complete the interview privately. The Whole Picture: Life isn't separate pieces; every domain influences the others simultaneously.",
   },
   sections: [
     {
@@ -58,7 +58,7 @@ export const GUIDE = {
         { ul: [
           "**Core Priorities**: Identifying what truly matters to you across your daily routines, commitments, and habits.",
           "**Energy Dynamics**: Distinguishing between the specific activities and environments that act as energy sources versus those that serve as constant energy drains.",
-          "**Identity Alignment**: Measuring how deeply connected your daily life feels to who you authenticly are as an individual.",
+          "**Identity Alignment**: Measuring how deeply connected your daily life feels to who you authentically are as an individual.",
         ] },
         { p: "While these dimensions offer a clear framework for categorizing your experiences, they do not exist as isolated silos; rather, they function continuously as an interdependent system." },
       ],
