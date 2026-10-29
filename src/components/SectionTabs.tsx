@@ -10,7 +10,7 @@ import { useBooking } from "@/lib/useBooking";
 // Navigation labels only (Jana, 2026-10-13); section titles and content are unchanged
 const SECTIONS = [
   { id: "your-map", label: "Your Life Map" },
-  { id: "reality-snapshot", label: "What Stands Out" },
+  { id: "reality-snapshot", label: "Reality Snapshot" },
   { id: "life-system", label: "How It Connects" },
   { id: "personal-insights", label: "Personal Insights" },
   { id: "reflections", label: "Reflections" },
