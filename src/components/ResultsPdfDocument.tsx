@@ -83,8 +83,8 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
       {/* ── What Stands Out: the Reality Snapshot. Every cell draws its own four lines (collapsed by -1px margins), so the
           grid keeps all its lines even where it continues onto a new page (Jana, 2026-10-13) ── */}
       <section className="mt-10">
-        <SectionHead eyebrow="What Stands Out" title={insights?.standsOut.title ?? "Where your life stands today"} />
-        {insights && <div className={`mt-4 space-y-3 ${body}`}>{insights.standsOut.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>}
+        {/* Eyebrow no longer repeats the heading; no intro paragraph, the heading leads into the tiles (Jana, 28 Oct) */}
+        <SectionHead eyebrow="Reality Snapshot" title={insights?.standsOut.title ?? "Where your life stands today"} />
         <div className="mt-4 pt-2">
         <div className="grid grid-cols-3 pl-px pt-px">
           {snapshot.map((s) => (

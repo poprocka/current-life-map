@@ -88,8 +88,8 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
       <section id="reality-snapshot" className="scroll-mt-24 mt-24" aria-labelledby="snap-h">
         <p className="eyebrow">Reality Snapshot</p>
         <h2 id="snap-h" className="mt-3 font-serif text-[36px] font-light">{insights?.standsOut.title ?? "Where your life stands today"}</h2>
-        {insights && <div className="mt-5 max-w-[820px] space-y-3 text-[14.5px] leading-[1.8] text-mahogany/85">{insights.standsOut.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>}
-        <div className="mt-10 grid border-l border-t hairline sm:grid-cols-2 lg:grid-cols-3">
+        {/* Intro paragraph removed (Jana, 28 Oct): the heading leads straight into the tiles */}
+        <div className="mt-8 grid border-l border-t hairline sm:grid-cols-2 lg:grid-cols-3">
           {snapshot.map((s) => (
             <article key={s.key} className="border-b border-r hairline p-7">
               <p className="eyebrow">{s.label}</p>
