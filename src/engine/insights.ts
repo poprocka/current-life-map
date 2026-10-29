@@ -42,11 +42,15 @@ export function generateResultInsights(result: LifeMapResult, answers: Answers, 
  *  - The Sun: the previous engine's Sun reading and question (written from the Sun answers only).
  *  - Life Interconnections: the person's own answer on whether their areas help or compete (always answered).
  */
+const ORBIT_NAMES = /\b(Mind|Body|Restoration|Growth|Love|Social World|Resources|Joy)\b/;
 function fillEmptySections(ins: ResultInsights, result: LifeMapResult, answers: Answers): ResultInsights {
   let out = ins;
   if (!ins.self.paragraphs.length) {
     const legacy = generateNarrative(result, answers).self;
-    if (legacy.paragraphs.length) out = { ...out, self: { ...legacy, title: ins.self.title, question: legacy.question ?? ins.self.question } };
+    // Only what is about the relationship with yourself: links to other Orbits are already told under Life Interconnections
+    const own = legacy.paragraphs.filter((p) => !ORBIT_NAMES.test(p.text));
+    const paragraphs = own.length ? own : legacy.paragraphs;
+    if (paragraphs.length) out = { ...out, self: { ...legacy, paragraphs, title: ins.self.title, question: legacy.question ?? ins.self.question } };
   }
   if (!ins.connections.paragraphs.length) {
     const v = answers["interconnections.07"];
