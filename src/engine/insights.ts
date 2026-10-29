@@ -42,6 +42,21 @@ export function generateResultInsights(result: LifeMapResult, answers: Answers, 
  *  - The Sun: the previous engine's Sun reading and question (written from the Sun answers only).
  *  - Life Interconnections: the person's own answer on whether their areas help or compete (always answered).
  */
+/** Sentences already on the page (opening, cards, connections, What stands out, Orbits). */
+function pageSentences(ins: ResultInsights): Set<string> {
+  const all = [
+    ...ins.opening.paragraphs.map((p) => p.text), ...ins.standsOut.paragraphs.map((p) => p.text), ...ins.connections.paragraphs.map((p) => p.text),
+    ...ins.mapReading.paragraphs.map((p) => p.text), ...ins.cards.flatMap((c) => [c.lead, ...c.sections.flatMap((x) => [x.text, x.meaning ?? ""])]),
+    ...ins.orbits.flatMap((o) => o.paragraphs),
+  ];
+  return new Set(all.flatMap(sentences));
+}
+const sentences = (t: string) => t.split(/(?<=[.?!])\s+/).map((x) => x.trim().toLowerCase()).filter(Boolean);
+/** Drops sentences the page already says; a paragraph left with nothing is dropped. */
+function withoutRepeats<P extends { text: string }>(paras: P[], ins: ResultInsights): P[] {
+  const seen = pageSentences(ins);
+  return paras.map((p) => ({ ...p, text: p.text.split(/(?<=[.?!])\s+/).filter((x) => !seen.has(x.trim().toLowerCase())).join(" ").trim() })).filter((p) => p.text);
+}
 const ORBIT_NAMES = /\b(Mind|Body|Restoration|Growth|Love|Social World|Resources|Joy)\b/;
 function fillEmptySections(ins: ResultInsights, result: LifeMapResult, answers: Answers): ResultInsights {
   let out = ins;
@@ -49,7 +64,9 @@ function fillEmptySections(ins: ResultInsights, result: LifeMapResult, answers: 
     const legacy = generateNarrative(result, answers).self;
     // Only what is about the relationship with yourself: links to other Orbits are already told under Life Interconnections
     const own = legacy.paragraphs.filter((p) => !ORBIT_NAMES.test(p.text));
-    const paragraphs = own.length ? own : legacy.paragraphs;
+    // …and never a sentence the page already says elsewhere (Jana, 28 Oct: summarise, don't repeat)
+    const fresh = withoutRepeats(own.length ? own : legacy.paragraphs, ins);
+    const paragraphs = fresh.length ? fresh : own.length ? own : legacy.paragraphs;
     if (paragraphs.length) out = { ...out, self: { ...legacy, paragraphs, title: ins.self.title, question: legacy.question ?? ins.self.question } };
   }
   if (!ins.connections.paragraphs.length) {

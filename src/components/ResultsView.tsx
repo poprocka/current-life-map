@@ -107,18 +107,18 @@ export function ResultsView({ result, insights, children, embedded, afterMap, to
           <h2 id="system-h" className="mt-3 font-serif text-[36px] font-light">How the parts of your life connect</h2>
           <div className="mt-10 grid gap-14 lg:grid-cols-2 lg:gap-16">
             {/* D. The Sun */}
-            <section id="the-sun" aria-labelledby="self-h">
+            {insights.self.paragraphs.length > 0 && <section id="the-sun" aria-labelledby="self-h">
               <p className="eyebrow">The Sun</p>
               <h3 id="self-h" className="mt-3 font-serif text-[28px] font-light leading-tight">{insights.self.title}</h3>
               <div className="mt-5 space-y-4 text-[14.5px] leading-[1.8] text-mahogany/85">{insights.self.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
               {insights.self.question && <QuestionBlock className="mt-5">{insights.self.question}</QuestionBlock>}
-            </section>
+            </section>}
             {/* E. Life Interconnections */}
-            <section id="life-interconnections" aria-labelledby="links-h">
+            {insights.connections.paragraphs.length > 0 && <section id="life-interconnections" aria-labelledby="links-h">
               <p className="eyebrow">Life Interconnections</p>
               <h3 id="links-h" className="mt-3 font-serif text-[28px] font-light leading-tight">{insights.connections.title}</h3>
               <div className="mt-5 space-y-4 text-[14.5px] leading-[1.8] text-mahogany/85">{insights.connections.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
-            </section>
+            </section>}
           </div>
           {/* G. The eight Orbits */}
           <OrbitList insights={insights} />
