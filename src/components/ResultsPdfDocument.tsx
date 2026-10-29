@@ -147,7 +147,7 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
               <article key={c.key} className="mt-6 pt-1"><div className="border-t hairline pt-4">
                 <div className="pdf-keep pdf-with-next">
                   <h3 className={h3.replace("mt-2 ", "")}>{c.title}</h3>
-                  <p className={`mt-1.5 ${body} text-mahogany/70`}>{c.lead}</p>
+                  {c.lead && <p className={`mt-1.5 ${body} text-mahogany/70`}>{c.lead}</p>}
                 </div>
                 <div className="mt-4"><InsightBody c={c} /></div>
               </div></article>

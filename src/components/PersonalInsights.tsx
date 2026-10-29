@@ -74,7 +74,7 @@ function InsightDialog({ insights, index, onIndex, onClose }: { insights: Result
             return (
               <div key={card.key} aria-hidden={!on} style={{ gridArea: "1 / 1" }} className={on ? "" : "pointer-events-none hidden lg:invisible lg:block"}>
                 <h2 {...(on ? { id: "insight-title" } : {})} className="mt-6 font-serif text-[34px] font-light leading-tight lg:text-[36px] [@media(min-width:1024px)_and_(max-height:1100px)]:mt-3 [@media(min-width:1024px)_and_(max-height:1100px)]:text-[28px]">{c.title}</h2>
-                <p className="mt-3 max-w-[820px] text-[15.5px] leading-relaxed text-mahogany/70 [@media(min-width:1024px)_and_(max-height:1100px)]:mt-2 [@media(min-width:1024px)_and_(max-height:1100px)]:text-[14.5px]">{c.lead}</p>
+                {c.lead && <p className="mt-3 max-w-[820px] text-[15.5px] leading-relaxed text-mahogany/70 [@media(min-width:1024px)_and_(max-height:1100px)]:mt-2 [@media(min-width:1024px)_and_(max-height:1100px)]:text-[14.5px]">{c.lead}</p>}
                 <div aria-hidden className="my-8 h-px w-full bg-[#D9C3A8]/70 lg:my-7 [@media(min-width:1024px)_and_(max-height:1100px)]:my-4" />
                 <InsightBody c={c} />
               </div>
@@ -123,7 +123,7 @@ function InsightBlock({ s, major }: { s: ResultInsights["cards"][number]["sectio
   const prose = "text-[14.5px] leading-[1.75] text-mahogany/85 [@media(min-width:1024px)_and_(max-height:1100px)]:text-[14px] [@media(min-width:1024px)_and_(max-height:1100px)]:leading-[1.65]";
   return (
     <section>
-      <h3 className="font-serif text-[21px] font-normal">{s.heading}</h3>
+      <h3 className="font-serif text-[21px] font-normal"><InsightHeading text={s.heading} /></h3>
       {major ? (
         <div className={`mt-3 space-y-4 ${prose} [@media(min-width:1024px)_and_(max-height:1100px)]:space-y-3`}>
           <div><p className="text-[10.5px] uppercase tracking-[0.16em] text-taupe">What you shared</p>
@@ -171,4 +171,12 @@ export function OrbitList({ insights }: { insights: ResultInsights }) {
       </ul>
     </div>
   );
+}
+
+const ORBIT_AFTER_COLON = /^(.*:\s+)(Mind|Body|Restoration|Growth|Love|Social World|Resources|Joy)$/;
+/** "…: Restoration" — the Orbit name in burgundy italic, so it stands apart from the phrase before it (Jana, 28 Oct). */
+function InsightHeading({ text }: { text: string }) {
+  const m = ORBIT_AFTER_COLON.exec(text);
+  if (!m) return <>{text}</>;
+  return <>{m[1]}<em className="italic text-burgundy">{m[2]}</em></>;
 }

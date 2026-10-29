@@ -40,7 +40,7 @@ describe("results never show an empty insight section", () => {
       expect(ins.connections.paragraphs.length, `Life Interconnections (${at})`).toBeGreaterThan(0);
       expect(ins.cards).toHaveLength(5);
       for (const c of ins.cards) {
-        expect(c.sections.length && c.lead && c.question && c.why, `card "${c.title}" (${at})`).toBeTruthy();
+        expect(c.sections.length && c.question && c.why, `card "${c.title}" (${at})`).toBeTruthy();
         for (const x of c.sections) expect(x.text, `card "${c.title}" text (${at})`).toBeTruthy();
       }
       expect(ins.orbits).toHaveLength(8);
