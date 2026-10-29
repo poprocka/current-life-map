@@ -104,13 +104,13 @@ export function ResultsPdfDocument({ result, insights, reflections = [], generat
           <SectionHead eyebrow="How It Connects" title="How the parts of your life connect" />
           <div className="mt-5 grid grid-cols-2 gap-10">
             <section>
-              <p className="eyebrow">The Sun</p>
+              <p className="eyebrow pdf-with-next">The Sun</p>
               <h3 className={h3}>{insights.self.title}</h3>
               <div className={`mt-3 space-y-3 ${body}`}>{insights.self.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
               {insights.self.question && <QuestionBlock size="sm" className="mt-4">{insights.self.question}</QuestionBlock>}
             </section>
             <section>
-              <p className="eyebrow">Life Interconnections</p>
+              <p className="eyebrow pdf-with-next">Life Interconnections</p>
               <h3 className={h3}>{insights.connections.title}</h3>
               <div className={`mt-3 space-y-3 ${body}`}>{insights.connections.paragraphs.map((p, i) => <p key={i}>{p.text}</p>)}</div>
             </section>

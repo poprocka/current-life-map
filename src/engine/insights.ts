@@ -8,6 +8,7 @@ import { generateNarrative } from "@/engine/narrative";
 import type { Answers } from "@/engine/narrative/context";
 import type { ResultNarrative } from "@/engine/narrative/types";
 import { generateInterpretation, INTERPRET_VERSION, type Interpretation } from "@/engine/interpret";
+import { SUPPORT_COMPETE_READING } from "@/content/v10/scales";
 
 export { F6_TOLERANCE, toYou } from "@/engine/narrative/context";
 export { INSIGHT_DISCLAIMER, NARRATIVE_TEMPLATE_VERSION as INSIGHTS_TEMPLATE_VERSION, generateReflectionLayer } from "@/engine/narrative";
@@ -27,9 +28,30 @@ export const engineForTemplate = (templateVersion: string | null | undefined): N
 export function generateResultInsights(result: LifeMapResult, answers: Answers, opts: { engine?: NarrativeEngine } = {}): ResultInsights {
   if (opts.engine === "legacy") return generateNarrative(result, answers);
   try {
-    return generateInterpretation(result, answers);
+    return fillEmptySections(generateInterpretation(result, answers), result, answers);
   } catch (err) {
     if (process.env.NODE_ENV === "test") throw err;
     return { ...generateNarrative(result, answers), fallback: true };
   }
+}
+
+/**
+ * Never leave a section without text (Jana, 28 Oct: some respondents received an empty "The Sun" section). The
+ * interpretation gives each reading exactly one home, so when the Sun's reading is used elsewhere (e.g. as the central
+ * thread) "The Sun" could end up empty, and "Life Interconnections" likewise. Fallbacks:
+ *  - The Sun: the previous engine's Sun reading and question (written from the Sun answers only).
+ *  - Life Interconnections: the person's own answer on whether their areas help or compete (always answered).
+ */
+function fillEmptySections(ins: ResultInsights, result: LifeMapResult, answers: Answers): ResultInsights {
+  let out = ins;
+  if (!ins.self.paragraphs.length) {
+    const legacy = generateNarrative(result, answers).self;
+    if (legacy.paragraphs.length) out = { ...out, self: { ...legacy, title: ins.self.title, question: legacy.question ?? ins.self.question } };
+  }
+  if (!ins.connections.paragraphs.length) {
+    const v = answers["interconnections.07"];
+    const text = typeof v === "string" ? SUPPORT_COMPETE_READING[v] : undefined;
+    if (text) out = { ...out, connections: { ...ins.connections, paragraphs: [{ text, observationIds: [], evidence: [] }], fallback: true } };
+  }
+  return out;
 }

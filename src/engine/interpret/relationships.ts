@@ -355,7 +355,7 @@ const lever: Rel = (e) => {
   return [{
     id: `lever:${L}:weak`, relationship: "lever", areas: [L], kind: "tension", discovery: "possibility", homes: ["begin"], score: weak ? 0.72 : 0.6, modifiers: weak ? [`${L}.congruence`] : [], evidence: ev, contradictions: [], sufficiency: "explicit",
     distinctive: weak ? "The lever is also one of the least supported or least owned areas." : "A lever chosen by the person.",
-    heading: `Where change could carry: ${e.N(L)}`, lead: `${e.N(L)} is where you sense a change would carry furthest.`,
+    heading: `Where a small change could make the biggest difference: ${e.N(L)}`, lead: `${e.N(L)} is where you sense a change would carry furthest.`,
     observation: `You chose ${e.N(L)} as the area where improvement could lift the rest of your life${weak ? `, and it's also ${e.map.dimmest.includes(L) || e.c.lessSupported(L) ? "one of the least supported areas on your Map" : "an area you don't yet live on your own terms"}` : ""}${alsoGap ? `. It's also what you said gets less of your time than you'd like` : ""}.`,
     meaning: "People often sense where the lever is before they can say why. A small, steady change in one well-chosen area can reshape more of a life than a big push everywhere at once.",
     alternative: "Improving one area won't necessarily change the others, but the instinct is worth exploring.",
